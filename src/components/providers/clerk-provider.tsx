@@ -3,10 +3,13 @@
 import { ClerkProvider as BaseClerkProvider } from '@clerk/nextjs';
 
 export function ClerkProvider({ children }: { children: React.ReactNode }) {
+  // In Cloudflare Pages, environment variables need to be accessed at build time
+  // or passed from server components
   const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
   // If no publishable key, render children without Clerk
   if (!publishableKey) {
+    console.warn('Clerk publishable key not found');
     return <>{children}</>;
   }
 
@@ -17,6 +20,8 @@ export function ClerkProvider({ children }: { children: React.ReactNode }) {
       signUpUrl="/auth/sign-up"
       afterSignInUrl="/chat"
       afterSignUpUrl="/chat"
+      signInFallbackRedirectUrl="/chat"
+      signUpFallbackRedirectUrl="/chat"
     >
       {children}
     </BaseClerkProvider>
