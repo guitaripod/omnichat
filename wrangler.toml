@@ -1,0 +1,27 @@
+name = "omnichat"
+compatibility_date = "2024-06-08"
+compatibility_flags = ["nodejs_compat"]
+
+# D1 Database Configuration
+[[d1_databases]]
+binding = "DB"
+database_name = "omnichat-db"
+database_id = "to-be-generated"
+
+# R2 Storage Configuration
+[[r2_buckets]]
+binding = "R2"
+bucket_name = "omnichat-files"
+
+# KV Namespace for sessions/cache
+[[kv_namespaces]]
+binding = "KV"
+id = "to-be-generated"
+
+# Environment variables (will be set with wrangler secret)
+# OPENAI_API_KEY
+# ANTHROPIC_API_KEY
+# GOOGLE_API_KEY
+# CLERK_SECRET_KEY
+# STRIPE_SECRET_KEY
+# STRIPE_WEBHOOK_SECRET
