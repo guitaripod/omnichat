@@ -66,12 +66,12 @@
 
 ### Epic 2.1: Multi-LLM Integration
 
-- [ ] Set up Vercel AI SDK
-- [ ] Integrate OpenAI API
-- [ ] Integrate Anthropic API
-- [ ] Integrate Google Gemini API
-- [ ] Create model selector UI
-- [ ] Implement streaming responses
+- [x] ~~Set up Vercel AI SDK~~ (Replaced with custom implementation due to edge runtime incompatibility)
+- [ ] Implement custom OpenAI API integration with native fetch
+- [ ] Implement custom Anthropic API integration with native fetch
+- [ ] Implement custom Google Gemini API integration with native fetch
+- [x] Create model selector UI
+- [ ] Implement SSE streaming parser for responses
 
 ### Epic 2.2: Local Ollama Support
 
