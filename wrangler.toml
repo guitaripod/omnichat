@@ -1,10 +1,17 @@
 name = "omnichat"
-compatibility_date = "2024-06-08"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+pages_build_output_dir = ".vercel/output/static"
+
+# Production environment
+[env.production]
+compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
 
-[compatibility_flags]
-# Enable Node.js compatibility for Cloudflare Pages
-nodejs_compat = true
+# Preview environment
+[env.preview]
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
 
 # D1 Database Configuration
 [[d1_databases]]
