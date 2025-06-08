@@ -2,6 +2,12 @@
 
 AI chat application featuring multi-LLM support, local Ollama integration, and advanced chat features.
 
+## 🏗️ Architecture
+
+![OmniChat Technical Architecture](./docs/images/architecture.png)
+
+OmniChat is built on Cloudflare's edge infrastructure for global low-latency performance. The application leverages a modern stack with Next.js for the frontend, Cloudflare Workers for edge computing, and D1 SQLite for data persistence.
+
 ## Features
 
 ### Core Features
