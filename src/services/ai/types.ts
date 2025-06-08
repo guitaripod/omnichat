@@ -145,7 +145,7 @@ export const AI_MODELS: Record<AIProvider, AIModel[]> = {
       description: 'High performance with exceptional reasoning',
     },
     {
-      id: 'claude-3.7-sonnet-20250220',
+      id: 'claude-3-7-sonnet-20250219',
       name: 'Claude 3.7 Sonnet',
       provider: 'anthropic',
       contextWindow: 200000,
@@ -183,6 +183,16 @@ export const AI_MODELS: Record<AIProvider, AIModel[]> = {
       supportsVision: true,
       supportsTools: true,
       description: 'Previous flagship - still powerful',
+    },
+    {
+      id: 'claude-3-sonnet-20240229',
+      name: 'Claude 3 Sonnet',
+      provider: 'anthropic',
+      contextWindow: 200000,
+      maxOutput: 4096,
+      supportsVision: true,
+      supportsTools: true,
+      description: 'Balanced performance and cost',
     },
   ],
   google: [
