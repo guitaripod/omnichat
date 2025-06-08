@@ -3,6 +3,14 @@ import { UserButton } from '@clerk/nextjs';
 import { redirect } from 'next/navigation';
 
 export default async function ProfilePage() {
+  if (!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <p className="text-gray-600">Authentication not configured</p>
+      </div>
+    );
+  }
+
   const user = await currentUser();
 
   if (!user) {
@@ -17,13 +25,15 @@ export default async function ProfilePage() {
 
           <div className="mb-6 rounded-lg bg-white p-6 shadow-md dark:bg-gray-800">
             <div className="mb-6 flex items-center space-x-4">
-              <UserButton
-                appearance={{
-                  elements: {
-                    userButtonAvatarBox: 'h-16 w-16',
-                  },
-                }}
-              />
+              {process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && (
+                <UserButton
+                  appearance={{
+                    elements: {
+                      userButtonAvatarBox: 'h-16 w-16',
+                    },
+                  }}
+                />
+              )}
               <div>
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
                   {user.firstName} {user.lastName}
@@ -60,14 +70,16 @@ export default async function ProfilePage() {
             <div className="space-y-4">
               <div className="flex items-center justify-between border-b border-gray-200 py-3 dark:border-gray-700">
                 <span className="text-gray-700 dark:text-gray-300">Manage Account</span>
-                <UserButton
-                  afterSignOutUrl="/"
-                  appearance={{
-                    elements: {
-                      userButtonTrigger: 'hidden',
-                    },
-                  }}
-                />
+                {process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && (
+                  <UserButton
+                    afterSignOutUrl="/"
+                    appearance={{
+                      elements: {
+                        userButtonTrigger: 'hidden',
+                      },
+                    }}
+                  />
+                )}
               </div>
 
               <div className="flex items-center justify-between border-b border-gray-200 py-3 dark:border-gray-700">

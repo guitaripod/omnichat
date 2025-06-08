@@ -3,10 +3,17 @@ import { currentUser } from '@clerk/nextjs/server';
 import { redirect } from 'next/navigation';
 
 export default async function Home() {
-  const user = await currentUser();
-
-  if (user) {
-    redirect('/chat');
+  // Only check for user if Clerk is configured
+  if (process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) {
+    try {
+      const user = await currentUser();
+      if (user) {
+        redirect('/chat');
+      }
+    } catch {
+      // Clerk not configured, continue to show landing page
+      console.log('Clerk not configured, showing landing page');
+    }
   }
 
   return (

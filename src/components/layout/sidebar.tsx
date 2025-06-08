@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { cn } from '@/utils';
 import { MessageSquare, Plus, Menu, X, Settings, User } from 'lucide-react';
 import { UserButton } from '@clerk/nextjs';
+import { MockUserButton } from '@/components/ui/mock-user-button';
 
 export function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -87,7 +88,11 @@ export function Sidebar() {
               Settings
             </Link>
             <div className="pt-2">
-              <UserButton afterSignOutUrl="/" />
+              {process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ? (
+                <UserButton afterSignOutUrl="/" />
+              ) : (
+                <MockUserButton />
+              )}
             </div>
           </div>
         </div>
