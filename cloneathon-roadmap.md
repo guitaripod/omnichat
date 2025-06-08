@@ -96,6 +96,7 @@
 - [ ] Create sync mechanism for offline/online states
 - [ ] Build conversation search functionality
 - [ ] Add export chat feature (JSON, Markdown)
+- [ ] Add export feature that compiles a summary of the chat that creates a card-like widget .png that the user can save or copy to clipboard.
 
 ## Phase 3: Advanced Features (Days 5-6)
 
@@ -112,10 +113,11 @@
 
 ### Epic 3.2: Code Syntax Highlighting
 
-- [ ] Integrate Prism.js or Shiki
+- [ ] Integrate Shiki
 - [ ] Create custom code block component
 - [ ] Add language detection
 - [ ] Implement copy code button
+- [ ] Implement copy code as a beautiful card image that can be shared
 - [ ] Support inline code formatting
 
 ### Epic 3.3: Resumable Streams
@@ -140,7 +142,7 @@
 ### Epic 4.1: Stripe Integration
 
 - [ ] Set up Stripe account and products
-- [ ] Create subscription tiers (Free, Pro, Enterprise)
+- [ ] Create subscription tiers (Free, Ultimate)
 - [ ] Implement Stripe Checkout flow
 - [ ] Build webhook handlers for subscription events
 - [ ] Create billing portal integration
@@ -182,7 +184,6 @@
 - [ ] **Team Collaboration**: Shared conversations with permissions
 - [ ] **Plugin System**: Allow custom tool integrations
 - [ ] **Analytics Dashboard**: Usage stats and insights
-- [ ] **Mobile PWA**: Offline-capable mobile experience
 
 ### Epic 5.3: AI Image Generation
 
