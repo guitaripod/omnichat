@@ -90,6 +90,8 @@ export class GoogleProvider implements ChatProvider {
                 }
 
                 buffer += decoder.decode(value, { stream: true });
+                console.log('[Google] Raw buffer chunk:', buffer.substring(0, 200));
+
                 const lines = buffer.split('\n');
                 buffer = lines.pop() || '';
 
@@ -101,12 +103,20 @@ export class GoogleProvider implements ChatProvider {
                         '[Google] Parsed streaming line:',
                         JSON.stringify(parsed, null, 2)
                       );
-                      const text = parsed.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                      // Check for text in different possible locations
+                      const text =
+                        parsed.candidates?.[0]?.content?.parts?.[0]?.text ||
+                        parsed.text ||
+                        parsed.candidates?.[0]?.text;
+
                       if (text) {
-                        console.log(`[Google] Streaming chunk: ${text.substring(0, 50)}...`);
+                        console.log(`[Google] Found text: ${text.substring(0, 50)}...`);
                         controller.enqueue(
                           encoder.encode(`data: ${JSON.stringify({ content: text })}\n\n`)
                         );
+                      } else {
+                        console.log('[Google] No text found in response structure');
                       }
                     } catch (e) {
                       console.error('[Google] Error parsing streaming line:', line, e);
