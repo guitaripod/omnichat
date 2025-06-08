@@ -47,7 +47,7 @@ export class GoogleProvider implements ChatProvider {
 
     try {
       const endpoint = stream ? 'streamGenerateContent' : 'generateContent';
-      const url = `https://generativelanguage.googleapis.com/v1/models/${model}:${endpoint}?key=${this.apiKey}`;
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:${endpoint}?key=${this.apiKey}`;
       console.log(`[Google] Request URL: ${url.replace(this.apiKey, 'REDACTED')}`);
 
       console.log('[Google] Sending request to Google AI API...');
