@@ -3,13 +3,17 @@
 import { useState, useRef, useEffect } from 'react';
 import { MessageList } from './message-list';
 import { MessageInput } from './message-input';
+import { ModelSelector } from './model-selector';
 import type { Message } from '@/types';
 import { generateId } from '@/utils';
 
 export function ChatContainer() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedModel, setSelectedModel] = useState('gpt-4o-mini');
+  const [, setStreamingMessage] = useState<string>('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -30,38 +34,128 @@ export function ChatContainer() {
 
     setMessages((prev) => [...prev, userMessage]);
     setIsLoading(true);
+    setStreamingMessage('');
+
+    // Create new AbortController for this request
+    abortControllerRef.current = new AbortController();
 
     try {
-      // TODO: Implement actual API call
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: content }),
+        body: JSON.stringify({
+          messages: [...messages, userMessage].map((msg) => ({
+            role: msg.role,
+            content: msg.content,
+          })),
+          model: selectedModel,
+          stream: true,
+        }),
+        signal: abortControllerRef.current.signal,
       });
 
-      if (!response.ok) throw new Error('Failed to send message');
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(error || 'Failed to send message');
+      }
 
-      const data = await response.json();
-
+      // Create assistant message placeholder
       const assistantMessage: Message = {
         id: generateId(),
         conversationId: '1',
         role: 'assistant',
-        content: data.response,
+        content: '',
         createdAt: new Date(),
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
+
+      // Handle streaming response
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+
+      if (reader) {
+        let accumulatedContent = '';
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value);
+          const lines = chunk.split('\n');
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6);
+              if (data === '[DONE]') continue;
+
+              try {
+                const parsed = JSON.parse(data);
+                if (parsed.content) {
+                  accumulatedContent += parsed.content;
+                  setStreamingMessage(accumulatedContent);
+
+                  // Update the assistant message
+                  setMessages((prev) => {
+                    const newMessages = [...prev];
+                    const lastMessage = newMessages[newMessages.length - 1];
+                    if (lastMessage.role === 'assistant') {
+                      lastMessage.content = accumulatedContent;
+                    }
+                    return newMessages;
+                  });
+                }
+              } catch {
+                // Continue on parse error
+              }
+            }
+          }
+        }
+      }
     } catch (error) {
-      console.error('Error sending message:', error);
-      // TODO: Show error toast
+      if (error.name === 'AbortError') {
+        console.log('Request aborted');
+      } else {
+        console.error('Error sending message:', error);
+        // Show error message
+        const errorMessage: Message = {
+          id: generateId(),
+          conversationId: '1',
+          role: 'assistant',
+          content: `Error: ${error.message}`,
+          createdAt: new Date(),
+        };
+        setMessages((prev) => [...prev, errorMessage]);
+      }
     } finally {
       setIsLoading(false);
+      setStreamingMessage('');
+      abortControllerRef.current = null;
+    }
+  };
+
+  const handleStopGeneration = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
     }
   };
 
   return (
     <div className="flex h-full flex-col bg-white dark:bg-gray-900">
+      {/* Header with Model Selector */}
+      <div className="border-b border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-800">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <h1 className="text-lg font-semibold text-gray-900 dark:text-white">Chat</h1>
+            <ModelSelector
+              selectedModel={selectedModel}
+              onModelChange={setSelectedModel}
+              className="w-64"
+            />
+          </div>
+        </div>
+      </div>
+
       {/* Messages */}
       <div className="flex-1 overflow-y-auto">
         {messages.length === 0 ? (
@@ -84,7 +178,11 @@ export function ChatContainer() {
       </div>
 
       {/* Input */}
-      <MessageInput onSendMessage={handleSendMessage} isLoading={isLoading} />
+      <MessageInput
+        onSendMessage={handleSendMessage}
+        isLoading={isLoading}
+        onStop={handleStopGeneration}
+      />
     </div>
   );
 }

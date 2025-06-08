@@ -1,14 +1,15 @@
 'use client';
 
 import { useState, useRef, KeyboardEvent } from 'react';
-import { Send, Paperclip, Loader2 } from 'lucide-react';
+import { Send, Paperclip, Square } from 'lucide-react';
 
 interface MessageInputProps {
   onSendMessage: (message: string) => void;
   isLoading: boolean;
+  onStop?: () => void;
 }
 
-export function MessageInput({ onSendMessage, isLoading }: MessageInputProps) {
+export function MessageInput({ onSendMessage, isLoading, onStop }: MessageInputProps) {
   const [message, setMessage] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -54,12 +55,12 @@ export function MessageInput({ onSendMessage, isLoading }: MessageInputProps) {
             />
 
             <button
-              onClick={handleSubmit}
-              disabled={!message.trim() || isLoading}
+              onClick={isLoading ? onStop : handleSubmit}
+              disabled={!isLoading && !message.trim()}
               className="absolute right-2 bottom-2 rounded-lg p-2 text-blue-600 transition-colors hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50 dark:text-blue-400 dark:hover:bg-blue-900/20"
-              aria-label="Send message"
+              aria-label={isLoading ? 'Stop generation' : 'Send message'}
             >
-              {isLoading ? <Loader2 size={20} className="animate-spin" /> : <Send size={20} />}
+              {isLoading ? <Square size={20} className="fill-current" /> : <Send size={20} />}
             </button>
           </div>
         </div>
