@@ -60,9 +60,20 @@ export async function POST(req: NextRequest) {
     console.log('Getting provider instance...');
     const provider = AIProviderFactory.getProvider(modelInfo.provider);
     console.log('Provider retrieved successfully');
+    console.log(`Provider type: ${provider.name}`);
+    console.log(`Available models for provider: ${provider.models.map((m) => m.id).join(', ')}`);
 
     // Generate response
     console.log('Calling chatCompletion...');
+    console.log('Request parameters:', {
+      model,
+      messagesCount: messages.length,
+      temperature,
+      maxTokens,
+      stream,
+      userId,
+    });
+
     const response = await provider.chatCompletion({
       model,
       messages,
@@ -90,12 +101,23 @@ export async function POST(req: NextRequest) {
     }
   } catch (error) {
     console.error('Chat API Error:', error);
+    console.error('Error type:', error?.constructor?.name);
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack');
 
     const errorMessage = error instanceof Error ? error.message : 'An error occurred';
 
     // Handle specific error types
     if (errorMessage.includes('not initialized')) {
       return new Response(errorMessage, { status: 503 });
+    }
+
+    // Log more details about the error
+    if (errorMessage.includes('API error')) {
+      console.error('API error details:', {
+        message: errorMessage,
+        provider: req.headers.get('x-provider'),
+        model: req.headers.get('x-model'),
+      });
     }
 
     return NextResponse.json({ error: errorMessage }, { status: 500 });

@@ -23,11 +23,21 @@ export class AnthropicProvider implements ChatProvider {
   async chatCompletion(options: ChatCompletionOptions): Promise<StreamResponse | string> {
     const { model, messages, temperature = 0.7, maxTokens = 4096, topP, stream = true } = options;
 
+    console.log(`[Anthropic] Starting chat completion with model: ${model}`);
+    console.log(
+      `[Anthropic] Options: temperature=${temperature}, maxTokens=${maxTokens}, stream=${stream}`
+    );
+    console.log(`[Anthropic] Messages count: ${messages.length}`);
+
     const controller = new AbortController();
 
     // Extract system message if present
     const systemMessage = messages.find((msg) => msg.role === 'system');
     const nonSystemMessages = messages.filter((msg) => msg.role !== 'system');
+
+    if (systemMessage) {
+      console.log('[Anthropic] System message found, will be added to request body');
+    }
 
     const body: any = {
       model,
@@ -43,7 +53,10 @@ export class AnthropicProvider implements ChatProvider {
       body.system = systemMessage.content;
     }
 
+    console.log('[Anthropic] Request body:', JSON.stringify(body, null, 2));
+
     try {
+      console.log('[Anthropic] Sending request to Anthropic API...');
       const response = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: {
@@ -55,34 +68,44 @@ export class AnthropicProvider implements ChatProvider {
         signal: controller.signal,
       });
 
+      console.log(`[Anthropic] Response status: ${response.status}`);
+
       if (!response.ok) {
         const error = await response.text();
+        console.error(`[Anthropic] API error response: ${error}`);
         throw new Error(`Anthropic API error: ${response.status} - ${error}`);
       }
 
       if (stream) {
+        console.log('[Anthropic] Creating SSE stream...');
         const sseStream = createSSEStream(response, (data) => {
           try {
             const parsed = JSON.parse(data);
+            console.log(`[Anthropic] SSE event type: ${parsed.type}`);
             if (parsed.type === 'content_block_delta' && parsed.delta?.text) {
+              console.log(`[Anthropic] Streaming chunk: ${parsed.delta.text.substring(0, 50)}...`);
               return parsed.delta.text;
             }
             return null;
-          } catch {
+          } catch (e) {
+            console.error('[Anthropic] Error parsing SSE data:', data, e);
             return null;
           }
         });
 
+        console.log('[Anthropic] Stream created successfully');
         return {
           stream: sseStream,
           controller,
         };
       } else {
         const data = await response.json();
+        console.log('[Anthropic] Non-streaming response received:', JSON.stringify(data, null, 2));
         return data.content[0].text;
       }
     } catch (error) {
-      console.error('Anthropic API Error:', error);
+      console.error('[Anthropic] Error in chatCompletion:', error);
+      console.error('[Anthropic] Error stack:', error instanceof Error ? error.stack : 'No stack');
       throw new Error(
         `Anthropic API Error: ${error instanceof Error ? error.message : 'Unknown error'}`
       );

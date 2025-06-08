@@ -23,6 +23,12 @@ export class OpenAIProvider implements ChatProvider {
   async chatCompletion(options: ChatCompletionOptions): Promise<StreamResponse | string> {
     const { model, messages, temperature = 0.7, maxTokens, topP, stream = true } = options;
 
+    console.log(`[OpenAI] Starting chat completion with model: ${model}`);
+    console.log(
+      `[OpenAI] Options: temperature=${temperature}, maxTokens=${maxTokens}, stream=${stream}`
+    );
+    console.log(`[OpenAI] Messages count: ${messages.length}`);
+
     const controller = new AbortController();
     const body = {
       model,
@@ -33,7 +39,10 @@ export class OpenAIProvider implements ChatProvider {
       stream,
     };
 
+    console.log('[OpenAI] Request body:', JSON.stringify(body, null, 2));
+
     try {
+      console.log('[OpenAI] Sending request to OpenAI API...');
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -44,32 +53,43 @@ export class OpenAIProvider implements ChatProvider {
         signal: controller.signal,
       });
 
+      console.log(`[OpenAI] Response status: ${response.status}`);
+
       if (!response.ok) {
         const error = await response.text();
+        console.error(`[OpenAI] API error response: ${error}`);
         throw new Error(`OpenAI API error: ${response.status} - ${error}`);
       }
 
       if (stream) {
+        console.log('[OpenAI] Creating SSE stream...');
         const sseStream = createSSEStream(response, (data) => {
           try {
             const parsed = JSON.parse(data);
             const content = parsed.choices?.[0]?.delta?.content;
+            if (content) {
+              console.log(`[OpenAI] Streaming chunk: ${content.substring(0, 50)}...`);
+            }
             return content || null;
-          } catch {
+          } catch (e) {
+            console.error('[OpenAI] Error parsing SSE data:', data, e);
             return null;
           }
         });
 
+        console.log('[OpenAI] Stream created successfully');
         return {
           stream: sseStream,
           controller,
         };
       } else {
         const data = await response.json();
+        console.log('[OpenAI] Non-streaming response received:', JSON.stringify(data, null, 2));
         return data.choices[0].message.content;
       }
     } catch (error) {
-      console.error('OpenAI API Error:', error);
+      console.error('[OpenAI] Error in chatCompletion:', error);
+      console.error('[OpenAI] Error stack:', error instanceof Error ? error.stack : 'No stack');
       throw new Error(
         `OpenAI API Error: ${error instanceof Error ? error.message : 'Unknown error'}`
       );
