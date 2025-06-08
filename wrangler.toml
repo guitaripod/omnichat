@@ -1,17 +1,17 @@
 name = "omnichat"
 compatibility_date = "2024-09-23"
-compatibility_flags = ["nodejs_compat"]
+compatibility_flags = ["nodejs_compat", "streams_enable_constructors", "transformstream_enable_standard_constructor"]
 pages_build_output_dir = ".vercel/output/static"
 
 # Production environment
 [env.production]
 compatibility_date = "2024-09-23"
-compatibility_flags = ["nodejs_compat"]
+compatibility_flags = ["nodejs_compat", "streams_enable_constructors", "transformstream_enable_standard_constructor"]
 
 # Preview environment
 [env.preview]
 compatibility_date = "2024-09-23"
-compatibility_flags = ["nodejs_compat"]
+compatibility_flags = ["nodejs_compat", "streams_enable_constructors", "transformstream_enable_standard_constructor"]
 
 # D1 Database Configuration
 [[d1_databases]]

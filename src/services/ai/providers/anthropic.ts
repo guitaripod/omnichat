@@ -1,11 +1,12 @@
 import { createAnthropic } from '@ai-sdk/anthropic';
-import { streamText, generateText } from 'ai';
+import { streamText, generateText, type CoreMessage } from 'ai';
 import {
   ChatProvider,
   ChatCompletionOptions,
   StreamResponse,
   AIProvider,
   AI_MODELS,
+  ChatMessage,
 } from '../types';
 
 export class AnthropicProvider implements ChatProvider {
@@ -17,7 +18,10 @@ export class AnthropicProvider implements ChatProvider {
     if (!apiKey) {
       throw new Error('Anthropic API key is required');
     }
-    this.anthropic = createAnthropic({ apiKey });
+    this.anthropic = createAnthropic({
+      apiKey,
+      fetch: globalThis.fetch?.bind(globalThis),
+    });
   }
 
   async chatCompletion(options: ChatCompletionOptions): Promise<StreamResponse | string> {
@@ -27,11 +31,7 @@ export class AnthropicProvider implements ChatProvider {
       if (stream) {
         const response = await streamText({
           model: this.anthropic(model),
-          messages: messages.map((msg) => ({
-            role: msg.role,
-            content: msg.content,
-            ...(msg.images && { images: msg.images }),
-          })),
+          messages: this.mapMessages(messages),
           temperature,
           maxTokens,
           topP,
@@ -45,11 +45,7 @@ export class AnthropicProvider implements ChatProvider {
       } else {
         const response = await generateText({
           model: this.anthropic(model),
-          messages: messages.map((msg) => ({
-            role: msg.role,
-            content: msg.content,
-            ...(msg.images && { images: msg.images }),
-          })),
+          messages: this.mapMessages(messages),
           temperature,
           maxTokens,
           topP,
@@ -59,7 +55,9 @@ export class AnthropicProvider implements ChatProvider {
       }
     } catch (error) {
       console.error('Anthropic API Error:', error);
-      throw new Error(`Anthropic API Error: ${error.message || 'Unknown error'}`);
+      throw new Error(
+        `Anthropic API Error: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 
@@ -76,5 +74,37 @@ export class AnthropicProvider implements ChatProvider {
       console.error('Anthropic API key validation failed:', error);
       return false;
     }
+  }
+
+  private mapMessages(messages: ChatMessage[]): CoreMessage[] {
+    return messages.map((msg) => {
+      if (msg.role === 'tool') {
+        // Tool messages are not supported in basic chat, skip them
+        return {
+          role: 'assistant' as const,
+          content: msg.content,
+        };
+      }
+
+      // Handle images if present
+      if (msg.images && msg.images.length > 0 && msg.role === 'user') {
+        return {
+          role: msg.role,
+          content: [
+            { type: 'text' as const, text: msg.content },
+            ...msg.images.map((image) => ({
+              type: 'image' as const,
+              image: image,
+            })),
+          ],
+        };
+      }
+
+      // Simple text message
+      return {
+        role: msg.role as 'system' | 'user' | 'assistant',
+        content: msg.content,
+      };
+    });
   }
 }

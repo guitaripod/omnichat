@@ -10,7 +10,7 @@ import { generateId } from '@/utils';
 export function ChatContainer() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedModel, setSelectedModel] = useState('gpt-4o-mini');
+  const [selectedModel, setSelectedModel] = useState('gpt-4o');
   const [, setStreamingMessage] = useState<string>('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -113,7 +113,7 @@ export function ChatContainer() {
         }
       }
     } catch (error) {
-      if (error.name === 'AbortError') {
+      if (error instanceof Error && error.name === 'AbortError') {
         console.log('Request aborted');
       } else {
         console.error('Error sending message:', error);
@@ -122,7 +122,7 @@ export function ChatContainer() {
           id: generateId(),
           conversationId: '1',
           role: 'assistant',
-          content: `Error: ${error.message}`,
+          content: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
           createdAt: new Date(),
         };
         setMessages((prev) => [...prev, errorMessage]);

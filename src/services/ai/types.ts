@@ -53,6 +53,16 @@ export interface AIServiceConfig {
 export const AI_MODELS: Record<AIProvider, AIModel[]> = {
   openai: [
     {
+      id: 'o3-mini',
+      name: 'O3 Mini',
+      provider: 'openai',
+      contextWindow: 128000,
+      maxOutput: 65536,
+      supportsVision: true,
+      supportsTools: true,
+      description: 'Latest reasoning model (Jan 2025)',
+    },
+    {
       id: 'gpt-4o',
       name: 'GPT-4o',
       provider: 'openai',
@@ -63,6 +73,16 @@ export const AI_MODELS: Record<AIProvider, AIModel[]> = {
       description: 'Most capable GPT-4 model with vision support',
     },
     {
+      id: 'gpt-4o-audio-preview',
+      name: 'GPT-4o Audio',
+      provider: 'openai',
+      contextWindow: 128000,
+      maxOutput: 16384,
+      supportsVision: true,
+      supportsTools: true,
+      description: 'GPT-4o with audio capabilities',
+    },
+    {
       id: 'gpt-4o-mini',
       name: 'GPT-4o Mini',
       provider: 'openai',
@@ -71,6 +91,16 @@ export const AI_MODELS: Record<AIProvider, AIModel[]> = {
       supportsVision: true,
       supportsTools: true,
       description: 'Smaller, faster, cheaper GPT-4 model',
+    },
+    {
+      id: 'gpt-4-turbo',
+      name: 'GPT-4 Turbo',
+      provider: 'openai',
+      contextWindow: 128000,
+      maxOutput: 4096,
+      supportsVision: true,
+      supportsTools: true,
+      description: 'Previous generation turbo model',
     },
     {
       id: 'gpt-3.5-turbo',
@@ -113,6 +143,16 @@ export const AI_MODELS: Record<AIProvider, AIModel[]> = {
       supportsTools: true,
       description: 'Powerful model for complex tasks',
     },
+    {
+      id: 'claude-3-haiku-20240307',
+      name: 'Claude 3 Haiku',
+      provider: 'anthropic',
+      contextWindow: 200000,
+      maxOutput: 4096,
+      supportsVision: true,
+      supportsTools: true,
+      description: 'Fastest Claude model',
+    },
   ],
   google: [
     {
@@ -124,6 +164,26 @@ export const AI_MODELS: Record<AIProvider, AIModel[]> = {
       supportsVision: true,
       supportsTools: true,
       description: 'Latest Gemini model with image generation',
+    },
+    {
+      id: 'gemini-2.0-flash-thinking-exp',
+      name: 'Gemini 2.0 Flash Thinking',
+      provider: 'google',
+      contextWindow: 32767,
+      maxOutput: 8192,
+      supportsVision: true,
+      supportsTools: true,
+      description: 'Advanced reasoning with thinking process',
+    },
+    {
+      id: 'gemini-exp-1206',
+      name: 'Gemini Experimental',
+      provider: 'google',
+      contextWindow: 2097152,
+      maxOutput: 8192,
+      supportsVision: true,
+      supportsTools: true,
+      description: 'Latest experimental Gemini model',
     },
     {
       id: 'gemini-1.5-pro',
@@ -144,6 +204,16 @@ export const AI_MODELS: Record<AIProvider, AIModel[]> = {
       supportsVision: true,
       supportsTools: true,
       description: 'Fast and versatile',
+    },
+    {
+      id: 'gemini-1.5-flash-8b',
+      name: 'Gemini 1.5 Flash 8B',
+      provider: 'google',
+      contextWindow: 1048576,
+      maxOutput: 8192,
+      supportsVision: true,
+      supportsTools: true,
+      description: 'Smallest and fastest Gemini model',
     },
   ],
 };

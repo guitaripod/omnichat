@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { ChevronDown, Sparkles, Brain, Zap } from 'lucide-react';
 import { cn } from '@/utils';
-import { AIProvider, AIModel, AIProviderFactory } from '@/services/ai';
+import { AIProvider, AIModel, AI_MODELS } from '@/services/ai';
 
 interface ModelSelectorProps {
   selectedModel: string;
@@ -29,12 +29,12 @@ export function ModelSelector({ selectedModel, onModelChange, className }: Model
   const [selectedModelInfo, setSelectedModelInfo] = useState<AIModel | undefined>();
 
   useEffect(() => {
-    // Get available models from the factory
-    const models = AIProviderFactory.getAllModels();
-    setAvailableModels(models);
+    // Get all models from AI_MODELS constant
+    const allModels = Object.values(AI_MODELS).flat();
+    setAvailableModels(allModels);
 
     // Set selected model info
-    const modelInfo = AIProviderFactory.getModelById(selectedModel);
+    const modelInfo = allModels.find((model) => model.id === selectedModel);
     setSelectedModelInfo(modelInfo);
   }, [selectedModel]);
 
