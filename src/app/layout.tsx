@@ -3,6 +3,8 @@ import { Geist, Geist_Mono } from 'next/font/google';
 import { ClerkProvider } from '@/components/providers/clerk-provider';
 import './globals.css';
 
+export const runtime = 'edge';
+
 const geistSans = Geist({
   variable: '--font-geist-sans',
   subsets: ['latin'],
