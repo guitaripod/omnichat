@@ -29,6 +29,13 @@ const providerBgColors: Record<AIProvider, string> = {
   google: 'bg-blue-50 dark:bg-blue-900/10',
 };
 
+const formatContextSize = (tokens: number): string => {
+  if (tokens >= 1000000) {
+    return `${(tokens / 1000000).toFixed(1)}M`;
+  }
+  return `${Math.round(tokens / 1000)}k`;
+};
+
 export function ModelSelector({ selectedModel, onModelChange, className }: ModelSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [availableModels, setAvailableModels] = useState<AIModel[]>([]);
@@ -97,15 +104,22 @@ export function ModelSelector({ selectedModel, onModelChange, className }: Model
               <div key={provider}>
                 <div
                   className={cn(
-                    'sticky top-0 flex items-center gap-2 border-b border-gray-200 px-3 py-1.5 backdrop-blur-sm',
-                    'dark:border-gray-700',
-                    providerBgColors[provider as AIProvider]
+                    'sticky top-0 z-10 flex items-center gap-2 border-b px-4 py-2',
+                    'bg-gray-50/95 backdrop-blur-sm dark:bg-gray-900/95',
+                    'border-gray-200 dark:border-gray-700'
                   )}
                 >
-                  <span className={providerColors[provider as AIProvider]}>
-                    {providerIcons[provider as AIProvider]}
+                  <span
+                    className={cn(
+                      'flex h-5 w-5 items-center justify-center rounded',
+                      providerBgColors[provider as AIProvider]
+                    )}
+                  >
+                    <span className={providerColors[provider as AIProvider]}>
+                      {providerIcons[provider as AIProvider]}
+                    </span>
                   </span>
-                  <span className="text-xs font-semibold tracking-wider text-gray-700 uppercase dark:text-gray-300">
+                  <span className="text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-400">
                     {provider}
                   </span>
                 </div>
@@ -117,17 +131,23 @@ export function ModelSelector({ selectedModel, onModelChange, className }: Model
                       setIsOpen(false);
                     }}
                     className={cn(
-                      'group flex w-full items-center justify-between px-3 py-2 text-left',
-                      'hover:bg-gray-50 dark:hover:bg-gray-700/50',
-                      'transition-all duration-150',
+                      'group relative flex w-full items-start gap-3 px-4 py-3 text-left',
+                      'hover:bg-gray-50 dark:hover:bg-gray-700/30',
+                      'transition-colors duration-150',
                       selectedModel === model.id && 'bg-blue-50 dark:bg-blue-900/20'
                     )}
                   >
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
+                    {/* Selection indicator */}
+                    {selectedModel === model.id && (
+                      <div className="absolute top-0 left-0 h-full w-1 bg-blue-500" />
+                    )}
+
+                    {/* Model info */}
+                    <div className="flex-1 space-y-1">
+                      <div className="flex items-baseline gap-2">
                         <span
                           className={cn(
-                            'text-sm font-medium',
+                            'font-medium',
                             selectedModel === model.id
                               ? 'text-blue-600 dark:text-blue-400'
                               : 'text-gray-900 dark:text-white'
@@ -135,37 +155,41 @@ export function ModelSelector({ selectedModel, onModelChange, className }: Model
                         >
                           {model.name}
                         </span>
-                        <span className="text-xs text-gray-500 dark:text-gray-400">{model.id}</span>
-                      </div>
-                      {model.description && (
-                        <span className="line-clamp-1 text-xs text-gray-600 dark:text-gray-400">
-                          {model.description}
+                        {/* Context and output inline */}
+                        <span className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-500">
+                          <span className="flex items-center gap-1">
+                            <span className="font-mono">
+                              {formatContextSize(model.contextWindow)}
+                            </span>
+                            <span className="text-gray-400">context</span>
+                          </span>
+                          <span className="text-gray-300 dark:text-gray-600">•</span>
+                          <span className="flex items-center gap-1">
+                            <span className="font-mono">{formatContextSize(model.maxOutput)}</span>
+                            <span className="text-gray-400">output</span>
+                          </span>
                         </span>
+                      </div>
+
+                      {model.description && (
+                        <p className="text-xs text-gray-600 dark:text-gray-400">
+                          {model.description}
+                        </p>
                       )}
                     </div>
-                    <div className="ml-4 flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
-                      <div className="flex flex-col items-end">
-                        <span className="font-mono">
-                          {(model.contextWindow / 1000).toFixed(0)}k
+
+                    {/* Features */}
+                    <div className="flex items-center gap-1.5 pt-0.5">
+                      {model.supportsVision && (
+                        <span className="rounded-md bg-purple-100 px-2 py-0.5 text-[10px] font-medium text-purple-700 dark:bg-purple-900/30 dark:text-purple-300">
+                          Vision
                         </span>
-                        <span className="text-[10px] text-gray-400">context</span>
-                      </div>
-                      <div className="flex flex-col items-end">
-                        <span className="font-mono">{(model.maxOutput / 1000).toFixed(0)}k</span>
-                        <span className="text-[10px] text-gray-400">output</span>
-                      </div>
-                      <div className="flex gap-1">
-                        {model.supportsVision && (
-                          <span className="rounded bg-purple-100 px-1.5 py-0.5 text-[10px] font-medium text-purple-700 dark:bg-purple-900/30 dark:text-purple-300">
-                            Vision
-                          </span>
-                        )}
-                        {model.supportsTools && (
-                          <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
-                            Tools
-                          </span>
-                        )}
-                      </div>
+                      )}
+                      {model.supportsTools && (
+                        <span className="rounded-md bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
+                          Tools
+                        </span>
+                      )}
                     </div>
                   </button>
                 ))}
