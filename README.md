@@ -1,36 +1,117 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# OmniChat
+
+AI chat application featuring multi-LLM support, local Ollama integration, and advanced chat features.
+
+## Features
+
+### Core Features
+
+- **Multi-LLM Support**: Chat with OpenAI, Anthropic, Google Gemini, and local Ollama models
+- **Real-time Streaming**: Fast, responsive AI conversations with streaming responses
+- **Persistent Chat History**: Save and search through your conversation history
+- **Responsive Design**: Works seamlessly across desktop and mobile devices
+- **Dark/Light Mode**: Toggle between themes for comfortable usage
+
+### Advanced Features
+
+- **File Attachments**: Upload and discuss images, PDFs, and documents
+- **Code Syntax Highlighting**: Beautiful code blocks with language detection
+- **Chat Branching**: Explore different conversation paths
+- **Voice Input/Output**: Speak to AI and hear responses back
+- **Resumable Streams**: Continue interrupted conversations seamlessly
+- **Export Conversations**: Download chats as JSON or Markdown
+
+## Tech Stack
+
+- **Frontend**: Next.js 14+ with App Router and TypeScript
+- **Backend**: Cloudflare Workers for edge functions
+- **Database**: Cloudflare D1 (SQLite) with Drizzle ORM
+- **Storage**: Cloudflare R2 for file attachments
+- **Authentication**: Clerk for user management
+- **Payments**: Stripe integration for subscriptions
+- **Deployment**: Cloudflare Pages
+- **UI**: Tailwind CSS with shadcn/ui components
+- **AI Integration**: Vercel AI SDK for unified LLM interface & Ollama
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 18+
+- Cloudflare account (for deployment)
+- API keys for AI providers (OpenAI, Anthropic, etc.)
+
+### Development
 
 ```bash
+# Install dependencies
+npm install
+
+# Start development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+
+# Run type checking
+npm run typecheck
+
+# Run linting
+npm run lint
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Local Development with Ollama
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. Install Ollama locally
+2. Pull a model: `ollama pull llama3.1`
+3. Start Ollama server: `ollama serve`
+4. The app will automatically detect local Ollama models
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Deployment
 
-## Learn More
+```bash
+# Deploy to Cloudflare Pages
+wrangler deploy
 
-To learn more about Next.js, take a look at the following resources:
+# Set up environment variables
+wrangler secret put OPENAI_API_KEY
+wrangler secret put ANTHROPIC_API_KEY
+wrangler secret put CLERK_SECRET_KEY
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Environment Variables
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Set these using `wrangler secret put <KEY>`:
 
-## Deploy on Vercel
+- `OPENAI_API_KEY` - OpenAI API key
+- `ANTHROPIC_API_KEY` - Anthropic API key
+- `GOOGLE_AI_API_KEY` - Google AI API key
+- `CLERK_SECRET_KEY` - Clerk authentication
+- `STRIPE_SECRET_KEY` - Stripe payments
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Project Structure
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+src/
+├── app/                 # Next.js App Router pages
+├── components/          # React components
+│   ├── chat/           # Chat-specific components
+│   ├── layout/         # Layout components
+│   └── ui/             # Reusable UI components
+├── hooks/              # Custom React hooks
+├── lib/                # Utilities and configurations
+├── services/           # External service integrations
+├── store/              # State management
+└── types/              # TypeScript type definitions
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/amazing-feature`
+3. Make your changes and test them
+4. Run `npm run typecheck` and `npm run lint`
+5. Commit your changes: `git commit -m 'Add amazing feature'`
+6. Push to the branch: `git push origin feature/amazing-feature`
+7. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
