@@ -34,7 +34,9 @@ export function ChatContainer() {
     const savedKeys = localStorage.getItem('apiKeys');
     if (savedKeys) {
       const keys = JSON.parse(savedKeys);
-      setOllamaBaseUrl(keys.ollama);
+      setOllamaBaseUrl(keys.ollama || 'http://localhost:11434');
+    } else {
+      setOllamaBaseUrl('http://localhost:11434');
     }
   }, []);
 
@@ -51,15 +53,13 @@ export function ChatContainer() {
   // Initialize AI providers from localStorage
   useEffect(() => {
     const savedKeys = localStorage.getItem('apiKeys');
-    if (savedKeys) {
-      const keys = JSON.parse(savedKeys);
-      AIProviderFactory.initialize({
-        openaiApiKey: keys.openai,
-        anthropicApiKey: keys.anthropic,
-        googleApiKey: keys.google,
-        ollamaBaseUrl: keys.ollama,
-      });
-    }
+    const keys = savedKeys ? JSON.parse(savedKeys) : {};
+    AIProviderFactory.initialize({
+      openaiApiKey: keys.openai,
+      anthropicApiKey: keys.anthropic,
+      googleApiKey: keys.google,
+      ollamaBaseUrl: keys.ollama || 'http://localhost:11434',
+    });
   }, []);
 
   // Create conversation if none exists
@@ -109,9 +109,9 @@ export function ChatContainer() {
       let response: Response;
       let reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
 
-      // Get fresh Ollama URL from localStorage
+      // Get fresh Ollama URL from localStorage with default
       const savedKeys = localStorage.getItem('apiKeys');
-      const currentOllamaUrl = savedKeys ? JSON.parse(savedKeys).ollama : undefined;
+      const currentOllamaUrl = savedKeys ? JSON.parse(savedKeys).ollama : 'http://localhost:11434';
 
       // Check if this is an Ollama model and if Ollama is available locally
       const isOllamaModel = selectedModel.startsWith('ollama/');
@@ -255,9 +255,9 @@ export function ChatContainer() {
       let response: Response;
       let reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
 
-      // Get fresh Ollama URL from localStorage
+      // Get fresh Ollama URL from localStorage with default
       const savedKeys = localStorage.getItem('apiKeys');
-      const currentOllamaUrl = savedKeys ? JSON.parse(savedKeys).ollama : undefined;
+      const currentOllamaUrl = savedKeys ? JSON.parse(savedKeys).ollama : 'http://localhost:11434';
 
       // Check if this is an Ollama model and if Ollama is available locally
       const isOllamaModel = selectedModel.startsWith('ollama/');
