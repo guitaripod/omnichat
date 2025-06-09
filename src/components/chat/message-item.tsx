@@ -5,6 +5,7 @@ import { cn } from '@/utils';
 import { AI_MODELS } from '@/services/ai';
 import { MarkdownRenderer } from './markdown-renderer';
 import { StreamingIndicator } from './streaming-indicator';
+import { AttachmentPreview } from './attachment-preview';
 
 interface MessageItemProps {
   message: Message;
@@ -174,6 +175,15 @@ export function MessageItem({
                 </>
               )}
             </div>
+
+            {/* Attachments */}
+            {message.attachments && message.attachments.length > 0 && (
+              <div className="mt-3 space-y-2">
+                {message.attachments.map((attachment) => (
+                  <AttachmentPreview key={attachment.id} attachment={attachment} />
+                ))}
+              </div>
+            )}
 
             {/* Message Actions */}
             {!isStreaming && message.content && (
