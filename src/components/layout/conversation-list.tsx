@@ -1,9 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { Plus, MessageSquare, Trash2, Edit2, Check, X, MoreVertical } from 'lucide-react';
+import { Plus, MessageSquare, Trash2, Edit2, Check, X, MoreVertical, Download } from 'lucide-react';
 import { useConversationStore } from '@/store/conversations';
 import { cn } from '@/utils';
+import { ExportDialog } from '@/components/chat/export-dialog';
 
 export function ConversationList() {
   const {
@@ -18,6 +19,7 @@ export function ConversationList() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState('');
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
+  const [exportDialogId, setExportDialogId] = useState<string | null>(null);
 
   const handleNewChat = () => {
     createConversation();
@@ -141,6 +143,16 @@ export function ConversationList() {
                             Rename
                           </button>
                           <button
+                            onClick={() => {
+                              setExportDialogId(conversation.id);
+                              setMenuOpenId(null);
+                            }}
+                            className="flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+                          >
+                            <Download className="h-3 w-3" />
+                            Export
+                          </button>
+                          <button
                             onClick={() => handleDelete(conversation.id)}
                             className="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/10"
                           >
@@ -157,6 +169,15 @@ export function ConversationList() {
           </div>
         )}
       </div>
+
+      {/* Export Dialog */}
+      {exportDialogId && (
+        <ExportDialog
+          isOpen={true}
+          onClose={() => setExportDialogId(null)}
+          conversationId={exportDialogId}
+        />
+      )}
     </div>
   );
 }

@@ -1,11 +1,18 @@
 'use client';
 
-import { Settings2, Moon, Sun } from 'lucide-react';
+import { Settings2, Moon, Sun, Download } from 'lucide-react';
 import { useTheme } from '@/hooks/use-theme';
 import { SearchBar } from './search-bar';
+import { useState } from 'react';
+import { useConversationStore } from '@/store/conversations';
+import { ExportDialog } from '@/components/chat/export-dialog';
 
 export function Header() {
   const { theme, toggleTheme, mounted } = useTheme();
+  const [showExportDialog, setShowExportDialog] = useState(false);
+  const { currentConversationId, messages } = useConversationStore();
+
+  const hasMessages = currentConversationId && messages[currentConversationId]?.length > 0;
 
   if (!mounted) return null;
 
@@ -17,6 +24,17 @@ export function Header() {
       </div>
 
       <div className="flex items-center gap-2">
+        {hasMessages && (
+          <button
+            onClick={() => setShowExportDialog(true)}
+            className="rounded-lg p-2 text-gray-600 transition-colors hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+            aria-label="Export conversation"
+            title="Export conversation"
+          >
+            <Download size={20} />
+          </button>
+        )}
+
         <button
           onClick={toggleTheme}
           className="rounded-lg p-2 text-gray-600 transition-colors hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
@@ -32,6 +50,15 @@ export function Header() {
           <Settings2 size={20} />
         </button>
       </div>
+
+      {/* Export Dialog */}
+      {showExportDialog && currentConversationId && (
+        <ExportDialog
+          isOpen={true}
+          onClose={() => setShowExportDialog(false)}
+          conversationId={currentConversationId}
+        />
+      )}
     </header>
   );
 }
