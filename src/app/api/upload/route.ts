@@ -55,21 +55,16 @@ interface R2Objects {
   cursor?: string;
 }
 
-interface Context {
-  env: {
-    R2_STORAGE?: R2Bucket;
-  };
-}
-
-export async function POST(request: NextRequest, context: Context) {
+export async function POST(request: NextRequest) {
   try {
     const { userId } = await auth();
     if (!userId) {
       return Response.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Check R2 binding from context
-    if (!context?.env?.R2_STORAGE) {
+    // Get R2 binding from Cloudflare environment
+    const R2_STORAGE = (process.env as any).R2_STORAGE as R2Bucket | undefined;
+    if (!R2_STORAGE) {
       return Response.json({ success: false, error: 'R2 storage not configured' }, { status: 500 });
     }
 
@@ -99,7 +94,7 @@ export async function POST(request: NextRequest, context: Context) {
 
     // Upload to R2
     const arrayBuffer = await file.arrayBuffer();
-    await context.env.R2_STORAGE.put(r2Key, arrayBuffer, {
+    await R2_STORAGE.put(r2Key, arrayBuffer, {
       httpMetadata: {
         contentType: file.type,
       },
@@ -134,7 +129,7 @@ export async function POST(request: NextRequest, context: Context) {
   }
 }
 
-export async function GET(request: NextRequest, context: Context) {
+export async function GET(request: NextRequest) {
   try {
     const { userId } = await auth();
     if (!userId) {
@@ -153,12 +148,13 @@ export async function GET(request: NextRequest, context: Context) {
       return Response.json({ success: false, error: 'Access denied' }, { status: 403 });
     }
 
-    // Check R2 binding from context
-    if (!context?.env?.R2_STORAGE) {
+    // Get R2 binding from Cloudflare environment
+    const R2_STORAGE = (process.env as any).R2_STORAGE as R2Bucket | undefined;
+    if (!R2_STORAGE) {
       return Response.json({ success: false, error: 'R2 storage not configured' }, { status: 500 });
     }
 
-    const object = await context.env.R2_STORAGE.get(key);
+    const object = await R2_STORAGE.get(key);
     if (!object) {
       return Response.json({ success: false, error: 'File not found' }, { status: 404 });
     }
