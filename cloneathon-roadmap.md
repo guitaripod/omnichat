@@ -74,20 +74,20 @@
 
 ### Epic 2.2: Local Ollama Support
 
-- [ ] Research Ollama Web API integration
-- [ ] Create Ollama connection settings UI
-- [ ] Implement local model detection
-- [ ] Handle Ollama streaming responses
-- [ ] Add connection status indicators
+- [x] Research Ollama Web API integration
+- [x] Create Ollama connection settings UI
+- [x] Implement local model detection
+- [x] Handle Ollama streaming responses
+- [x] Add connection status indicators
 
 ### Epic 2.3: Chat Functionality
 
-- [ ] Create message components with markdown support
-- [ ] Implement real-time streaming UI
-- [ ] Add typing indicators
-- [ ] Build conversation management (create, delete, rename)
-- [ ] Implement message editing/deletion
-- [ ] Add copy/regenerate functionality
+- [x] Create message components with markdown support
+- [x] Implement real-time streaming UI
+- [x] Add typing indicators
+- [x] Build conversation management (create, delete, rename)
+- [x] Implement message editing/deletion
+- [x] Add copy/regenerate functionality
 
 ### Epic 2.4: Data Persistence
 
