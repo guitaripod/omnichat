@@ -68,6 +68,7 @@ export function ChatContainer() {
       conversationId: currentConversationId,
       role: 'user',
       content,
+      model: selectedModel,
       createdAt: new Date(),
     };
 
