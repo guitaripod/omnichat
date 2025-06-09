@@ -1,4 +1,5 @@
-import { User, Sparkles, Brain, Zap, Server } from 'lucide-react';
+import { User, Sparkles, Brain, Zap, Server, Copy, Check, RefreshCw } from 'lucide-react';
+import { useState } from 'react';
 import type { Message } from '@/types';
 import { cn } from '@/utils';
 import { AI_MODELS } from '@/services/ai';
@@ -8,6 +9,8 @@ import { StreamingIndicator } from './streaming-indicator';
 interface MessageItemProps {
   message: Message;
   isStreaming?: boolean;
+  onRegenerate?: () => void;
+  canRegenerate?: boolean;
 }
 
 // Provider icons and colors
@@ -53,11 +56,23 @@ function getProviderFromModel(modelId?: string) {
   return model?.provider || null;
 }
 
-export function MessageItem({ message, isStreaming = false }: MessageItemProps) {
+export function MessageItem({
+  message,
+  isStreaming = false,
+  onRegenerate,
+  canRegenerate = false,
+}: MessageItemProps) {
+  const [copied, setCopied] = useState(false);
   const isUser = message.role === 'user';
   const provider = !isUser ? getProviderFromModel(message.model) : null;
   const providerColor = provider ? providerColors[provider] : null;
   const ProviderIcon = provider ? providerIcons[provider] : null;
+
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(message.content);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   return (
     <div className={cn('flex', isUser ? 'justify-end' : 'justify-start', 'px-4 py-3')}>
@@ -159,6 +174,39 @@ export function MessageItem({ message, isStreaming = false }: MessageItemProps) 
                 </>
               )}
             </div>
+
+            {/* Message Actions */}
+            {!isStreaming && message.content && (
+              <div className="mt-3 flex items-center gap-2 opacity-0 transition-opacity group-hover:opacity-100">
+                <button
+                  onClick={handleCopy}
+                  className="flex items-center gap-1 rounded-md px-2 py-1 text-xs text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
+                  title="Copy message"
+                >
+                  {copied ? (
+                    <>
+                      <Check className="h-3 w-3" />
+                      Copied
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="h-3 w-3" />
+                      Copy
+                    </>
+                  )}
+                </button>
+                {!isUser && canRegenerate && onRegenerate && (
+                  <button
+                    onClick={onRegenerate}
+                    className="flex items-center gap-1 rounded-md px-2 py-1 text-xs text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
+                    title="Regenerate response"
+                  >
+                    <RefreshCw className="h-3 w-3" />
+                    Regenerate
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>

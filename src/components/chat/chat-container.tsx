@@ -166,6 +166,99 @@ export function ChatContainer() {
     }
   };
 
+  const handleRegenerateMessage = async (index: number) => {
+    if (!currentConversationId || isLoading) return;
+
+    // Get current messages
+    const messagesArray = getMessages(currentConversationId);
+    if (index !== messagesArray.length - 1 || messagesArray[index].role !== 'assistant') return;
+
+    // Delete the last assistant message
+    const assistantMessage = messagesArray[index];
+    const conversationStore = useConversationStore.getState();
+    conversationStore.deleteMessage(currentConversationId, assistantMessage.id);
+
+    // Get messages up to (but not including) the deleted assistant message
+    const previousMessages = messagesArray.slice(0, index);
+
+    // Regenerate response
+    setIsLoading(true);
+    setStreamingMessage('');
+    abortControllerRef.current = new AbortController();
+
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: previousMessages.map((msg) => ({
+            role: msg.role,
+            content: msg.content,
+          })),
+          model: selectedModel,
+          stream: true,
+        }),
+        signal: abortControllerRef.current.signal,
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to regenerate message');
+      }
+
+      // Create new assistant message placeholder
+      const newAssistantMessage: Message = {
+        id: generateId(),
+        conversationId: currentConversationId,
+        role: 'assistant',
+        content: '',
+        model: selectedModel,
+        createdAt: new Date(),
+      };
+
+      addMessage(currentConversationId, newAssistantMessage);
+
+      // Handle streaming response (same as in handleSendMessage)
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+
+      if (reader) {
+        let accumulatedContent = '';
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value);
+          const lines = chunk.split('\n');
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6);
+              if (data === '[DONE]') continue;
+
+              try {
+                const parsed = JSON.parse(data);
+                if (parsed.content) {
+                  accumulatedContent += parsed.content;
+                  setStreamingMessage(accumulatedContent);
+                  updateMessage(currentConversationId, newAssistantMessage.id, accumulatedContent);
+                }
+              } catch {
+                // Continue on parse error
+              }
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error regenerating message:', error);
+    } finally {
+      setIsLoading(false);
+      setStreamingMessage('');
+      abortControllerRef.current = null;
+    }
+  };
+
   return (
     <div className="flex h-full flex-col bg-white dark:bg-gray-900">
       {/* Messages */}
@@ -183,7 +276,11 @@ export function ChatContainer() {
           </div>
         ) : (
           <>
-            <MessageList messages={messages} isLoading={isLoading} />
+            <MessageList
+              messages={messages}
+              isLoading={isLoading}
+              onRegenerateMessage={handleRegenerateMessage}
+            />
             <div ref={messagesEndRef} />
           </>
         )}
