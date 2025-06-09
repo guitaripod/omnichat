@@ -1,3 +1,5 @@
+import { FileAttachment } from './attachments';
+
 export interface User {
   id: string;
   email: string;
@@ -27,7 +29,7 @@ export interface Message {
   model?: ModelType;
   createdAt: Date;
   parentId?: string | null;
-  attachments?: Attachment[];
+  attachments?: FileAttachment[];
 }
 
 export interface Attachment {

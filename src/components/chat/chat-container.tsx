@@ -9,6 +9,7 @@ import { AIProviderFactory } from '@/services/ai/provider-factory';
 import { useConversationStore } from '@/store/conversations';
 import { useOllama } from '@/hooks/use-ollama';
 import { OllamaClientProvider } from '@/services/ai/providers/ollama-client';
+import { FileAttachment } from '@/types/attachments';
 
 export function ChatContainer() {
   const { currentConversationId, createConversation, addMessage, updateMessage } =
@@ -74,7 +75,7 @@ export function ChatContainer() {
     }
   }, [currentConversationId, createConversation, selectedModel]);
 
-  const handleSendMessage = async (content: string) => {
+  const handleSendMessage = async (content: string, attachments?: FileAttachment[]) => {
     if (!currentConversationId) return;
 
     const userMessage: Message = {
@@ -84,6 +85,7 @@ export function ChatContainer() {
       content,
       model: selectedModel,
       createdAt: new Date(),
+      attachments,
     };
 
     await addMessage(currentConversationId, userMessage);
@@ -432,6 +434,7 @@ export function ChatContainer() {
         onStop={handleStopGeneration}
         selectedModel={selectedModel}
         onModelChange={setSelectedModel}
+        conversationId={currentConversationId || ''}
       />
     </div>
   );

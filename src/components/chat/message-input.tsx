@@ -2,15 +2,18 @@
 
 import { useState, useRef, KeyboardEvent, useEffect } from 'react';
 import { Send, Paperclip, Square, ChevronDown, Sparkles, Brain, Zap, Server } from 'lucide-react';
-import { cn } from '@/utils';
+import { cn } from '@/lib/utils';
 import { AIProvider, AIModel, AI_MODELS } from '@/services/ai';
+import { FileUpload, FileAttachmentDisplay } from './file-upload';
+import { FileAttachment } from '@/types/attachments';
 
 interface MessageInputProps {
-  onSendMessage: (message: string) => void;
+  onSendMessage: (message: string, attachments?: FileAttachment[]) => void;
   isLoading: boolean;
   onStop?: () => void;
   selectedModel: string;
   onModelChange: (modelId: string) => void;
+  conversationId: string;
 }
 
 const providerIcons: Record<AIProvider, React.ReactNode> = {
@@ -33,18 +36,24 @@ export function MessageInput({
   onStop,
   selectedModel,
   onModelChange,
+  conversationId,
 }: MessageInputProps) {
   const [message, setMessage] = useState('');
   const [isModelSelectorOpen, setIsModelSelectorOpen] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const [hoveredModel, setHoveredModel] = useState<string | null>(null);
+  const [attachments, setAttachments] = useState<FileAttachment[]>([]);
+  const [showFileUpload, setShowFileUpload] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const modelSelectorRef = useRef<HTMLDivElement>(null);
 
   const handleSubmit = () => {
-    if (message.trim() && !isLoading) {
-      onSendMessage(message.trim());
+    if ((message.trim() || attachments.length > 0) && !isLoading) {
+      onSendMessage(message.trim(), attachments.length > 0 ? attachments : undefined);
       setMessage('');
+      setAttachments([]);
+      setShowFileUpload(false);
       textareaRef.current?.focus();
     }
   };
@@ -368,10 +377,52 @@ export function MessageInput({
               </div>
             </div>
 
+            {/* File Upload Area */}
+            {showFileUpload && (
+              <div className="border-b border-gray-200 p-4 dark:border-gray-600">
+                <FileUpload
+                  conversationId={conversationId}
+                  messageId={`temp-${Date.now()}`}
+                  onUploadComplete={(attachment) => {
+                    setAttachments([...attachments, attachment]);
+                    setUploadError(null);
+                  }}
+                  onError={(error) => {
+                    setUploadError(error);
+                  }}
+                />
+                {uploadError && (
+                  <div className="mt-2 rounded-md bg-red-50 p-2 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-400">
+                    {uploadError}
+                  </div>
+                )}
+                {attachments.length > 0 && (
+                  <div className="mt-3 space-y-2">
+                    <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Attached files:
+                    </p>
+                    {attachments.map((attachment, index) => (
+                      <FileAttachmentDisplay
+                        key={attachment.id}
+                        attachment={attachment}
+                        onRemove={() => {
+                          setAttachments(attachments.filter((_, i) => i !== index));
+                        }}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Message Input Area */}
             <div className="flex items-end gap-2 p-3">
               <button
-                className="rounded-lg p-2 text-gray-600 transition-colors hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+                onClick={() => setShowFileUpload(!showFileUpload)}
+                className={cn(
+                  'rounded-lg p-2 text-gray-600 transition-colors hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700',
+                  showFileUpload && 'bg-gray-100 text-blue-600 dark:bg-gray-700 dark:text-blue-400'
+                )}
                 aria-label="Attach file"
               >
                 <Paperclip size={20} />
@@ -397,7 +448,7 @@ export function MessageInput({
 
               <button
                 onClick={isLoading ? onStop : handleSubmit}
-                disabled={!isLoading && !message.trim()}
+                disabled={!isLoading && !message.trim() && attachments.length === 0}
                 className={cn(
                   'rounded-lg p-2 transition-all duration-200',
                   isLoading
