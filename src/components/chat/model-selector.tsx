@@ -187,7 +187,7 @@ export function ModelSelector({ selectedModel, onModelChange, className }: Model
                         {hoveredModel === model.id && model.description && (
                           <div
                             className={cn(
-                              'absolute top-0 left-full z-[10000] ml-2 w-64 rounded-lg',
+                              'absolute bottom-full left-0 z-[10000] mb-2 w-64 rounded-lg',
                               'border bg-white p-3 shadow-lg',
                               'border-gray-200 dark:border-gray-700 dark:bg-gray-800',
                               'pointer-events-none'
