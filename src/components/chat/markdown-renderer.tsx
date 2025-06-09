@@ -63,7 +63,7 @@ function CodeBlock({ className, children, ...props }: React.HTMLAttributes<HTMLE
 
 export function MarkdownRenderer({ content }: MarkdownRendererProps) {
   return (
-    <div className="prose prose-sm dark:prose-invert max-w-none">
+    <div className="prose prose-sm dark:prose-invert prose-p:my-1 prose-p:last:mb-0 prose-pre:my-2 prose-headings:mt-3 prose-headings:mb-2 max-w-none">
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkMath]}
         rehypePlugins={[rehypeKatex, rehypeHighlight]}
