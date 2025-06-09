@@ -3,7 +3,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { MessageList } from './message-list';
 import { MessageInput } from './message-input';
-import { ModelSelector } from './model-selector';
 import type { Message } from '@/types';
 import { generateId } from '@/utils';
 
@@ -142,18 +141,9 @@ export function ChatContainer() {
 
   return (
     <div className="flex h-full flex-col bg-white dark:bg-gray-900">
-      {/* Header with Model Selector */}
+      {/* Header */}
       <div className="border-b border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-800">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <h1 className="text-lg font-semibold text-gray-900 dark:text-white">Chat</h1>
-            <ModelSelector
-              selectedModel={selectedModel}
-              onModelChange={setSelectedModel}
-              className="w-64"
-            />
-          </div>
-        </div>
+        <h1 className="text-lg font-semibold text-gray-900 dark:text-white">Chat</h1>
       </div>
 
       {/* Messages */}
@@ -182,6 +172,8 @@ export function ChatContainer() {
         onSendMessage={handleSendMessage}
         isLoading={isLoading}
         onStop={handleStopGeneration}
+        selectedModel={selectedModel}
+        onModelChange={setSelectedModel}
       />
     </div>
   );
