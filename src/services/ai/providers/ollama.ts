@@ -4,12 +4,11 @@ import {
   StreamChunk,
   ChatCompletionOptions,
   StreamResponse,
-  AI_MODELS,
 } from '../types';
 
 export class OllamaProvider implements ChatProvider {
   name = 'ollama' as const;
-  models = AI_MODELS.ollama;
+  models = []; // Models are dynamically loaded
   private baseUrl: string;
   private abortController: AbortController | null = null;
 

@@ -354,13 +354,44 @@ export function ChatContainer() {
       <div className="flex-1 overflow-y-auto">
         {messages.length === 0 ? (
           <div className="flex h-full items-center justify-center">
-            <div className="text-center">
+            <div className="max-w-md text-center">
               <h2 className="mb-2 text-2xl font-semibold text-gray-900 dark:text-white">
                 Start a new conversation
               </h2>
-              <p className="text-gray-600 dark:text-gray-400">
+              <p className="mb-6 text-gray-600 dark:text-gray-400">
                 Select a model and send your first message
               </p>
+
+              {/* Quick Start Guide */}
+              <div className="rounded-lg bg-gray-50 p-4 text-left text-sm dark:bg-gray-800">
+                <p className="mb-3 font-medium text-gray-900 dark:text-white">Quick Start:</p>
+                <div className="space-y-2 text-gray-600 dark:text-gray-400">
+                  <div className="flex items-start gap-2">
+                    <span className="text-blue-500">•</span>
+                    <span>
+                      <strong>Cloud AI:</strong> Add API keys in{' '}
+                      <a href="/profile" className="text-blue-500 underline hover:text-blue-600">
+                        Profile Settings
+                      </a>
+                    </span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="text-purple-500">•</span>
+                    <span>
+                      <strong>Local AI:</strong> Install{' '}
+                      <a
+                        href="https://ollama.com"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-purple-500 underline hover:text-purple-600"
+                      >
+                        Ollama
+                      </a>{' '}
+                      for offline models
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         ) : (

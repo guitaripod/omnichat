@@ -23,8 +23,10 @@ export function useOllama(customBaseUrl?: string): UseOllamaResult {
 
   const checkOllamaConnection = useCallback(async (): Promise<boolean> => {
     setIsChecking(true);
+    console.log('Checking Ollama connection at:', ollamaBaseUrl);
     try {
       const available = await OllamaClientProvider.isAvailable(ollamaBaseUrl);
+      console.log('Ollama available:', available);
       setIsOllamaAvailable(available);
       return available;
     } catch (error) {

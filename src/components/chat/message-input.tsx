@@ -73,12 +73,83 @@ export function MessageInput({
     };
   }, [isModelSelectorOpen]);
 
-  // Get all models and find current model info
-  const allModels = Object.values(AI_MODELS).flat();
-  const currentModel = allModels.find((model) => model.id === selectedModel);
+  // State for dynamically loaded models
+  const [availableModels, setAvailableModels] = useState<AIModel[]>([]);
+  const [ollamaBaseUrl, setOllamaBaseUrl] = useState<string>('http://localhost:11434');
+  const [isOllamaAvailable, setIsOllamaAvailable] = useState(false);
+
+  // Load Ollama URL from localStorage after mount
+  useEffect(() => {
+    const savedKeys = localStorage.getItem('apiKeys');
+    if (savedKeys) {
+      try {
+        const parsed = JSON.parse(savedKeys);
+        if (parsed.ollama) {
+          setOllamaBaseUrl(parsed.ollama);
+        }
+      } catch (error) {
+        console.error('Failed to parse saved API keys:', error);
+      }
+    }
+  }, []);
+
+  // Load static models immediately
+  useEffect(() => {
+    const staticModels = Object.entries(AI_MODELS)
+      .filter(([provider]) => provider !== 'ollama')
+      .flatMap(([_, models]) => models);
+    setAvailableModels(staticModels);
+  }, []);
+
+  // Load Ollama models when URL is available
+  useEffect(() => {
+    if (!ollamaBaseUrl) return;
+
+    const loadOllamaModels = async () => {
+      try {
+        console.log('MessageInput: Loading Ollama models from:', ollamaBaseUrl);
+        const response = await fetch(`${ollamaBaseUrl}/api/tags`);
+        if (response.ok) {
+          setIsOllamaAvailable(true);
+          const data = await response.json();
+          const ollamaModelNames = data.models?.map((m: { name: string }) => m.name) || [];
+          console.log('MessageInput: Found Ollama models:', ollamaModelNames);
+
+          // Convert to AIModel format
+          const ollamaModels: AIModel[] = ollamaModelNames.map((name: string) => ({
+            id: `ollama/${name}`,
+            name: name,
+            provider: 'ollama' as AIProvider,
+            contextWindow: 4096,
+            maxOutput: 4096,
+            supportsVision: false,
+            supportsTools: false,
+            description: `Local Ollama model: ${name}`,
+          }));
+
+          // Add Ollama models to existing models
+          setAvailableModels((prev) => {
+            const nonOllamaModels = prev.filter((m) => m.provider !== 'ollama');
+            return [...nonOllamaModels, ...ollamaModels];
+          });
+        } else {
+          setIsOllamaAvailable(false);
+        }
+      } catch (error) {
+        console.error('MessageInput: Failed to load Ollama models:', error);
+        setIsOllamaAvailable(false);
+      }
+    };
+
+    // Try to load immediately
+    loadOllamaModels();
+  }, [ollamaBaseUrl]);
+
+  // Get current model info
+  const currentModel = availableModels.find((model) => model.id === selectedModel);
 
   // Group models by provider
-  const groupedModels = allModels.reduce(
+  const groupedModels = availableModels.reduce(
     (acc, model) => {
       if (!acc[model.provider]) {
         acc[model.provider] = [];
@@ -236,6 +307,62 @@ export function MessageInput({
                         </div>
                       </div>
                     ))}
+
+                    {/* Show Ollama section if configured but no models loaded */}
+                    {!groupedModels.ollama && ollamaBaseUrl && (
+                      <div className="mb-2 last:mb-0">
+                        <div className="mb-1 flex items-center gap-2 px-2 py-1">
+                          <span className={providerColors.ollama}>{providerIcons.ollama}</span>
+                          <span className="text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
+                            ollama
+                          </span>
+                          <span className="ml-auto text-xs text-yellow-500">
+                            {isOllamaAvailable ? 'Loading models...' : 'Not connected'}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Ollama Help Text */}
+                    {!isOllamaAvailable && ollamaBaseUrl && (
+                      <div className="mx-2 mt-2 rounded-lg bg-amber-50 p-3 text-xs text-amber-800 dark:bg-amber-900/20 dark:text-amber-200">
+                        <p className="mb-1 font-medium">Ollama not connected</p>
+                        <p className="mb-2">To use local AI models:</p>
+                        <ol className="ml-3 list-decimal space-y-0.5">
+                          <li>
+                            Install Ollama from{' '}
+                            <a
+                              href="https://ollama.com"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="underline"
+                            >
+                              ollama.com
+                            </a>
+                          </li>
+                          <li>
+                            Run:{' '}
+                            <code className="rounded bg-amber-100 px-1 dark:bg-amber-800">
+                              OLLAMA_ORIGINS="*" ollama serve
+                            </code>
+                          </li>
+                          <li>
+                            Pull a model:{' '}
+                            <code className="rounded bg-amber-100 px-1 dark:bg-amber-800">
+                              ollama pull llama3.2
+                            </code>
+                          </li>
+                        </ol>
+                        <p className="mt-2">
+                          <a
+                            href="/profile"
+                            className="underline hover:text-amber-600 dark:hover:text-amber-300"
+                          >
+                            Configure in Settings →
+                          </a>
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

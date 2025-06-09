@@ -174,9 +174,46 @@ export default function ApiSettings() {
 
       {/* Ollama */}
       <div className="mb-4">
-        <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-          Ollama Base URL
-        </label>
+        <div className="mb-3">
+          <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+            Ollama (Local AI Models)
+          </label>
+          <div className="mb-4 rounded-lg bg-blue-50 p-4 text-sm text-blue-800 dark:bg-blue-900/20 dark:text-blue-200">
+            <p className="mb-2 font-medium">Quick Setup:</p>
+            <ol className="ml-4 list-decimal space-y-1 text-xs">
+              <li>
+                Install Ollama:{' '}
+                <code className="rounded bg-blue-100 px-1 dark:bg-blue-800">
+                  curl -fsSL https://ollama.com/install.sh | sh
+                </code>
+              </li>
+              <li>
+                Enable CORS:{' '}
+                <code className="rounded bg-blue-100 px-1 dark:bg-blue-800">
+                  OLLAMA_ORIGINS="*" ollama serve
+                </code>
+              </li>
+              <li>
+                Pull a model:{' '}
+                <code className="rounded bg-blue-100 px-1 dark:bg-blue-800">
+                  ollama pull llama3.2
+                </code>
+              </li>
+              <li>Configure the URL below (default: http://localhost:11434)</li>
+            </ol>
+            <p className="mt-2 text-xs">
+              <a
+                href="https://ollama.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline hover:text-blue-600 dark:hover:text-blue-300"
+              >
+                Learn more about Ollama →
+              </a>
+            </p>
+          </div>
+        </div>
+
         <div className="flex gap-2">
           <input
             type="text"
@@ -217,6 +254,20 @@ export default function ApiSettings() {
             </span>
           )}
         </div>
+
+        {/* Troubleshooting */}
+        {ollamaStatus === 'disconnected' && (
+          <div className="mt-3 rounded-md bg-red-50 p-3 text-xs text-red-700 dark:bg-red-900/20 dark:text-red-300">
+            <p className="font-medium">Connection failed. Check that:</p>
+            <ul className="mt-1 ml-4 list-disc space-y-0.5">
+              <li>
+                Ollama is running (<code>ollama serve</code>)
+              </li>
+              <li>CORS is enabled (see setup instructions above)</li>
+              <li>The URL is correct (default: http://localhost:11434)</li>
+            </ul>
+          </div>
+        )}
 
         {/* Available Models */}
         {ollamaStatus === 'connected' && ollamaModels.length > 0 && (

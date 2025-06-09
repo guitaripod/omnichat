@@ -4,8 +4,6 @@ import { useState, useEffect } from 'react';
 import { ChevronDown, Sparkles, Brain, Zap, Check, Server, Wifi, WifiOff } from 'lucide-react';
 import { cn } from '@/utils';
 import { AIProvider, AIModel, AI_MODELS } from '@/services/ai';
-import { OllamaProvider } from '@/services/ai/providers/ollama';
-import { useOllama } from '@/hooks/use-ollama';
 
 interface ModelSelectorProps {
   selectedModel: string;
@@ -46,55 +44,77 @@ export function ModelSelector({ selectedModel, onModelChange, className }: Model
   const [availableModels, setAvailableModels] = useState<AIModel[]>([]);
   const [selectedModelInfo, setSelectedModelInfo] = useState<AIModel | undefined>();
   const [hoveredModel, setHoveredModel] = useState<string | null>(null);
+  const [ollamaBaseUrl, setOllamaBaseUrl] = useState<string>('http://localhost:11434');
 
-  // Get Ollama connection status
-  const savedKeys = typeof window !== 'undefined' ? localStorage.getItem('apiKeys') : null;
-  const ollamaBaseUrl = savedKeys ? JSON.parse(savedKeys).ollama : undefined;
-  const { isOllamaAvailable } = useOllama(ollamaBaseUrl);
+  // Don't use the hook for now - just check availability directly
+  const [isOllamaAvailable, setIsOllamaAvailable] = useState(false);
 
+  // Load Ollama URL from localStorage after mount
   useEffect(() => {
-    const loadModels = async () => {
-      // Get all static models from AI_MODELS constant
-      const staticModels = Object.entries(AI_MODELS)
-        .filter(([provider]) => provider !== 'ollama')
-        .flatMap(([_, models]) => models);
-
-      // Try to load Ollama models dynamically
-      const savedKeys = localStorage.getItem('apiKeys');
-      if (savedKeys) {
-        const keys = JSON.parse(savedKeys);
-        if (keys.ollama) {
-          try {
-            const provider = new OllamaProvider(keys.ollama);
-            const models = await provider.listModels();
-
-            // Convert Ollama model names to AIModel format
-            const ollamaAIModels: AIModel[] = models.map((name) => ({
-              id: `ollama/${name}`,
-              name: name,
-              provider: 'ollama' as AIProvider,
-              contextWindow: 4096, // Default context window
-              maxOutput: 4096,
-              supportsVision: false,
-              supportsTools: false,
-              description: `Local Ollama model: ${name}`,
-            }));
-
-            setAvailableModels([...staticModels, ...ollamaAIModels]);
-          } catch (error) {
-            console.error('Failed to load Ollama models:', error);
-            setAvailableModels(staticModels);
-          }
-        } else {
-          setAvailableModels(staticModels);
+    const savedKeys = localStorage.getItem('apiKeys');
+    if (savedKeys) {
+      try {
+        const parsed = JSON.parse(savedKeys);
+        if (parsed.ollama) {
+          setOllamaBaseUrl(parsed.ollama);
+          // Check if Ollama is available
+          fetch(`${parsed.ollama}/api/tags`)
+            .then((res) => res.ok && setIsOllamaAvailable(true))
+            .catch(() => setIsOllamaAvailable(false));
         }
-      } else {
-        setAvailableModels(staticModels);
+      } catch (error) {
+        console.error('Failed to parse saved API keys:', error);
+      }
+    }
+  }, []);
+
+  // Load static models immediately
+  useEffect(() => {
+    const staticModels = Object.entries(AI_MODELS)
+      .filter(([provider]) => provider !== 'ollama')
+      .flatMap(([_, models]) => models);
+    setAvailableModels(staticModels);
+  }, []);
+
+  // Load Ollama models when URL is available
+  useEffect(() => {
+    if (!ollamaBaseUrl) return;
+
+    const loadOllamaModels = async () => {
+      try {
+        console.log('Loading Ollama models from:', ollamaBaseUrl);
+        const response = await fetch(`${ollamaBaseUrl}/api/tags`);
+        if (response.ok) {
+          const data = await response.json();
+          const ollamaModelNames = data.models?.map((m: { name: string }) => m.name) || [];
+          console.log('Found Ollama models:', ollamaModelNames);
+
+          // Convert to AIModel format
+          const ollamaModels: AIModel[] = ollamaModelNames.map((name: string) => ({
+            id: `ollama/${name}`,
+            name: name,
+            provider: 'ollama' as AIProvider,
+            contextWindow: 4096,
+            maxOutput: 4096,
+            supportsVision: false,
+            supportsTools: false,
+            description: `Local Ollama model: ${name}`,
+          }));
+
+          // Add Ollama models to existing models
+          setAvailableModels((prev) => {
+            const nonOllamaModels = prev.filter((m) => m.provider !== 'ollama');
+            return [...nonOllamaModels, ...ollamaModels];
+          });
+        }
+      } catch (error) {
+        console.error('Failed to load Ollama models:', error);
       }
     };
 
-    loadModels();
-  }, []);
+    // Try to load immediately
+    loadOllamaModels();
+  }, [ollamaBaseUrl]); // Only depend on URL, not availability status
 
   useEffect(() => {
     // Set selected model info
@@ -112,6 +132,15 @@ export function ModelSelector({ selectedModel, onModelChange, className }: Model
     },
     {} as Record<AIProvider, AIModel[]>
   );
+
+  // Debug log - only depend on availableModels
+  useEffect(() => {
+    console.log('ModelSelector render:', {
+      availableModels: availableModels.length,
+      providers: Object.keys(groupedModels),
+      ollamaModels: availableModels.filter((m) => m.provider === 'ollama').length,
+    });
+  }, [availableModels]);
 
   return (
     <div className={cn('relative', className)}>
@@ -270,6 +299,73 @@ export function ModelSelector({ selectedModel, onModelChange, className }: Model
                   </div>
                 </div>
               ))}
+
+              {/* Show Ollama section if configured */}
+              {!groupedModels.ollama && ollamaBaseUrl && (
+                <div className="mb-3">
+                  {/* Provider Header */}
+                  <div className="mb-2 flex items-center gap-2 px-2">
+                    <span className={providerColors.ollama}>{providerIcons.ollama}</span>
+                    <span className="text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                      ollama
+                    </span>
+                    <span className="ml-auto flex items-center gap-1">
+                      {isOllamaAvailable ? (
+                        <>
+                          <Wifi className="h-3 w-3 text-yellow-500" />
+                          <span className="text-xs text-yellow-500">Loading models...</span>
+                        </>
+                      ) : (
+                        <>
+                          <WifiOff className="h-3 w-3 text-red-500" />
+                          <span className="text-xs text-red-500">Not available</span>
+                        </>
+                      )}
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* Ollama Help Text */}
+              {!isOllamaAvailable && ollamaBaseUrl && (
+                <div className="mx-2 mt-2 rounded-lg bg-amber-50 p-3 text-xs text-amber-800 dark:bg-amber-900/20 dark:text-amber-200">
+                  <p className="mb-1 font-medium">Ollama not connected</p>
+                  <p className="mb-2">To use local AI models:</p>
+                  <ol className="ml-3 list-decimal space-y-0.5">
+                    <li>
+                      Install Ollama from{' '}
+                      <a
+                        href="https://ollama.com"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="underline"
+                      >
+                        ollama.com
+                      </a>
+                    </li>
+                    <li>
+                      Run:{' '}
+                      <code className="rounded bg-amber-100 px-1 dark:bg-amber-800">
+                        OLLAMA_ORIGINS="*" ollama serve
+                      </code>
+                    </li>
+                    <li>
+                      Pull a model:{' '}
+                      <code className="rounded bg-amber-100 px-1 dark:bg-amber-800">
+                        ollama pull llama3.2
+                      </code>
+                    </li>
+                  </ol>
+                  <p className="mt-2">
+                    <a
+                      href="/profile"
+                      className="underline hover:text-amber-600 dark:hover:text-amber-300"
+                    >
+                      Configure in Settings →
+                    </a>
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </>

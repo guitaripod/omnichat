@@ -13,6 +13,7 @@ OmniChat is built on Cloudflare's edge infrastructure for global low-latency per
 ### Core Features
 
 - **Multi-LLM Support**: Chat with OpenAI, Anthropic, Google Gemini, and local Ollama models
+- **Local AI with Ollama**: Run models locally for privacy and offline use
 - **Real-time Streaming**: Fast, responsive AI conversations with streaming responses
 - **Persistent Chat History**: Save and search through your conversation history
 - **Responsive Design**: Works seamlessly across desktop and mobile devices
@@ -63,12 +64,67 @@ npm run typecheck
 npm run lint
 ```
 
-### Local Development with Ollama
+### Local Ollama Integration
 
-1. Install Ollama locally
-2. Pull a model: `ollama pull llama3.1`
-3. Start Ollama server: `ollama serve`
-4. The app will automatically detect local Ollama models
+OmniChat supports running AI models locally through Ollama, providing fast, private, and offline-capable AI conversations.
+
+#### Quick Setup
+
+1. **Install Ollama**
+
+   ```bash
+   # macOS/Linux
+   curl -fsSL https://ollama.com/install.sh | sh
+
+   # Windows
+   # Download from https://ollama.com/download
+   ```
+
+2. **Enable CORS for Browser Access**
+
+   ```bash
+   # Start Ollama with CORS enabled
+   OLLAMA_ORIGINS="*" ollama serve
+
+   # Or set it permanently (Linux/macOS)
+   # Add to ~/.bashrc or ~/.zshrc:
+   export OLLAMA_ORIGINS="*"
+   ```
+
+3. **Pull AI Models**
+
+   ```bash
+   # Popular models
+   ollama pull llama3.2        # 2GB, fast general purpose
+   ollama pull mistral         # 4GB, good for coding
+   ollama pull gemma3:27b      # 17GB, high quality
+   ollama pull devstral        # 14GB, specialized for development
+
+   # List installed models
+   ollama list
+   ```
+
+4. **Configure in OmniChat**
+   - Go to Profile → API Configuration
+   - Ollama URL should be `http://localhost:11434` (default)
+   - The app will automatically detect and list your installed models
+
+#### Features
+
+- **Direct Browser Connection**: Ollama models run directly from your browser to your local Ollama server
+- **Automatic Model Detection**: Available models appear in the model selector
+- **No Internet Required**: Once models are downloaded, works completely offline
+- **Fast Response Times**: No network latency for local models
+- **Privacy**: Your conversations never leave your machine
+
+#### Troubleshooting
+
+If Ollama models don't appear:
+
+- Ensure Ollama is running: `ollama serve`
+- Check CORS is enabled: The browser console should not show CORS errors
+- Verify the URL in settings matches your Ollama instance
+- Try accessing `http://localhost:11434/api/tags` in your browser
 
 ### Deployment
 
