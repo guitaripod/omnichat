@@ -174,7 +174,7 @@ export class GoogleProvider implements ChatProvider {
       } else {
         const data = await response.json();
         console.log('[Google] Non-streaming response received:', JSON.stringify(data, null, 2));
-        return data.candidates[0].content.parts[0].text;
+        return (data as any).candidates[0].content.parts[0].text;
       }
     } catch (error) {
       console.error('[Google] Error in chatCompletion:', error);

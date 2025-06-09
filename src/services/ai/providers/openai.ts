@@ -85,7 +85,7 @@ export class OpenAIProvider implements ChatProvider {
       } else {
         const data = await response.json();
         console.log('[OpenAI] Non-streaming response received:', JSON.stringify(data, null, 2));
-        return data.choices[0].message.content;
+        return (data as any).choices[0].message.content;
       }
     } catch (error) {
       console.error('[OpenAI] Error in chatCompletion:', error);

@@ -1,6 +1,6 @@
 import { getDb } from './client';
 import { getRequestContext } from '@cloudflare/next-on-pages';
-import type { CloudflareEnv } from '@/env';
+import type { CloudflareEnv } from '../../../env';
 
 /**
  * Get the D1 database instance from Cloudflare bindings

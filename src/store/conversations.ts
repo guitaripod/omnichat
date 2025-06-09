@@ -72,7 +72,9 @@ export const useConversationStore = create<ConversationState>()(
           });
 
           if (response.ok) {
-            const { conversation: dbConversation } = await response.json();
+            const { conversation: dbConversation } = (await response.json()) as {
+              conversation: Conversation;
+            };
             // Update with real ID from database
             set((state) => ({
               conversations: state.conversations.map((c) =>
@@ -221,7 +223,7 @@ export const useConversationStore = create<ConversationState>()(
 
           const response = await fetch('/api/conversations');
           if (response.ok) {
-            const { conversations } = await response.json();
+            const { conversations } = (await response.json()) as { conversations: any[] };
             const formattedConversations = conversations.map((c: any) => ({
               ...c,
               createdAt: new Date(c.createdAt),
@@ -260,7 +262,7 @@ export const useConversationStore = create<ConversationState>()(
         try {
           const response = await fetch(`/api/conversations/${conversationId}/messages`);
           if (response.ok) {
-            const { messages } = await response.json();
+            const { messages } = (await response.json()) as { messages: any[] };
             const formattedMessages = messages.map((m: any) => ({
               ...m,
               createdAt: new Date(m.createdAt),

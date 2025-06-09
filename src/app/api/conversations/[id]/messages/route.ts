@@ -36,7 +36,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     }
 
     const { id: conversationId } = await params;
-    const body = await req.json();
+    const body = (await req.json()) as {
+      role: string;
+      content: string;
+      model?: string;
+      parentId?: string;
+    };
     const { role, content, model, parentId } = body;
 
     if (!role || !content) {

@@ -183,7 +183,7 @@ export class OllamaClientProvider implements ChatProvider {
       }
 
       const data = await response.json();
-      return data.models?.map((model: { name: string }) => model.name) || [];
+      return (data as any).models?.map((model: { name: string }) => model.name) || [];
     } catch (error) {
       console.error('Failed to list Ollama models:', error);
       return [];

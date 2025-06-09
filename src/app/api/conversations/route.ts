@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
       return new Response('Unauthorized', { status: 401 });
     }
 
-    const body = await req.json();
+    const body = (await req.json()) as { title: string; model: string };
     const { title, model } = body;
 
     if (!title || !model) {
@@ -101,7 +101,7 @@ export async function PATCH(req: NextRequest) {
       return new Response('Missing conversation ID', { status: 400 });
     }
 
-    const body = await req.json();
+    const body = (await req.json()) as { title?: string; isArchived?: boolean };
     const { title, isArchived } = body;
 
     const db = getDb(process.env.DB as unknown as D1Database);

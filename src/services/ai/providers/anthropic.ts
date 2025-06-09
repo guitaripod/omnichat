@@ -101,7 +101,7 @@ export class AnthropicProvider implements ChatProvider {
       } else {
         const data = await response.json();
         console.log('[Anthropic] Non-streaming response received:', JSON.stringify(data, null, 2));
-        return data.content[0].text;
+        return (data as any).content[0].text;
       }
     } catch (error) {
       console.error('[Anthropic] Error in chatCompletion:', error);

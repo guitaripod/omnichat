@@ -41,7 +41,9 @@ export function SearchBar({ useServerSearch = false }: SearchBarProps = {}) {
       try {
         const response = await fetch(`/api/search?q=${encodeURIComponent(searchQuery)}`);
         if (response.ok) {
-          const { results: searchResults } = await response.json();
+          const { results: searchResults } = (await response.json()) as {
+            results: { conversations?: any[]; messages?: any[] };
+          };
 
           // Transform server results to match our format
           const groupedResults = new Map<string, SearchResult>();

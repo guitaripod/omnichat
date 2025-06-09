@@ -111,7 +111,7 @@ export function MessageInput({
         const response = await fetch(`${ollamaBaseUrl}/api/tags`);
         if (response.ok) {
           setIsOllamaAvailable(true);
-          const data = await response.json();
+          const data = (await response.json()) as { models?: { name: string }[] };
           const ollamaModelNames = data.models?.map((m: { name: string }) => m.name) || [];
           console.log('MessageInput: Found Ollama models:', ollamaModelNames);
 

@@ -5,7 +5,7 @@ import type { ChatMessage } from '@/services/ai/types';
 import { getD1Database } from '@/lib/db/get-db';
 import { createMessage, getUserByClerkId } from '@/lib/db/queries';
 import { getRequestContext } from '@cloudflare/next-on-pages';
-import type { CloudflareEnv } from '@/env';
+import type { CloudflareEnv } from '../../../../env';
 
 export const runtime = 'edge';
 

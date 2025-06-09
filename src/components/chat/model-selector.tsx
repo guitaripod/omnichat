@@ -85,7 +85,7 @@ export function ModelSelector({ selectedModel, onModelChange, className }: Model
         console.log('Loading Ollama models from:', ollamaBaseUrl);
         const response = await fetch(`${ollamaBaseUrl}/api/tags`);
         if (response.ok) {
-          const data = await response.json();
+          const data = (await response.json()) as { models?: { name: string }[] };
           const ollamaModelNames = data.models?.map((m: { name: string }) => m.name) || [];
           console.log('Found Ollama models:', ollamaModelNames);
 
