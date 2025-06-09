@@ -1,19 +1,28 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { MessageList } from './message-list';
 import { MessageInput } from './message-input';
 import type { Message } from '@/types';
 import { generateId } from '@/utils';
 import { AIProviderFactory } from '@/services/ai/provider-factory';
+import { useConversationStore } from '@/store/conversations';
 
 export function ChatContainer() {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const { currentConversationId, createConversation, getMessages, addMessage, updateMessage } =
+    useConversationStore();
+
   const [isLoading, setIsLoading] = useState(false);
   const [selectedModel, setSelectedModel] = useState('gpt-4o');
   const [, setStreamingMessage] = useState<string>('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+
+  // Get messages for current conversation
+  const messages = useMemo(
+    () => (currentConversationId ? getMessages(currentConversationId) : []),
+    [currentConversationId, getMessages]
+  );
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -37,16 +46,25 @@ export function ChatContainer() {
     }
   }, []);
 
+  // Create conversation if none exists
+  useEffect(() => {
+    if (!currentConversationId) {
+      createConversation('New Chat', selectedModel);
+    }
+  }, [currentConversationId, createConversation, selectedModel]);
+
   const handleSendMessage = async (content: string) => {
+    if (!currentConversationId) return;
+
     const userMessage: Message = {
       id: generateId(),
-      conversationId: '1', // TODO: Use actual conversation ID
+      conversationId: currentConversationId,
       role: 'user',
       content,
       createdAt: new Date(),
     };
 
-    setMessages((prev) => [...prev, userMessage]);
+    addMessage(currentConversationId, userMessage);
     setIsLoading(true);
     setStreamingMessage('');
 
@@ -76,14 +94,14 @@ export function ChatContainer() {
       // Create assistant message placeholder
       const assistantMessage: Message = {
         id: generateId(),
-        conversationId: '1',
+        conversationId: currentConversationId,
         role: 'assistant',
         content: '',
         model: selectedModel,
         createdAt: new Date(),
       };
 
-      setMessages((prev) => [...prev, assistantMessage]);
+      addMessage(currentConversationId, assistantMessage);
 
       // Handle streaming response
       const reader = response.body?.getReader();
@@ -111,14 +129,7 @@ export function ChatContainer() {
                   setStreamingMessage(accumulatedContent);
 
                   // Update the assistant message
-                  setMessages((prev) => {
-                    const newMessages = [...prev];
-                    const lastMessage = newMessages[newMessages.length - 1];
-                    if (lastMessage.role === 'assistant') {
-                      lastMessage.content = accumulatedContent;
-                    }
-                    return newMessages;
-                  });
+                  updateMessage(currentConversationId, assistantMessage.id, accumulatedContent);
                 }
               } catch {
                 // Continue on parse error
@@ -135,12 +146,12 @@ export function ChatContainer() {
         // Show error message
         const errorMessage: Message = {
           id: generateId(),
-          conversationId: '1',
+          conversationId: currentConversationId,
           role: 'assistant',
           content: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
           createdAt: new Date(),
         };
-        setMessages((prev) => [...prev, errorMessage]);
+        addMessage(currentConversationId, errorMessage);
       }
     } finally {
       setIsLoading(false);

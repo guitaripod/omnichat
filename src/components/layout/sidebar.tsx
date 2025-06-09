@@ -2,20 +2,14 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import { cn } from '@/utils';
-import { MessageSquare, Plus, Menu, X, Settings, User } from 'lucide-react';
+import { Menu, X, Settings, User } from 'lucide-react';
 import { UserButton } from '@clerk/nextjs';
 import { MockUserButton } from '@/components/ui/mock-user-button';
+import { ConversationList } from './conversation-list';
 
 export function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
-  const pathname = usePathname();
-
-  const conversations = [
-    { id: '1', title: 'GPT-4 Discussion', updatedAt: new Date() },
-    { id: '2', title: 'Claude Analysis', updatedAt: new Date(Date.now() - 86400000) },
-  ];
 
   return (
     <>
@@ -39,36 +33,9 @@ export function Sidebar() {
             </Link>
           </div>
 
-          {/* New chat button */}
-          <div className="px-4 py-4">
-            <button className="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700">
-              <Plus size={20} />
-              New Chat
-            </button>
-          </div>
-
           {/* Conversations list */}
-          <div className="flex-1 overflow-y-auto px-4">
-            <h3 className="mb-2 text-xs font-semibold tracking-wider text-gray-500 uppercase">
-              Recent Conversations
-            </h3>
-            <div className="space-y-1">
-              {conversations.map((conv) => (
-                <Link
-                  key={conv.id}
-                  href={`/chat/${conv.id}`}
-                  className={cn(
-                    'flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors',
-                    pathname === `/chat/${conv.id}`
-                      ? 'bg-gray-100 text-gray-900 dark:bg-gray-700 dark:text-white'
-                      : 'text-gray-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700'
-                  )}
-                >
-                  <MessageSquare size={16} />
-                  <span className="flex-1 truncate">{conv.title}</span>
-                </Link>
-              ))}
-            </div>
+          <div className="flex-1 overflow-hidden">
+            <ConversationList />
           </div>
 
           {/* Bottom section */}
