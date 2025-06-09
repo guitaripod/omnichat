@@ -89,7 +89,10 @@ export const useConversationStore = create<ConversationState>()(
               currentConversationId: dbConversation.id,
               messages: {
                 ...state.messages,
-                [dbConversation.id]: state.messages[tempId] || [],
+                [dbConversation.id]: (state.messages[tempId] || []).map((msg) => ({
+                  ...msg,
+                  conversationId: dbConversation.id,
+                })),
               },
             }));
             // Clean up temp ID
