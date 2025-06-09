@@ -40,18 +40,7 @@ export interface Attachment {
   createdAt: Date;
 }
 
-export type ModelType =
-  | 'gpt-4o'
-  | 'gpt-4o-mini'
-  | 'gpt-4-turbo'
-  | 'claude-3-5-sonnet'
-  | 'claude-3-5-haiku'
-  | 'claude-3-opus'
-  | 'gemini-2.0-flash'
-  | 'gemini-1.5-pro'
-  | 'ollama-llama3'
-  | 'ollama-mistral'
-  | 'ollama-custom';
+export type ModelType = string; // Allow any model ID for flexibility
 
 export interface ApiUsage {
   id: string;

@@ -3,9 +3,11 @@ import type { Message } from '@/types';
 import { cn } from '@/utils';
 import { AI_MODELS } from '@/services/ai';
 import { MarkdownRenderer } from './markdown-renderer';
+import { StreamingIndicator } from './streaming-indicator';
 
 interface MessageItemProps {
   message: Message;
+  isStreaming?: boolean;
 }
 
 // Provider icons and colors
@@ -51,7 +53,7 @@ function getProviderFromModel(modelId?: string) {
   return model?.provider || null;
 }
 
-export function MessageItem({ message }: MessageItemProps) {
+export function MessageItem({ message, isStreaming = false }: MessageItemProps) {
   const isUser = message.role === 'user';
   const provider = !isUser ? getProviderFromModel(message.model) : null;
   const providerColor = provider ? providerColors[provider] : null;
@@ -151,7 +153,10 @@ export function MessageItem({ message }: MessageItemProps) {
               {isUser ? (
                 <p className="whitespace-pre-wrap">{message.content}</p>
               ) : (
-                <MarkdownRenderer content={message.content} />
+                <>
+                  {message.content && <MarkdownRenderer content={message.content} />}
+                  {isStreaming && !message.content && <StreamingIndicator className="mt-2" />}
+                </>
               )}
             </div>
           </div>

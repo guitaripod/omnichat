@@ -79,6 +79,7 @@ export function ChatContainer() {
         conversationId: '1',
         role: 'assistant',
         content: '',
+        model: selectedModel,
         createdAt: new Date(),
       };
 
@@ -171,7 +172,7 @@ export function ChatContainer() {
           </div>
         ) : (
           <>
-            <MessageList messages={messages} />
+            <MessageList messages={messages} isLoading={isLoading} />
             <div ref={messagesEndRef} />
           </>
         )}
