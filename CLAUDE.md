@@ -20,20 +20,20 @@ wrangler d1 execute     # Run D1 database commands
 wrangler r2 bucket list # Manage R2 storage
 ```
 
-## Git Practices
+# Git Practices
 
 - Make sure everything is working after completing tasks
 - Do Git properly by committing individual tasks after every task
 - Do not move to the next task before the previous one is committed
 
-## Environment & Configuration
+# Environment & Configuration
 
 - **NEVER use .env files** - use Cloudflare secrets and wrangler commands
 - Store API keys in Cloudflare Workers KV or environment variables
 - Use `wrangler secret put <KEY>` to set secrets
 - Only ask for API keys when absolutely required for external services
 
-## Code Style
+# Code Style
 
 - TypeScript strict mode enabled
 - Use ES modules and destructured imports
@@ -41,14 +41,14 @@ wrangler r2 bucket list # Manage R2 storage
 - Use Tailwind CSS for styling with shadcn/ui components
 - Follow Next.js App Router patterns
 
-## Database Operations
+# Database Operations
 
 - Use Drizzle ORM for type-safe queries
 - Run migrations with `wrangler d1 migrations apply`
 - Schema changes go through proper migration files
 - Prefer edge-compatible database operations
 
-## Testing & Quality
+# Testing & Quality
 
 - Run `npm run typecheck` after code changes
 - Use `npm run lint` to check code style
@@ -56,7 +56,7 @@ wrangler r2 bucket list # Manage R2 storage
 - Test streaming responses and edge function behavior
 - Do proper unit test coverage
 
-## Security Practices
+# Security Practices
 
 - Never commit API keys or secrets
 - Use Cloudflare's security features (WAF, rate limiting)
@@ -64,7 +64,7 @@ wrangler r2 bucket list # Manage R2 storage
 - Sanitize user inputs before database operations
 - Use CSP headers and security middleware
 
-## Performance Guidelines
+# Performance Guidelines
 
 - Optimize for edge deployment
 - Use streaming responses for AI interactions
@@ -72,7 +72,7 @@ wrangler r2 bucket list # Manage R2 storage
 - Lazy load conversations and components
 - Monitor bundle size and Core Web Vitals
 
-## Development Workflow
+# Development Workflow
 
 1. Always run typecheck after making changes
 2. Test in both local and edge environments
