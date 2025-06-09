@@ -224,37 +224,58 @@ export const useConversationStore = create<ConversationState>()(
           const response = await fetch('/api/conversations');
           if (response.ok) {
             const { conversations } = (await response.json()) as { conversations: any[] };
-            const formattedConversations = conversations.map((c: any) => ({
+            const serverConversations = conversations.map((c: any) => ({
               ...c,
               createdAt: new Date(c.createdAt),
               updatedAt: new Date(c.updatedAt),
             }));
 
-            set({
-              conversations: formattedConversations,
-              isSyncing: false,
+            // Merge strategy: Keep local conversations with temp IDs and merge with server data
+            set((state) => {
+              const localConversations = state.conversations;
+              const conversationMap = new Map<string, Conversation>();
+
+              // First, add all server conversations
+              for (const conv of serverConversations) {
+                conversationMap.set(conv.id, conv);
+              }
+
+              // Then, preserve local conversations that aren't on the server yet
+              for (const conv of localConversations) {
+                // Keep conversations with temporary IDs (not synced yet)
+                if (conv.id.startsWith('temp-') && !conversationMap.has(conv.id)) {
+                  conversationMap.set(conv.id, conv);
+                }
+                // Also keep any local conversation that has messages but isn't on server
+                else if (!conversationMap.has(conv.id) && state.messages[conv.id]?.length > 0) {
+                  conversationMap.set(conv.id, conv);
+                }
+              }
+
+              // Convert map back to sorted array (newest first)
+              const mergedConversations = Array.from(conversationMap.values()).sort(
+                (a, b) => b.updatedAt.getTime() - a.updatedAt.getTime()
+              );
+
+              return {
+                conversations: mergedConversations,
+                isSyncing: false,
+              };
             });
 
-            // Update offline storage
-            for (const conv of formattedConversations) {
+            // Update offline storage with server data only
+            for (const conv of serverConversations) {
               await offlineStorage.saveConversation(conv);
             }
+          } else {
+            // Don't overwrite local data on server error
+            console.error('Server returned error:', response.status);
+            set({ isSyncing: false });
           }
         } catch (error) {
           console.error('Failed to sync conversations:', error);
-
-          // Fallback to offline storage
-          try {
-            const userId = 'current-user'; // TODO: Get from auth
-            const offlineConversations = await offlineStorage.getConversations(userId);
-            set({
-              conversations: offlineConversations,
-              isSyncing: false,
-            });
-          } catch (offlineError) {
-            console.error('Failed to load offline conversations:', offlineError);
-            set({ isSyncing: false });
-          }
+          // Don't overwrite local data on network error
+          set({ isSyncing: false });
         }
       },
 

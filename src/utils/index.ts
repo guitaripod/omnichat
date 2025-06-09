@@ -16,7 +16,7 @@ export function formatDate(date: Date | string): string {
 }
 
 export function generateId(): string {
-  return crypto.randomUUID();
+  return `temp-${crypto.randomUUID()}`;
 }
 
 export function truncateString(str: string, maxLength: number): string {
