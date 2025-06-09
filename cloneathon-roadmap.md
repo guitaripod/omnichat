@@ -60,7 +60,7 @@
 - [x] Set up global state management (Zustand)
 - [x] Create loading states and error boundaries
 
-## Phase 2: Core Chat Features (Days 3-4)
+## Phase 2: Core Chat Features (Days 3-4) ✅ COMPLETED
 
 **Goal**: Implement required features for competition
 
@@ -89,7 +89,7 @@
 - [x] Implement message editing/deletion
 - [x] Add copy/regenerate functionality
 
-### Epic 2.4: Data Persistence ✅ COMPLETED
+### Epic 2.4: Data Persistence
 
 - [x] Implement chat history saving to D1
 - [x] Create sync mechanism for offline/online states
