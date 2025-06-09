@@ -35,6 +35,7 @@ export function MessageInput({
   const [message, setMessage] = useState('');
   const [isModelSelectorOpen, setIsModelSelectorOpen] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
+  const [hoveredModel, setHoveredModel] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const modelSelectorRef = useRef<HTMLDivElement>(null);
 
@@ -160,33 +161,75 @@ export function MessageInput({
                         </div>
                         <div className="space-y-0.5">
                           {models.map((model) => (
-                            <button
-                              key={model.id}
-                              onClick={() => {
-                                onModelChange(model.id);
-                                setIsModelSelectorOpen(false);
-                              }}
-                              className={cn(
-                                'flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left transition-colors',
-                                selectedModel === model.id
-                                  ? 'bg-gray-100 dark:bg-gray-700'
-                                  : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'
-                              )}
-                            >
-                              <span className="text-sm text-gray-900 dark:text-white">
-                                {model.name}
-                              </span>
-                              <div className="flex items-center gap-2">
-                                <span className="text-xs text-gray-500 dark:text-gray-400">
-                                  {Math.round(model.contextWindow / 1000)}k
-                                </span>
-                                {model.supportsVision && (
-                                  <span className="text-xs text-purple-600 dark:text-purple-400">
-                                    Vision
-                                  </span>
+                            <div key={model.id} className="relative">
+                              <button
+                                onClick={() => {
+                                  onModelChange(model.id);
+                                  setIsModelSelectorOpen(false);
+                                }}
+                                onMouseEnter={() => setHoveredModel(model.id)}
+                                onMouseLeave={() => setHoveredModel(null)}
+                                className={cn(
+                                  'flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left transition-all duration-150',
+                                  selectedModel === model.id
+                                    ? 'bg-blue-100 text-blue-900 dark:bg-blue-900/30 dark:text-blue-100'
+                                    : hoveredModel === model.id
+                                      ? 'bg-gray-100 dark:bg-gray-700/70'
+                                      : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'
                                 )}
-                              </div>
-                            </button>
+                              >
+                                <span
+                                  className={cn(
+                                    'text-sm transition-colors',
+                                    selectedModel === model.id
+                                      ? 'font-medium'
+                                      : 'text-gray-900 dark:text-white'
+                                  )}
+                                >
+                                  {model.name}
+                                </span>
+                                <div className="flex items-center gap-2">
+                                  <span
+                                    className={cn(
+                                      'text-xs',
+                                      selectedModel === model.id
+                                        ? 'text-blue-700 dark:text-blue-300'
+                                        : 'text-gray-500 dark:text-gray-400'
+                                    )}
+                                  >
+                                    {Math.round(model.contextWindow / 1000)}k
+                                  </span>
+                                  {model.supportsVision && (
+                                    <span
+                                      className={cn(
+                                        'text-xs',
+                                        selectedModel === model.id
+                                          ? 'text-blue-700 dark:text-blue-300'
+                                          : 'text-purple-600 dark:text-purple-400'
+                                      )}
+                                    >
+                                      Vision
+                                    </span>
+                                  )}
+                                </div>
+                              </button>
+
+                              {/* Hover tooltip */}
+                              {hoveredModel === model.id && model.description && (
+                                <div
+                                  className={cn(
+                                    'absolute top-full right-0 left-0 z-50 mt-1 rounded-lg',
+                                    'border bg-white p-2 shadow-lg',
+                                    'border-gray-200 dark:border-gray-700 dark:bg-gray-800',
+                                    'pointer-events-none'
+                                  )}
+                                >
+                                  <p className="text-xs text-gray-600 dark:text-gray-300">
+                                    {model.description}
+                                  </p>
+                                </div>
+                              )}
+                            </div>
                           ))}
                         </div>
                       </div>
