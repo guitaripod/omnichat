@@ -1,9 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { Download, X, FileJson, FileText } from 'lucide-react';
+import { Download, X, FileJson, FileText, Image, Copy } from 'lucide-react';
 import { useConversationStore } from '@/store/conversations';
 import { ChatExporter } from '@/utils/export';
+import { ChatImageExporter } from '@/utils/export-image';
+import { useTheme } from '@/hooks/use-theme';
 
 interface ExportDialogProps {
   isOpen: boolean;
@@ -12,8 +14,10 @@ interface ExportDialogProps {
 }
 
 export function ExportDialog({ isOpen, onClose, conversationId }: ExportDialogProps) {
-  const [exportFormat, setExportFormat] = useState<'json' | 'markdown'>('markdown');
+  const [exportFormat, setExportFormat] = useState<'json' | 'markdown' | 'image'>('markdown');
   const [isExporting, setIsExporting] = useState(false);
+  const [imageCopied, setImageCopied] = useState(false);
+  const { theme } = useTheme();
 
   const { conversations, messages } = useConversationStore();
 
@@ -34,14 +38,24 @@ export function ExportDialog({ isOpen, onClose, conversationId }: ExportDialogPr
         content = ChatExporter.exportToJSON(conversation, conversationMessages);
         mimeType = 'application/json';
         format = 'json';
-      } else {
+        const filename = ChatExporter.generateFilename(conversation, format);
+        ChatExporter.downloadFile(filename, content, mimeType);
+      } else if (exportFormat === 'markdown') {
         content = ChatExporter.exportToMarkdown(conversation, conversationMessages);
         mimeType = 'text/markdown';
         format = 'md';
+        const filename = ChatExporter.generateFilename(conversation, format);
+        ChatExporter.downloadFile(filename, content, mimeType);
+      } else {
+        // Image export
+        const blob = await ChatImageExporter.exportToImage(
+          conversation,
+          conversationMessages,
+          theme as 'light' | 'dark'
+        );
+        const filename = `omnichat_${conversation.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_${new Date().toISOString().split('T')[0]}.png`;
+        ChatImageExporter.downloadImage(blob, filename);
       }
-
-      const filename = ChatExporter.generateFilename(conversation, format);
-      ChatExporter.downloadFile(filename, content, mimeType);
 
       // Close dialog after successful export
       setTimeout(onClose, 500);
@@ -84,7 +98,7 @@ export function ExportDialog({ isOpen, onClose, conversationId }: ExportDialogPr
             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
               Export Format
             </label>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-3">
               <button
                 onClick={() => setExportFormat('markdown')}
                 className={`flex items-center justify-center gap-2 rounded-lg border-2 p-3 transition-colors ${
@@ -107,6 +121,17 @@ export function ExportDialog({ isOpen, onClose, conversationId }: ExportDialogPr
                 <FileJson className="h-5 w-5" />
                 <span className="font-medium">JSON</span>
               </button>
+              <button
+                onClick={() => setExportFormat('image')}
+                className={`flex items-center justify-center gap-2 rounded-lg border-2 p-3 transition-colors ${
+                  exportFormat === 'image'
+                    ? 'border-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400'
+                    : 'border-gray-200 hover:border-gray-300 dark:border-gray-700 dark:hover:border-gray-600'
+                }`}
+              >
+                <Image className="h-5 w-5" />
+                <span className="font-medium">Image</span>
+              </button>
             </div>
           </div>
 
@@ -117,13 +142,45 @@ export function ExportDialog({ isOpen, onClose, conversationId }: ExportDialogPr
                 <strong>Markdown format:</strong> Human-readable format with formatting. Perfect for
                 sharing, documentation, or importing into note-taking apps.
               </p>
-            ) : (
+            ) : exportFormat === 'json' ? (
               <p>
                 <strong>JSON format:</strong> Structured data format that preserves all metadata.
                 Ideal for backups, data analysis, or importing into other tools.
               </p>
+            ) : (
+              <p>
+                <strong>Image format:</strong> Visual summary card showing the last few messages.
+                Great for sharing on social media or quick visual reference.
+              </p>
             )}
           </div>
+
+          {/* Copy to clipboard button for images */}
+          {exportFormat === 'image' && (
+            <button
+              onClick={async () => {
+                setIsExporting(true);
+                try {
+                  const blob = await ChatImageExporter.exportToImage(
+                    conversation,
+                    conversationMessages,
+                    theme as 'light' | 'dark'
+                  );
+                  await ChatImageExporter.copyImageToClipboard(blob);
+                  setImageCopied(true);
+                  setTimeout(() => setImageCopied(false), 2000);
+                } catch (error) {
+                  console.error('Copy failed:', error);
+                } finally {
+                  setIsExporting(false);
+                }
+              }}
+              className="flex items-center justify-center gap-2 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
+            >
+              <Copy className="h-4 w-4" />
+              {imageCopied ? 'Copied!' : 'Copy to Clipboard'}
+            </button>
+          )}
         </div>
 
         {/* Actions */}
