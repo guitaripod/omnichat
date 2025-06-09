@@ -31,7 +31,9 @@ export class AIProviderFactory {
   static getProvider(provider: AIProvider): ChatProvider {
     const instance = this.providers.get(provider);
     if (!instance) {
-      throw new Error(`Provider ${provider} not initialized. Please provide API key.`);
+      throw new Error(
+        `Provider ${provider} not initialized. Please ${provider === 'ollama' ? 'configure base URL' : 'provide API key'}.`
+      );
     }
     return instance;
   }

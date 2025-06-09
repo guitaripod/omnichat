@@ -122,9 +122,12 @@ export async function POST(req: NextRequest) {
     if (model.startsWith('ollama/')) {
       // This is an Ollama model
       if (!ollamaBaseUrl) {
-        return new Response('Provider ollama not initialized. Please provide API key.', {
-          status: 503,
-        });
+        return new Response(
+          'Ollama base URL not configured. Please configure Ollama in Profile > API Settings.',
+          {
+            status: 503,
+          }
+        );
       }
       actualModelName = model.replace('ollama/', '');
       provider = AIProviderFactory.getProvider('ollama');

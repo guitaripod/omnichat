@@ -28,8 +28,16 @@ export function ChatContainer() {
   const isCreatingConversationRef = useRef(false);
 
   // Get Ollama connection status
-  const savedKeys = typeof window !== 'undefined' ? localStorage.getItem('apiKeys') : null;
-  const ollamaBaseUrl = savedKeys ? JSON.parse(savedKeys).ollama : undefined;
+  const [ollamaBaseUrl, setOllamaBaseUrl] = useState<string | undefined>();
+
+  useEffect(() => {
+    const savedKeys = localStorage.getItem('apiKeys');
+    if (savedKeys) {
+      const keys = JSON.parse(savedKeys);
+      setOllamaBaseUrl(keys.ollama);
+    }
+  }, []);
+
   const { isOllamaAvailable } = useOllama(ollamaBaseUrl);
 
   const scrollToBottom = () => {
@@ -85,19 +93,35 @@ export function ChatContainer() {
     // Create new AbortController for this request
     abortControllerRef.current = new AbortController();
 
+    // Create assistant message placeholder
+    const assistantMessage: Message = {
+      id: generateId(),
+      conversationId: currentConversationId,
+      role: 'assistant',
+      content: '',
+      model: selectedModel,
+      createdAt: new Date(),
+    };
+
+    await addMessage(currentConversationId, assistantMessage);
+
     try {
       let response: Response;
       let reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
 
+      // Get fresh Ollama URL from localStorage
+      const savedKeys = localStorage.getItem('apiKeys');
+      const currentOllamaUrl = savedKeys ? JSON.parse(savedKeys).ollama : undefined;
+
       // Check if this is an Ollama model and if Ollama is available locally
       const isOllamaModel = selectedModel.startsWith('ollama/');
 
-      if (isOllamaModel && isOllamaAvailable && ollamaBaseUrl) {
+      if (isOllamaModel && isOllamaAvailable && currentOllamaUrl) {
         // Direct browser-to-Ollama connection
         console.log('Using direct Ollama connection for model:', selectedModel);
 
         if (!ollamaProviderRef.current) {
-          ollamaProviderRef.current = new OllamaClientProvider(ollamaBaseUrl);
+          ollamaProviderRef.current = new OllamaClientProvider(currentOllamaUrl);
         }
 
         const streamResponse = await ollamaProviderRef.current.chatCompletion({
@@ -124,7 +148,7 @@ export function ChatContainer() {
             })),
             model: selectedModel,
             stream: true,
-            ollamaBaseUrl: isOllamaModel ? ollamaBaseUrl : undefined,
+            ollamaBaseUrl: isOllamaModel ? currentOllamaUrl : undefined,
             conversationId: currentConversationId,
           }),
           signal: abortControllerRef.current.signal,
@@ -137,18 +161,6 @@ export function ChatContainer() {
 
         reader = response.body?.getReader();
       }
-
-      // Create assistant message placeholder
-      const assistantMessage: Message = {
-        id: generateId(),
-        conversationId: currentConversationId,
-        role: 'assistant',
-        content: '',
-        model: selectedModel,
-        createdAt: new Date(),
-      };
-
-      await addMessage(currentConversationId, assistantMessage);
 
       // Handle streaming response
       const decoder = new TextDecoder();
@@ -199,15 +211,9 @@ export function ChatContainer() {
         console.log('Request aborted');
       } else {
         console.error('Error sending message:', error);
-        // Show error message
-        const errorMessage: Message = {
-          id: generateId(),
-          conversationId: currentConversationId,
-          role: 'assistant',
-          content: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
-          createdAt: new Date(),
-        };
-        await addMessage(currentConversationId, errorMessage);
+        // Update the existing assistant message with error
+        const errorContent = `Error: ${error instanceof Error ? error.message : 'Unknown error'}`;
+        updateMessage(currentConversationId, assistantMessage.id, errorContent);
       }
     } finally {
       setIsLoading(false);
@@ -249,15 +255,19 @@ export function ChatContainer() {
       let response: Response;
       let reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
 
+      // Get fresh Ollama URL from localStorage
+      const savedKeys = localStorage.getItem('apiKeys');
+      const currentOllamaUrl = savedKeys ? JSON.parse(savedKeys).ollama : undefined;
+
       // Check if this is an Ollama model and if Ollama is available locally
       const isOllamaModel = selectedModel.startsWith('ollama/');
 
-      if (isOllamaModel && isOllamaAvailable && ollamaBaseUrl) {
+      if (isOllamaModel && isOllamaAvailable && currentOllamaUrl) {
         // Direct browser-to-Ollama connection
         console.log('Using direct Ollama connection for regeneration:', selectedModel);
 
         if (!ollamaProviderRef.current) {
-          ollamaProviderRef.current = new OllamaClientProvider(ollamaBaseUrl);
+          ollamaProviderRef.current = new OllamaClientProvider(currentOllamaUrl);
         }
 
         const streamResponse = await ollamaProviderRef.current.chatCompletion({
@@ -282,7 +292,7 @@ export function ChatContainer() {
             })),
             model: selectedModel,
             stream: true,
-            ollamaBaseUrl: isOllamaModel ? ollamaBaseUrl : undefined,
+            ollamaBaseUrl: isOllamaModel ? currentOllamaUrl : undefined,
             conversationId: currentConversationId,
           }),
           signal: abortControllerRef.current.signal,
