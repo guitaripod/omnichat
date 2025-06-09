@@ -1,13 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { currentUser } from '@clerk/nextjs/server';
 import { AIProviderFactory, AI_MODELS } from '@/services/ai';
-import { getDb } from '@/lib/db/client';
+import type { ChatMessage } from '@/services/ai/types';
+import { getD1Database } from '@/lib/db/get-db';
 import { createMessage, getUserByClerkId } from '@/lib/db/queries';
+import { getRequestContext } from '@cloudflare/next-on-pages';
+import type { CloudflareEnv } from '@/env';
 
 export const runtime = 'edge';
 
 interface ChatRequest {
-  messages: Array<{ role: string; content: string }>;
+  messages: ChatMessage[];
   model: string;
   temperature?: number;
   maxTokens?: number;
@@ -26,22 +29,34 @@ export async function POST(req: NextRequest) {
     const userId = user.id;
 
     // Initialize AI providers from Cloudflare secrets
-    // Check if environment variables are available
-    console.log('Checking environment variables...');
+    console.log('Accessing Cloudflare secrets...');
 
-    // Debug: Log all available environment variable keys
-    console.log('All process.env keys:', Object.keys(process.env));
-    console.log('NODE_ENV:', process.env.NODE_ENV);
-    console.log('Looking for API keys...');
+    let openaiApiKey: string | undefined;
+    let anthropicApiKey: string | undefined;
+    let googleApiKey: string | undefined;
 
-    const openaiApiKey = process.env.OPENAI_API_KEY;
-    const anthropicApiKey = process.env.ANTHROPIC_API_KEY;
-    const googleApiKey = process.env.GOOGLE_API_KEY;
+    try {
+      // In Cloudflare Pages, secrets are accessed via getRequestContext
+      const context = getRequestContext();
+      const env = context.env as CloudflareEnv;
 
-    // Debug: Check each key
-    console.log('OPENAI_API_KEY exists:', !!openaiApiKey);
-    console.log('ANTHROPIC_API_KEY exists:', !!anthropicApiKey);
-    console.log('GOOGLE_API_KEY exists:', !!googleApiKey);
+      openaiApiKey = env.OPENAI_API_KEY;
+      anthropicApiKey = env.ANTHROPIC_API_KEY;
+      googleApiKey = env.GOOGLE_API_KEY;
+
+      console.log('Cloudflare env keys available:', Object.keys(env));
+      console.log('Secrets found:', {
+        openai: !!openaiApiKey,
+        anthropic: !!anthropicApiKey,
+        google: !!googleApiKey,
+      });
+    } catch (error) {
+      // Fallback for local development
+      console.log('getRequestContext failed (local dev?), trying process.env:', error);
+      openaiApiKey = process.env.OPENAI_API_KEY;
+      anthropicApiKey = process.env.ANTHROPIC_API_KEY;
+      googleApiKey = process.env.GOOGLE_API_KEY;
+    }
 
     if (!openaiApiKey || !anthropicApiKey || !googleApiKey) {
       console.error('Missing API keys:', {
@@ -85,12 +100,16 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Get database instance (Note: In production, this would come from the request context)
-    // For now, we'll handle database operations separately
+    // Get database instance
     let dbUser = null;
-    if (process.env.DB) {
-      const db = getDb(process.env.DB as unknown as D1Database);
+    let db: ReturnType<typeof getD1Database> | null = null;
+
+    try {
+      db = getD1Database();
       dbUser = await getUserByClerkId(db, userId);
+    } catch (error) {
+      console.error('Database connection error:', error);
+      // Continue without database for now
     }
 
     // Get model info to determine provider
@@ -143,9 +162,7 @@ export async function POST(req: NextRequest) {
     });
 
     // Save messages to database if we have a DB connection
-    if (process.env.DB && dbUser && conversationId) {
-      const db = getDb(process.env.DB as unknown as D1Database);
-
+    if (db && dbUser && conversationId) {
       // Save the user message
       const userMessage = messages[messages.length - 1];
       if (userMessage && userMessage.role === 'user') {
