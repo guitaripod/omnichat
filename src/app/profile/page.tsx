@@ -1,6 +1,7 @@
 import { currentUser } from '@clerk/nextjs/server';
 import { UserButton } from '@clerk/nextjs';
 import { redirect } from 'next/navigation';
+import ApiSettings from '@/components/profile/api-settings';
 
 export const runtime = 'edge';
 
@@ -98,6 +99,10 @@ export default async function ProfilePage() {
                 </span>
               </div>
             </div>
+          </div>
+
+          <div className="mt-6">
+            <ApiSettings />
           </div>
         </div>
       </div>

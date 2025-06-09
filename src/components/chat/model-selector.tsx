@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ChevronDown, Sparkles, Brain, Zap, Check } from 'lucide-react';
+import { ChevronDown, Sparkles, Brain, Zap, Check, Server } from 'lucide-react';
 import { cn } from '@/utils';
 import { AIProvider, AIModel, AI_MODELS } from '@/services/ai';
 
@@ -15,18 +15,21 @@ const providerIcons: Record<AIProvider, React.ReactNode> = {
   openai: <Sparkles className="h-4 w-4" />,
   anthropic: <Brain className="h-4 w-4" />,
   google: <Zap className="h-4 w-4" />,
+  ollama: <Server className="h-4 w-4" />,
 };
 
 const providerColors: Record<AIProvider, string> = {
   openai: 'text-green-600 dark:text-green-400',
   anthropic: 'text-orange-600 dark:text-orange-400',
   google: 'text-blue-600 dark:text-blue-400',
+  ollama: 'text-purple-600 dark:text-purple-400',
 };
 
 const providerBgColors: Record<AIProvider, string> = {
   openai: 'bg-green-50 dark:bg-green-900/10 border-green-200 dark:border-green-800',
   anthropic: 'bg-orange-50 dark:bg-orange-900/10 border-orange-200 dark:border-orange-800',
   google: 'bg-blue-50 dark:bg-blue-900/10 border-blue-200 dark:border-blue-800',
+  ollama: 'bg-purple-50 dark:bg-purple-900/10 border-purple-200 dark:border-purple-800',
 };
 
 const formatContextSize = (tokens: number): string => {

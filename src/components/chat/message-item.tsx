@@ -1,4 +1,4 @@
-import { User, Sparkles, Brain, Zap } from 'lucide-react';
+import { User, Sparkles, Brain, Zap, Server } from 'lucide-react';
 import type { Message } from '@/types';
 import { cn } from '@/utils';
 import { AI_MODELS } from '@/services/ai';
@@ -12,6 +12,7 @@ const providerIcons = {
   openai: Sparkles,
   anthropic: Brain,
   google: Zap,
+  ollama: Server,
 };
 
 const providerColors = {
@@ -32,6 +33,12 @@ const providerColors = {
     border: 'border-blue-200 dark:border-blue-800',
     icon: 'text-blue-600 dark:text-blue-400',
     iconBg: 'bg-blue-100 dark:bg-blue-900/30',
+  },
+  ollama: {
+    bg: 'bg-gradient-to-br from-purple-50 to-violet-50 dark:from-purple-950/20 dark:to-violet-950/20',
+    border: 'border-purple-200 dark:border-purple-800',
+    icon: 'text-purple-600 dark:text-purple-400',
+    iconBg: 'bg-purple-100 dark:bg-purple-900/30',
   },
 };
 

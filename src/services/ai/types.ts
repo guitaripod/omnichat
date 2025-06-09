@@ -1,4 +1,4 @@
-export type AIProvider = 'openai' | 'anthropic' | 'google';
+export type AIProvider = 'openai' | 'anthropic' | 'google' | 'ollama';
 
 export interface AIModel {
   id: string;
@@ -46,8 +46,15 @@ export interface AIServiceConfig {
   openaiApiKey?: string;
   anthropicApiKey?: string;
   googleApiKey?: string;
+  ollamaBaseUrl?: string;
   defaultProvider?: AIProvider;
   defaultModel?: string;
+}
+
+export interface StreamChunk {
+  type: 'content' | 'error' | 'done';
+  content?: string;
+  error?: Error;
 }
 
 export const AI_MODELS: Record<AIProvider, AIModel[]> = {
@@ -245,6 +252,58 @@ export const AI_MODELS: Record<AIProvider, AIModel[]> = {
       supportsVision: true,
       supportsTools: true,
       description: 'Fast and efficient for most tasks',
+    },
+  ],
+  ollama: [
+    {
+      id: 'llama3.3:latest',
+      name: 'Llama 3.3',
+      provider: 'ollama',
+      contextWindow: 128000,
+      maxOutput: 128000,
+      supportsVision: false,
+      supportsTools: true,
+      description: 'Latest Llama model - great for general tasks',
+    },
+    {
+      id: 'llama3.2:latest',
+      name: 'Llama 3.2',
+      provider: 'ollama',
+      contextWindow: 128000,
+      maxOutput: 128000,
+      supportsVision: false,
+      supportsTools: true,
+      description: 'Stable Llama model with strong performance',
+    },
+    {
+      id: 'mistral:latest',
+      name: 'Mistral',
+      provider: 'ollama',
+      contextWindow: 32000,
+      maxOutput: 32000,
+      supportsVision: false,
+      supportsTools: false,
+      description: 'Fast and efficient for coding tasks',
+    },
+    {
+      id: 'codellama:latest',
+      name: 'Code Llama',
+      provider: 'ollama',
+      contextWindow: 16000,
+      maxOutput: 16000,
+      supportsVision: false,
+      supportsTools: false,
+      description: 'Specialized for code generation',
+    },
+    {
+      id: 'llava:latest',
+      name: 'LLaVA',
+      provider: 'ollama',
+      contextWindow: 4096,
+      maxOutput: 4096,
+      supportsVision: true,
+      supportsTools: false,
+      description: 'Multimodal model with vision capabilities',
     },
   ],
 };

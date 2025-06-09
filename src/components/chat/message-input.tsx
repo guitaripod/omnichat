@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, KeyboardEvent, useEffect } from 'react';
-import { Send, Paperclip, Square, ChevronDown, Sparkles, Brain, Zap } from 'lucide-react';
+import { Send, Paperclip, Square, ChevronDown, Sparkles, Brain, Zap, Server } from 'lucide-react';
 import { cn } from '@/utils';
 import { AIProvider, AIModel, AI_MODELS } from '@/services/ai';
 
@@ -17,12 +17,14 @@ const providerIcons: Record<AIProvider, React.ReactNode> = {
   openai: <Sparkles className="h-3.5 w-3.5" />,
   anthropic: <Brain className="h-3.5 w-3.5" />,
   google: <Zap className="h-3.5 w-3.5" />,
+  ollama: <Server className="h-3.5 w-3.5" />,
 };
 
 const providerColors: Record<AIProvider, string> = {
   openai: 'text-green-600 dark:text-green-400',
   anthropic: 'text-orange-600 dark:text-orange-400',
   google: 'text-blue-600 dark:text-blue-400',
+  ollama: 'text-purple-600 dark:text-purple-400',
 };
 
 export function MessageInput({

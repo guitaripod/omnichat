@@ -1,6 +1,7 @@
 import { OpenAIProvider } from './providers/openai';
 import { AnthropicProvider } from './providers/anthropic';
 import { GoogleProvider } from './providers/google';
+import { OllamaProvider } from './providers/ollama';
 import { ChatProvider, AIProvider, AIServiceConfig, AI_MODELS, AIModel } from './types';
 
 export class AIProviderFactory {
@@ -20,6 +21,10 @@ export class AIProviderFactory {
 
     if (config.googleApiKey) {
       this.providers.set('google', new GoogleProvider(config.googleApiKey));
+    }
+
+    if (config.ollamaBaseUrl) {
+      this.providers.set('ollama', new OllamaProvider(config.ollamaBaseUrl));
     }
   }
 
@@ -66,6 +71,10 @@ export class AIProviderFactory {
         case 'google':
           tempProvider = new GoogleProvider(apiKey);
           break;
+        case 'ollama':
+          // For Ollama, apiKey is actually the base URL
+          tempProvider = new OllamaProvider(apiKey);
+          break;
         default:
           return false;
       }
@@ -90,6 +99,11 @@ export class AIProviderFactory {
       case 'google':
         this.config.googleApiKey = apiKey;
         this.providers.set('google', new GoogleProvider(apiKey));
+        break;
+      case 'ollama':
+        // For Ollama, apiKey is actually the base URL
+        this.config.ollamaBaseUrl = apiKey;
+        this.providers.set('ollama', new OllamaProvider(apiKey));
         break;
     }
   }

@@ -5,6 +5,7 @@ import { MessageList } from './message-list';
 import { MessageInput } from './message-input';
 import type { Message } from '@/types';
 import { generateId } from '@/utils';
+import { AIProviderFactory } from '@/services/ai/provider-factory';
 
 export function ChatContainer() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -21,6 +22,20 @@ export function ChatContainer() {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Initialize AI providers from localStorage
+  useEffect(() => {
+    const savedKeys = localStorage.getItem('apiKeys');
+    if (savedKeys) {
+      const keys = JSON.parse(savedKeys);
+      AIProviderFactory.initialize({
+        openaiApiKey: keys.openai,
+        anthropicApiKey: keys.anthropic,
+        googleApiKey: keys.google,
+        ollamaBaseUrl: keys.ollama,
+      });
+    }
+  }, []);
 
   const handleSendMessage = async (content: string) => {
     const userMessage: Message = {
