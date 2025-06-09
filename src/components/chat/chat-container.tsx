@@ -141,11 +141,6 @@ export function ChatContainer() {
 
   return (
     <div className="flex h-full flex-col bg-white dark:bg-gray-900">
-      {/* Header */}
-      <div className="border-b border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-800">
-        <h1 className="text-lg font-semibold text-gray-900 dark:text-white">Chat</h1>
-      </div>
-
       {/* Messages */}
       <div className="flex-1 overflow-y-auto">
         {messages.length === 0 ? (
