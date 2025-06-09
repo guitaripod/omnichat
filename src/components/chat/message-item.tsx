@@ -177,7 +177,7 @@ export function MessageItem({
 
             {/* Message Actions */}
             {!isStreaming && message.content && (
-              <div className="mt-3 flex items-center gap-2 opacity-0 transition-opacity group-hover:opacity-100">
+              <div className="mt-3 flex items-center gap-2">
                 <button
                   onClick={handleCopy}
                   className="flex items-center gap-1 rounded-md px-2 py-1 text-xs text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
