@@ -2,10 +2,11 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { FileText, Download, X, Maximize2, Minimize2, Eye } from 'lucide-react';
+import { FileText, Download, X, Maximize2, Eye } from 'lucide-react';
 import { FileAttachment } from '@/types/attachments';
 import { cn } from '@/lib/utils';
 import { PDFViewer } from './pdf-viewer';
+import { AttachmentViewerModal } from './attachment-viewer-modal';
 
 interface AttachmentPreviewProps {
   attachment: FileAttachment;
@@ -13,9 +14,9 @@ interface AttachmentPreviewProps {
 }
 
 export function AttachmentPreview({ attachment, onRemove }: AttachmentPreviewProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [showPdfViewer, setShowPdfViewer] = useState(false);
+  const [showModal, setShowModal] = useState(false);
   const isImage = attachment.mimeType.startsWith('image/');
   const isPdf = attachment.mimeType === 'application/pdf';
 
@@ -49,7 +50,7 @@ export function AttachmentPreview({ attachment, onRemove }: AttachmentPreviewPro
           className={cn(
             'relative overflow-hidden rounded-lg border transition-all',
             'border-gray-200 dark:border-gray-700',
-            isExpanded ? 'max-w-full' : 'max-w-sm',
+            'max-w-sm',
             'hover:border-gray-300 dark:hover:border-gray-600'
           )}
         >
@@ -57,8 +58,8 @@ export function AttachmentPreview({ attachment, onRemove }: AttachmentPreviewPro
             <Image
               src={getAttachmentUrl()}
               alt={attachment.fileName}
-              width={isExpanded ? 800 : 400}
-              height={isExpanded ? 600 : 300}
+              width={400}
+              height={300}
               className="h-auto w-full"
               onError={() => setImageError(true)}
               priority={false}
@@ -68,15 +69,11 @@ export function AttachmentPreview({ attachment, onRemove }: AttachmentPreviewPro
             <div className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-colors hover:bg-black/50 hover:opacity-100">
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => setIsExpanded(!isExpanded)}
+                  onClick={() => setShowModal(true)}
                   className="rounded-lg bg-white/90 p-2 transition-colors hover:bg-white dark:bg-gray-800/90 dark:hover:bg-gray-700"
-                  aria-label={isExpanded ? 'Minimize' : 'Maximize'}
+                  aria-label="View fullscreen"
                 >
-                  {isExpanded ? (
-                    <Minimize2 className="h-4 w-4" />
-                  ) : (
-                    <Maximize2 className="h-4 w-4" />
-                  )}
+                  <Maximize2 className="h-4 w-4" />
                 </button>
                 <button
                   onClick={handleDownload}
@@ -105,6 +102,15 @@ export function AttachmentPreview({ attachment, onRemove }: AttachmentPreviewPro
             </p>
           </div>
         </div>
+
+        {/* Attachment Viewer Modal */}
+        {showModal && (
+          <AttachmentViewerModal
+            attachments={[attachment]}
+            initialIndex={0}
+            onClose={() => setShowModal(false)}
+          />
+        )}
       </div>
     );
   }
