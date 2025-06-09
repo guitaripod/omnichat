@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ChevronDown, Sparkles, Brain, Zap, Check, Server } from 'lucide-react';
+import { ChevronDown, Sparkles, Brain, Zap, Check, Server, Wifi, WifiOff } from 'lucide-react';
 import { cn } from '@/utils';
 import { AIProvider, AIModel, AI_MODELS } from '@/services/ai';
 import { OllamaProvider } from '@/services/ai/providers/ollama';
+import { useOllama } from '@/hooks/use-ollama';
 
 interface ModelSelectorProps {
   selectedModel: string;
@@ -45,6 +46,11 @@ export function ModelSelector({ selectedModel, onModelChange, className }: Model
   const [availableModels, setAvailableModels] = useState<AIModel[]>([]);
   const [selectedModelInfo, setSelectedModelInfo] = useState<AIModel | undefined>();
   const [hoveredModel, setHoveredModel] = useState<string | null>(null);
+
+  // Get Ollama connection status
+  const savedKeys = typeof window !== 'undefined' ? localStorage.getItem('apiKeys') : null;
+  const ollamaBaseUrl = savedKeys ? JSON.parse(savedKeys).ollama : undefined;
+  const { isOllamaAvailable } = useOllama(ollamaBaseUrl);
 
   useEffect(() => {
     const loadModels = async () => {
@@ -164,6 +170,21 @@ export function ModelSelector({ selectedModel, onModelChange, className }: Model
                     <span className="text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">
                       {provider}
                     </span>
+                    {provider === 'ollama' && (
+                      <span className="ml-auto flex items-center gap-1">
+                        {isOllamaAvailable ? (
+                          <>
+                            <Wifi className="h-3 w-3 text-green-500" />
+                            <span className="text-xs text-green-500">Connected</span>
+                          </>
+                        ) : (
+                          <>
+                            <WifiOff className="h-3 w-3 text-red-500" />
+                            <span className="text-xs text-red-500">Not available</span>
+                          </>
+                        )}
+                      </span>
+                    )}
                   </div>
 
                   {/* Compact Model List */}

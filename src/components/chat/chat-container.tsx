@@ -7,6 +7,8 @@ import type { Message } from '@/types';
 import { generateId } from '@/utils';
 import { AIProviderFactory } from '@/services/ai/provider-factory';
 import { useConversationStore } from '@/store/conversations';
+import { useOllama } from '@/hooks/use-ollama';
+import { OllamaClientProvider } from '@/services/ai/providers/ollama-client';
 
 export function ChatContainer() {
   const { currentConversationId, createConversation, addMessage, updateMessage } =
@@ -22,6 +24,12 @@ export function ChatContainer() {
   const [, setStreamingMessage] = useState<string>('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const ollamaProviderRef = useRef<OllamaClientProvider | null>(null);
+
+  // Get Ollama connection status
+  const savedKeys = typeof window !== 'undefined' ? localStorage.getItem('apiKeys') : null;
+  const ollamaBaseUrl = savedKeys ? JSON.parse(savedKeys).ollama : undefined;
+  const { isOllamaAvailable } = useOllama(ollamaBaseUrl);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -71,28 +79,55 @@ export function ChatContainer() {
     abortControllerRef.current = new AbortController();
 
     try {
-      // Get Ollama base URL from localStorage
-      const savedKeys = localStorage.getItem('apiKeys');
-      const ollamaBaseUrl = savedKeys ? JSON.parse(savedKeys).ollama : undefined;
+      let response: Response;
+      let reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
 
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      // Check if this is an Ollama model and if Ollama is available locally
+      const isOllamaModel = selectedModel.startsWith('ollama/');
+
+      if (isOllamaModel && isOllamaAvailable && ollamaBaseUrl) {
+        // Direct browser-to-Ollama connection
+        console.log('Using direct Ollama connection for model:', selectedModel);
+
+        if (!ollamaProviderRef.current) {
+          ollamaProviderRef.current = new OllamaClientProvider(ollamaBaseUrl);
+        }
+
+        const streamResponse = await ollamaProviderRef.current.chatCompletion({
           messages: [...messages, userMessage].map((msg) => ({
             role: msg.role,
             content: msg.content,
           })),
           model: selectedModel,
           stream: true,
-          ollamaBaseUrl,
-        }),
-        signal: abortControllerRef.current.signal,
-      });
+        });
 
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(error || 'Failed to send message');
+        reader = streamResponse.stream.getReader();
+      } else {
+        // Server-side API route for cloud providers
+        console.log('Using server API route for model:', selectedModel);
+
+        response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            messages: [...messages, userMessage].map((msg) => ({
+              role: msg.role,
+              content: msg.content,
+            })),
+            model: selectedModel,
+            stream: true,
+            ollamaBaseUrl: isOllamaModel ? ollamaBaseUrl : undefined,
+          }),
+          signal: abortControllerRef.current.signal,
+        });
+
+        if (!response.ok) {
+          const error = await response.text();
+          throw new Error(error || 'Failed to send message');
+        }
+
+        reader = response.body?.getReader();
       }
 
       // Create assistant message placeholder
@@ -108,7 +143,6 @@ export function ChatContainer() {
       addMessage(currentConversationId, assistantMessage);
 
       // Handle streaming response
-      const reader = response.body?.getReader();
       const decoder = new TextDecoder();
 
       if (reader) {
@@ -178,6 +212,9 @@ export function ChatContainer() {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
+    if (ollamaProviderRef.current) {
+      ollamaProviderRef.current.abort();
+    }
   };
 
   const handleRegenerateMessage = async (index: number) => {
@@ -201,27 +238,52 @@ export function ChatContainer() {
     abortControllerRef.current = new AbortController();
 
     try {
-      // Get Ollama base URL from localStorage
-      const savedKeys = localStorage.getItem('apiKeys');
-      const ollamaBaseUrl = savedKeys ? JSON.parse(savedKeys).ollama : undefined;
+      let response: Response;
+      let reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
 
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      // Check if this is an Ollama model and if Ollama is available locally
+      const isOllamaModel = selectedModel.startsWith('ollama/');
+
+      if (isOllamaModel && isOllamaAvailable && ollamaBaseUrl) {
+        // Direct browser-to-Ollama connection
+        console.log('Using direct Ollama connection for regeneration:', selectedModel);
+
+        if (!ollamaProviderRef.current) {
+          ollamaProviderRef.current = new OllamaClientProvider(ollamaBaseUrl);
+        }
+
+        const streamResponse = await ollamaProviderRef.current.chatCompletion({
           messages: previousMessages.map((msg) => ({
             role: msg.role,
             content: msg.content,
           })),
           model: selectedModel,
           stream: true,
-          ollamaBaseUrl,
-        }),
-        signal: abortControllerRef.current.signal,
-      });
+        });
 
-      if (!response.ok) {
-        throw new Error('Failed to regenerate message');
+        reader = streamResponse.stream.getReader();
+      } else {
+        // Server-side API route for cloud providers
+        response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            messages: previousMessages.map((msg) => ({
+              role: msg.role,
+              content: msg.content,
+            })),
+            model: selectedModel,
+            stream: true,
+            ollamaBaseUrl: isOllamaModel ? ollamaBaseUrl : undefined,
+          }),
+          signal: abortControllerRef.current.signal,
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to regenerate message');
+        }
+
+        reader = response.body?.getReader();
       }
 
       // Create new assistant message placeholder
@@ -237,7 +299,6 @@ export function ChatContainer() {
       addMessage(currentConversationId, newAssistantMessage);
 
       // Handle streaming response (same as in handleSendMessage)
-      const reader = response.body?.getReader();
       const decoder = new TextDecoder();
 
       if (reader) {
