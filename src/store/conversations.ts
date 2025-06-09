@@ -2,6 +2,8 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { Conversation, Message } from '@/types';
 import { generateId } from '@/utils';
+import { offlineStorage } from '@/services/storage/offline';
+import { syncService } from '@/services/storage/sync';
 
 interface ConversationState {
   conversations: Conversation[];
@@ -58,6 +60,9 @@ export const useConversationStore = create<ConversationState>()(
           messages: { ...state.messages, [conversation.id]: [] },
         }));
 
+        // Save to offline storage
+        await offlineStorage.saveConversation(conversation);
+
         // Try to persist to database
         try {
           const response = await fetch('/api/conversations', {
@@ -95,6 +100,11 @@ export const useConversationStore = create<ConversationState>()(
           }
         } catch (error) {
           console.error('Failed to persist conversation:', error);
+          // Add to sync queue for later
+          await offlineStorage.addToSyncQueue({
+            type: 'create_conversation',
+            data: { title: conversation.title, model: conversation.model },
+          });
         }
 
         return conversation;
@@ -139,6 +149,9 @@ export const useConversationStore = create<ConversationState>()(
           ),
         }));
 
+        // Save to offline storage
+        await offlineStorage.saveMessage(message);
+
         // Try to persist to database
         try {
           await fetch(`/api/conversations/${conversationId}/messages`, {
@@ -153,6 +166,17 @@ export const useConversationStore = create<ConversationState>()(
           });
         } catch (error) {
           console.error('Failed to persist message:', error);
+          // Add to sync queue for later
+          await offlineStorage.addToSyncQueue({
+            type: 'create_message',
+            data: {
+              conversationId,
+              role: message.role,
+              content: message.content,
+              model: message.model,
+              parentId: message.parentId,
+            },
+          });
         }
       },
 
@@ -190,21 +214,45 @@ export const useConversationStore = create<ConversationState>()(
       syncConversations: async () => {
         set({ isSyncing: true });
         try {
+          // Process offline sync queue first
+          if (syncService.isOnline()) {
+            await syncService.processSyncQueue();
+          }
+
           const response = await fetch('/api/conversations');
           if (response.ok) {
             const { conversations } = await response.json();
+            const formattedConversations = conversations.map((c: any) => ({
+              ...c,
+              createdAt: new Date(c.createdAt),
+              updatedAt: new Date(c.updatedAt),
+            }));
+
             set({
-              conversations: conversations.map((c: any) => ({
-                ...c,
-                createdAt: new Date(c.createdAt),
-                updatedAt: new Date(c.updatedAt),
-              })),
+              conversations: formattedConversations,
               isSyncing: false,
             });
+
+            // Update offline storage
+            for (const conv of formattedConversations) {
+              await offlineStorage.saveConversation(conv);
+            }
           }
         } catch (error) {
           console.error('Failed to sync conversations:', error);
-          set({ isSyncing: false });
+
+          // Fallback to offline storage
+          try {
+            const userId = 'current-user'; // TODO: Get from auth
+            const offlineConversations = await offlineStorage.getConversations(userId);
+            set({
+              conversations: offlineConversations,
+              isSyncing: false,
+            });
+          } catch (offlineError) {
+            console.error('Failed to load offline conversations:', offlineError);
+            set({ isSyncing: false });
+          }
         }
       },
 
@@ -213,19 +261,37 @@ export const useConversationStore = create<ConversationState>()(
           const response = await fetch(`/api/conversations/${conversationId}/messages`);
           if (response.ok) {
             const { messages } = await response.json();
+            const formattedMessages = messages.map((m: any) => ({
+              ...m,
+              createdAt: new Date(m.createdAt),
+              updatedAt: m.updatedAt ? new Date(m.updatedAt) : undefined,
+            }));
+
             set((state) => ({
               messages: {
                 ...state.messages,
-                [conversationId]: messages.map((m: any) => ({
-                  ...m,
-                  createdAt: new Date(m.createdAt),
-                  updatedAt: m.updatedAt ? new Date(m.updatedAt) : undefined,
-                })),
+                [conversationId]: formattedMessages,
               },
             }));
+
+            // Update offline storage
+            await offlineStorage.saveMessages(formattedMessages);
           }
         } catch (error) {
           console.error('Failed to sync messages:', error);
+
+          // Fallback to offline storage
+          try {
+            const offlineMessages = await offlineStorage.getMessages(conversationId);
+            set((state) => ({
+              messages: {
+                ...state.messages,
+                [conversationId]: offlineMessages,
+              },
+            }));
+          } catch (offlineError) {
+            console.error('Failed to load offline messages:', offlineError);
+          }
         }
       },
     }),
