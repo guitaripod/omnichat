@@ -25,6 +25,7 @@ export function ChatContainer() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const ollamaProviderRef = useRef<OllamaClientProvider | null>(null);
+  const isCreatingConversationRef = useRef(false);
 
   // Get Ollama connection status
   const savedKeys = typeof window !== 'undefined' ? localStorage.getItem('apiKeys') : null;
@@ -55,8 +56,13 @@ export function ChatContainer() {
 
   // Create conversation if none exists
   useEffect(() => {
-    if (!currentConversationId) {
-      createConversation('New Chat', selectedModel).catch(console.error);
+    if (!currentConversationId && !isCreatingConversationRef.current) {
+      isCreatingConversationRef.current = true;
+      createConversation('New Chat', selectedModel)
+        .catch(console.error)
+        .finally(() => {
+          isCreatingConversationRef.current = false;
+        });
     }
   }, [currentConversationId, createConversation, selectedModel]);
 

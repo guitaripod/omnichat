@@ -8,7 +8,7 @@ interface SyncOptions {
 
 export function useSync(options: SyncOptions = {}) {
   const { enabled = true, interval = 30000 } = options; // Default 30 seconds
-  const { syncConversations, currentConversationId, syncMessages } = useConversationStore();
+  const { syncConversations, syncMessages } = useConversationStore();
   const syncIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const lastSyncRef = useRef<Date>(new Date());
   const syncDebounceRef = useRef<NodeJS.Timeout | null>(null);
@@ -19,16 +19,19 @@ export function useSync(options: SyncOptions = {}) {
       // Sync conversations list
       await syncConversations();
 
+      // Get current conversation ID from store state directly
+      const state = useConversationStore.getState();
+
       // Sync current conversation messages if one is selected
-      if (currentConversationId) {
-        await syncMessages(currentConversationId);
+      if (state.currentConversationId) {
+        await syncMessages(state.currentConversationId);
       }
 
       lastSyncRef.current = new Date();
     } catch (error) {
       console.error('Sync failed:', error);
     }
-  }, [syncConversations, syncMessages, currentConversationId]);
+  }, [syncConversations, syncMessages]);
 
   // Debounced sync function
   const performSyncDebounced = useCallback(() => {
