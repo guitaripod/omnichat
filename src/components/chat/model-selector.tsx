@@ -29,12 +29,6 @@ const providerBgColors: Record<AIProvider, string> = {
   google: 'bg-blue-50 dark:bg-blue-900/10 border-blue-200 dark:border-blue-800',
 };
 
-const providerAccentColors: Record<AIProvider, string> = {
-  openai: 'bg-green-500',
-  anthropic: 'bg-orange-500',
-  google: 'bg-blue-500',
-};
-
 const formatContextSize = (tokens: number): string => {
   if (tokens >= 1000000) {
     return `${(tokens / 1000000).toFixed(1)}M`;
@@ -46,6 +40,7 @@ export function ModelSelector({ selectedModel, onModelChange, className }: Model
   const [isOpen, setIsOpen] = useState(false);
   const [availableModels, setAvailableModels] = useState<AIModel[]>([]);
   const [selectedModelInfo, setSelectedModelInfo] = useState<AIModel | undefined>();
+  const [hoveredModel, setHoveredModel] = useState<string | null>(null);
 
   useEffect(() => {
     // Get all models from AI_MODELS constant
@@ -98,135 +93,112 @@ export function ModelSelector({ selectedModel, onModelChange, className }: Model
 
       {isOpen && (
         <>
-          <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
+          <div className="fixed inset-0 z-[9998]" onClick={() => setIsOpen(false)} />
           <div
             className={cn(
-              'absolute left-1/2 z-50 mt-2 w-[900px] max-w-[95vw] -translate-x-1/2',
-              'rounded-2xl border bg-white/95 shadow-2xl backdrop-blur-xl',
+              'absolute left-0 z-[9999] mt-2 w-[480px] max-w-[calc(100vw-2rem)]',
+              'rounded-xl border bg-white/95 shadow-2xl backdrop-blur-xl',
               'border-gray-200 dark:border-gray-700 dark:bg-gray-900/95',
-              'scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 max-h-[80vh] overflow-y-auto'
+              'max-h-[70vh] overflow-y-auto'
             )}
           >
             {/* Header */}
-            <div className="sticky top-0 z-10 border-b border-gray-200 bg-white/80 px-6 py-4 backdrop-blur-xl dark:border-gray-700 dark:bg-gray-900/80">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Select AI Model
-              </h3>
-              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                Choose from {availableModels.length} available models
-              </p>
+            <div className="sticky top-0 z-10 border-b border-gray-200 bg-white/80 px-4 py-3 backdrop-blur-xl dark:border-gray-700 dark:bg-gray-900/80">
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Select Model</h3>
             </div>
 
-            {/* Models Grid */}
-            <div className="space-y-8 p-6">
+            {/* Models List */}
+            <div className="p-2">
               {Object.entries(groupedModels).map(([provider, models]) => (
-                <div key={provider}>
+                <div key={provider} className="mb-3">
                   {/* Provider Header */}
-                  <div className="mb-4 flex items-center gap-3">
-                    <span
-                      className={cn(
-                        'flex h-8 w-8 items-center justify-center rounded-lg',
-                        providerBgColors[provider as AIProvider].split(' ')[0]
-                      )}
-                    >
-                      <span className={providerColors[provider as AIProvider]}>
-                        {providerIcons[provider as AIProvider]}
-                      </span>
+                  <div className="mb-2 flex items-center gap-2 px-2">
+                    <span className={providerColors[provider as AIProvider]}>
+                      {providerIcons[provider as AIProvider]}
                     </span>
-                    <div>
-                      <h4 className="text-sm font-semibold tracking-wider text-gray-900 uppercase dark:text-white">
-                        {provider}
-                      </h4>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        {models.length} models available
-                      </p>
-                    </div>
+                    <span className="text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                      {provider}
+                    </span>
                   </div>
 
-                  {/* Models Grid */}
-                  <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
+                  {/* Compact Model List */}
+                  <div className="space-y-1">
                     {models.map((model) => (
-                      <button
-                        key={model.id}
-                        onClick={() => {
-                          onModelChange(model.id);
-                          setIsOpen(false);
-                        }}
-                        className={cn(
-                          'group relative rounded-xl border-2 p-4 text-left transition-all duration-200',
-                          'hover:scale-[1.02] hover:shadow-lg',
-                          selectedModel === model.id
-                            ? cn('border-2', providerBgColors[provider as AIProvider])
-                            : 'border-gray-200 hover:border-gray-300 dark:border-gray-700 dark:hover:border-gray-600'
-                        )}
-                      >
-                        {/* Selection indicator */}
-                        {selectedModel === model.id && (
-                          <div
-                            className={cn(
-                              'absolute top-3 right-3 flex h-6 w-6 items-center justify-center rounded-full',
-                              providerAccentColors[provider as AIProvider]
-                            )}
-                          >
-                            <Check className="h-3 w-3 text-white" />
-                          </div>
-                        )}
-
-                        {/* Model Content */}
-                        <div className="space-y-3">
-                          {/* Name and specs */}
-                          <div>
-                            <h5
+                      <div key={model.id} className="relative">
+                        <button
+                          onClick={() => {
+                            onModelChange(model.id);
+                            setIsOpen(false);
+                          }}
+                          onMouseEnter={() => setHoveredModel(model.id)}
+                          onMouseLeave={() => setHoveredModel(null)}
+                          className={cn(
+                            'group relative flex w-full items-center justify-between rounded-lg px-3 py-2 text-left transition-all',
+                            selectedModel === model.id
+                              ? cn(
+                                  'bg-opacity-20',
+                                  providerBgColors[provider as AIProvider].split(' ')[0]
+                                )
+                              : 'hover:bg-gray-100 dark:hover:bg-gray-800'
+                          )}
+                        >
+                          {/* Left side - Name and specs */}
+                          <div className="flex items-center gap-3">
+                            <span
                               className={cn(
-                                'text-base font-semibold',
+                                'text-sm font-medium',
                                 selectedModel === model.id
                                   ? providerColors[provider as AIProvider]
                                   : 'text-gray-900 dark:text-white'
                               )}
                             >
                               {model.name}
-                            </h5>
-                            <div className="mt-1 flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
-                              <span className="flex items-center gap-1">
-                                <span className="font-mono font-medium">
-                                  {formatContextSize(model.contextWindow)}
-                                </span>
-                                <span>ctx</span>
+                            </span>
+                            <span className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                              <span className="font-mono">
+                                {formatContextSize(model.contextWindow)}
                               </span>
-                              <span className="text-gray-300 dark:text-gray-600">•</span>
-                              <span className="flex items-center gap-1">
-                                <span className="font-mono font-medium">
-                                  {formatContextSize(model.maxOutput)}
-                                </span>
-                                <span>out</span>
+                              <span className="text-gray-300 dark:text-gray-600">·</span>
+                              <span className="font-mono">
+                                {formatContextSize(model.maxOutput)}
                               </span>
-                            </div>
+                            </span>
                           </div>
 
-                          {/* Description */}
-                          {model.description && (
-                            <p className="line-clamp-2 text-xs text-gray-600 dark:text-gray-400">
-                              {model.description}
-                            </p>
-                          )}
-
-                          {/* Features */}
+                          {/* Right side - Features and selection */}
                           <div className="flex items-center gap-2">
                             {model.supportsVision && (
-                              <span className="inline-flex items-center gap-1 rounded-full bg-purple-100 px-2.5 py-1 text-[10px] font-medium text-purple-700 dark:bg-purple-900/30 dark:text-purple-300">
-                                <span className="h-1 w-1 rounded-full bg-purple-500" />
+                              <span className="text-[10px] text-purple-600 dark:text-purple-400">
                                 Vision
                               </span>
                             )}
                             {model.supportsTools && (
-                              <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-1 text-[10px] font-medium text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
-                                <span className="h-1 w-1 rounded-full bg-amber-500" />
+                              <span className="text-[10px] text-amber-600 dark:text-amber-400">
                                 Tools
                               </span>
                             )}
+                            {selectedModel === model.id && (
+                              <Check className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
+                            )}
                           </div>
-                        </div>
-                      </button>
+                        </button>
+
+                        {/* Hover tooltip for description */}
+                        {hoveredModel === model.id && model.description && (
+                          <div
+                            className={cn(
+                              'absolute top-0 left-full z-[10000] ml-2 w-64 rounded-lg',
+                              'border bg-white p-3 shadow-lg',
+                              'border-gray-200 dark:border-gray-700 dark:bg-gray-800',
+                              'pointer-events-none'
+                            )}
+                          >
+                            <p className="text-xs text-gray-600 dark:text-gray-300">
+                              {model.description}
+                            </p>
+                          </div>
+                        )}
+                      </div>
                     ))}
                   </div>
                 </div>
