@@ -6,6 +6,16 @@ import { createMessage, getUserByClerkId } from '@/lib/db/queries';
 
 export const runtime = 'edge';
 
+interface ChatRequest {
+  messages: Array<{ role: string; content: string }>;
+  model: string;
+  temperature?: number;
+  maxTokens?: number;
+  stream?: boolean;
+  ollamaBaseUrl?: string;
+  conversationId?: string;
+}
+
 export async function POST(req: NextRequest) {
   try {
     // Authenticate user
@@ -18,9 +28,20 @@ export async function POST(req: NextRequest) {
     // Initialize AI providers from Cloudflare secrets
     // Check if environment variables are available
     console.log('Checking environment variables...');
+
+    // Debug: Log all available environment variable keys
+    console.log('All process.env keys:', Object.keys(process.env));
+    console.log('NODE_ENV:', process.env.NODE_ENV);
+    console.log('Looking for API keys...');
+
     const openaiApiKey = process.env.OPENAI_API_KEY;
     const anthropicApiKey = process.env.ANTHROPIC_API_KEY;
     const googleApiKey = process.env.GOOGLE_API_KEY;
+
+    // Debug: Check each key
+    console.log('OPENAI_API_KEY exists:', !!openaiApiKey);
+    console.log('ANTHROPIC_API_KEY exists:', !!anthropicApiKey);
+    console.log('GOOGLE_API_KEY exists:', !!googleApiKey);
 
     if (!openaiApiKey || !anthropicApiKey || !googleApiKey) {
       console.error('Missing API keys:', {
@@ -33,7 +54,7 @@ export async function POST(req: NextRequest) {
 
     // Parse request body
     console.log('Parsing request body...');
-    const body = await req.json();
+    const body = (await req.json()) as ChatRequest;
     const {
       messages,
       model,

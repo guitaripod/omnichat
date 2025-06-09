@@ -47,6 +47,7 @@
   "devDependencies": {
     "@cloudflare/next-on-pages": "^1.13.12",
     "@cloudflare/vitest-pool-workers": "^0.8.36",
+    "@cloudflare/workers-types": "^4.20250607.0",
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
     "@testing-library/jest-dom": "^6.6.3",
