@@ -96,7 +96,8 @@ export function ModelSelector({ selectedModel, onModelChange, className }: Model
           <div className="fixed inset-0 z-[9998]" onClick={() => setIsOpen(false)} />
           <div
             className={cn(
-              'absolute left-0 z-[9999] mt-2 w-[480px] max-w-[calc(100vw-2rem)]',
+              'absolute right-0 left-0 z-[9999] mt-2',
+              'sm:right-auto sm:left-auto sm:w-[480px]',
               'rounded-xl border bg-white/95 shadow-2xl backdrop-blur-xl',
               'border-gray-200 dark:border-gray-700 dark:bg-gray-900/95',
               'max-h-[70vh] overflow-y-auto'
@@ -143,7 +144,7 @@ export function ModelSelector({ selectedModel, onModelChange, className }: Model
                           )}
                         >
                           {/* Left side - Name and specs */}
-                          <div className="flex items-center gap-3">
+                          <div className="flex flex-1 flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
                             <span
                               className={cn(
                                 'text-sm font-medium',
@@ -166,7 +167,7 @@ export function ModelSelector({ selectedModel, onModelChange, className }: Model
                           </div>
 
                           {/* Right side - Features and selection */}
-                          <div className="flex items-center gap-2">
+                          <div className="flex shrink-0 items-center gap-2">
                             {model.supportsVision && (
                               <span className="text-[10px] text-purple-600 dark:text-purple-400">
                                 Vision
@@ -187,7 +188,8 @@ export function ModelSelector({ selectedModel, onModelChange, className }: Model
                         {hoveredModel === model.id && model.description && (
                           <div
                             className={cn(
-                              'absolute bottom-full left-0 z-[10000] mb-2 w-64 rounded-lg',
+                              'absolute bottom-full left-0 z-[10000] mb-2 rounded-lg',
+                              'hidden w-64 sm:block',
                               'border bg-white p-3 shadow-lg',
                               'border-gray-200 dark:border-gray-700 dark:bg-gray-800',
                               'pointer-events-none'
