@@ -47,7 +47,8 @@ export class GoogleProvider implements ChatProvider {
 
     try {
       const endpoint = stream ? 'streamGenerateContent' : 'generateContent';
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:${endpoint}?key=${this.apiKey}`;
+      const altParam = stream ? '&alt=sse' : '';
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:${endpoint}?key=${this.apiKey}${altParam}`;
       console.log(`[Google] Request URL: ${url.replace(this.apiKey, 'REDACTED')}`);
 
       console.log('[Google] Sending request to Google AI API...');
@@ -77,50 +78,85 @@ export class GoogleProvider implements ChatProvider {
           throw new Error('Response body is not readable');
         }
 
+        console.log('[Google] Starting to read streaming response...');
+
         const streamResponse = new ReadableStream({
           async start(controller) {
             try {
               let buffer = '';
+              let chunkCount = 0;
+
               while (true) {
                 const { done, value } = await reader.read();
 
                 if (done) {
+                  console.log('[Google] Stream reading complete');
                   controller.close();
                   break;
                 }
 
+                chunkCount++;
                 buffer += decoder.decode(value, { stream: true });
+                console.log(`[Google] Chunk ${chunkCount}, buffer size: ${buffer.length}`);
                 console.log('[Google] Raw buffer chunk:', buffer.substring(0, 200));
 
                 const lines = buffer.split('\n');
                 buffer = lines.pop() || '';
 
                 for (const line of lines) {
-                  if (line.trim()) {
+                  const trimmedLine = line.trim();
+                  if (!trimmedLine) continue;
+
+                  // Handle SSE format
+                  if (trimmedLine.startsWith('data: ')) {
+                    const data = trimmedLine.slice(6);
+
+                    // Skip SSE control messages
+                    if (data === '[DONE]') {
+                      console.log('[Google] Received end of stream marker');
+                      continue;
+                    }
+
                     try {
-                      const parsed = JSON.parse(line);
+                      const parsed = JSON.parse(data);
                       console.log(
-                        '[Google] Parsed streaming line:',
-                        JSON.stringify(parsed, null, 2)
+                        '[Google] Parsed SSE data:',
+                        JSON.stringify(parsed, null, 2).substring(0, 500)
                       );
 
-                      // Check for text in different possible locations
-                      const text =
-                        parsed.candidates?.[0]?.content?.parts?.[0]?.text ||
-                        parsed.text ||
-                        parsed.candidates?.[0]?.text;
+                      // Extract text from Gemini streaming response
+                      let text = '';
+
+                      // Standard Gemini response structure
+                      if (parsed.candidates?.[0]?.content?.parts?.[0]?.text) {
+                        text = parsed.candidates[0].content.parts[0].text;
+                      }
 
                       if (text) {
-                        console.log(`[Google] Found text: ${text.substring(0, 50)}...`);
+                        console.log(`[Google] Found text: "${text.substring(0, 50)}..."`);
                         controller.enqueue(
                           encoder.encode(`data: ${JSON.stringify({ content: text })}\n\n`)
                         );
                       } else {
-                        console.log('[Google] No text found in response structure');
+                        console.log('[Google] No text found in SSE data');
+                        if (parsed.candidates?.[0]) {
+                          console.log(
+                            '[Google] Candidate structure:',
+                            JSON.stringify(parsed.candidates[0])
+                          );
+                        }
                       }
                     } catch (e) {
-                      console.error('[Google] Error parsing streaming line:', line, e);
+                      console.error(
+                        '[Google] Error parsing SSE data:',
+                        data,
+                        'Error:',
+                        e instanceof Error ? e.message : String(e)
+                      );
                     }
+                  } else {
+                    // Log non-SSE lines for debugging
+                    console.log('[Google] Non-SSE line:', trimmedLine);
                   }
                 }
               }
