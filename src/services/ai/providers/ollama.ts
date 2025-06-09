@@ -71,6 +71,8 @@ export class OllamaProvider implements ChatProvider {
     this.abortController = new AbortController();
 
     try {
+      console.log('Ollama streamChat called with:', { baseUrl: this.baseUrl, model, messages });
+
       const response = await fetch(`${this.baseUrl}/api/chat`, {
         method: 'POST',
         headers: {
@@ -88,7 +90,9 @@ export class OllamaProvider implements ChatProvider {
       });
 
       if (!response.ok) {
-        throw new Error(`Ollama API error: ${response.statusText}`);
+        const errorText = await response.text();
+        console.error('Ollama API error:', response.status, errorText);
+        throw new Error(`Ollama API error: ${response.statusText} - ${errorText}`);
       }
 
       const reader = response.body?.getReader();
@@ -111,6 +115,7 @@ export class OllamaProvider implements ChatProvider {
           if (line.trim()) {
             try {
               const data = JSON.parse(line);
+              console.log('Ollama response line:', data);
 
               if (data.message?.content) {
                 yield {
@@ -123,7 +128,7 @@ export class OllamaProvider implements ChatProvider {
                 yield { type: 'done' };
               }
             } catch (e) {
-              console.error('Failed to parse Ollama response:', e);
+              console.error('Failed to parse Ollama response:', e, 'Line:', line);
             }
           }
         }

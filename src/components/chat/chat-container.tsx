@@ -128,15 +128,25 @@ export function ChatContainer() {
 
               try {
                 const parsed = JSON.parse(data);
+                console.log('Parsed streaming data:', parsed);
+
+                // Handle different response formats
+                let content = '';
                 if (parsed.content) {
-                  accumulatedContent += parsed.content;
+                  content = parsed.content;
+                } else if (parsed.choices?.[0]?.delta?.content) {
+                  content = parsed.choices[0].delta.content;
+                }
+
+                if (content) {
+                  accumulatedContent += content;
                   setStreamingMessage(accumulatedContent);
 
                   // Update the assistant message
                   updateMessage(currentConversationId, assistantMessage.id, accumulatedContent);
                 }
-              } catch {
-                // Continue on parse error
+              } catch (e) {
+                console.error('Error parsing streaming data:', e, 'Line:', line);
               }
             }
           }
@@ -247,13 +257,22 @@ export function ChatContainer() {
 
               try {
                 const parsed = JSON.parse(data);
+
+                // Handle different response formats
+                let content = '';
                 if (parsed.content) {
-                  accumulatedContent += parsed.content;
+                  content = parsed.content;
+                } else if (parsed.choices?.[0]?.delta?.content) {
+                  content = parsed.choices[0].delta.content;
+                }
+
+                if (content) {
+                  accumulatedContent += content;
                   setStreamingMessage(accumulatedContent);
                   updateMessage(currentConversationId, newAssistantMessage.id, accumulatedContent);
                 }
-              } catch {
-                // Continue on parse error
+              } catch (e) {
+                console.error('Error parsing streaming data in regenerate:', e);
               }
             }
           }
