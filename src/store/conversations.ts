@@ -293,20 +293,38 @@ export const useConversationStore = create<ConversationState>()(
               updatedAt: m.updatedAt ? new Date(m.updatedAt) : undefined,
             }));
 
-            // Merge strategy for messages
+            // Merge strategy for messages with deduplication
             set((state) => {
               const localMessages = state.messages[conversationId] || [];
               const messageMap = new Map<string, Message>();
+              const contentTimeMap = new Map<string, Message>();
 
-              // Add server messages first
+              // Create a key for deduplication based on content, role, and approximate time
+              const getDedupeKey = (msg: Message) => {
+                const timeWindow = Math.floor(msg.createdAt.getTime() / 5000) * 5000; // 5-second window
+                return `${msg.role}|${msg.content}|${timeWindow}`;
+              };
+
+              // Add server messages first (they take precedence)
               for (const msg of serverMessages) {
                 messageMap.set(msg.id, msg);
+                contentTimeMap.set(getDedupeKey(msg), msg);
               }
 
-              // Preserve local messages with temp IDs or that aren't on server
+              // Only add local messages that don't duplicate server messages
               for (const msg of localMessages) {
-                if (msg.id.startsWith('temp-') && !messageMap.has(msg.id)) {
+                const dedupeKey = getDedupeKey(msg);
+                const existingMsg = contentTimeMap.get(dedupeKey);
+
+                // Skip if we already have this message from server
+                if (existingMsg && !msg.id.startsWith('temp-')) {
+                  continue;
+                }
+
+                // Keep temp messages that aren't duplicates
+                if (msg.id.startsWith('temp-') && !existingMsg) {
                   messageMap.set(msg.id, msg);
+                  contentTimeMap.set(dedupeKey, msg);
                 }
               }
 

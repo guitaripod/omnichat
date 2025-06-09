@@ -3,7 +3,7 @@ import { currentUser } from '@clerk/nextjs/server';
 import { AIProviderFactory, AI_MODELS } from '@/services/ai';
 import type { ChatMessage } from '@/services/ai/types';
 import { getD1Database } from '@/lib/db/get-db';
-import { createMessage, getUserByClerkId } from '@/lib/db/queries';
+import { getUserByClerkId } from '@/lib/db/queries';
 import { getRequestContext } from '@cloudflare/next-on-pages';
 import type { CloudflareEnv } from '../../../../env';
 
@@ -101,12 +101,11 @@ export async function POST(req: NextRequest) {
     }
 
     // Get database instance
-    let dbUser = null;
     let db: ReturnType<typeof getD1Database> | null = null;
 
     try {
       db = getD1Database();
-      dbUser = await getUserByClerkId(db, userId);
+      await getUserByClerkId(db, userId);
     } catch (error) {
       console.error('Database connection error:', error);
       // Continue without database for now
@@ -122,6 +121,11 @@ export async function POST(req: NextRequest) {
 
     if (model.startsWith('ollama/')) {
       // This is an Ollama model
+      if (!ollamaBaseUrl) {
+        return new Response('Provider ollama not initialized. Please provide API key.', {
+          status: 503,
+        });
+      }
       actualModelName = model.replace('ollama/', '');
       provider = AIProviderFactory.getProvider('ollama');
     } else {
@@ -161,18 +165,8 @@ export async function POST(req: NextRequest) {
       userId,
     });
 
-    // Save messages to database if we have a DB connection
-    if (db && dbUser && conversationId) {
-      // Save the user message
-      const userMessage = messages[messages.length - 1];
-      if (userMessage && userMessage.role === 'user') {
-        await createMessage(db, {
-          conversationId,
-          role: 'user',
-          content: userMessage.content,
-        });
-      }
-    }
+    // Note: Messages are already saved client-side in chat-container.tsx
+    // to avoid duplication, we don't save them here
 
     if (stream && typeof response === 'object' && 'stream' in response) {
       // Return streaming response with proper headers for Cloudflare
