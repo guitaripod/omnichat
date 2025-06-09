@@ -11,6 +11,7 @@ export function useSync(options: SyncOptions = {}) {
   const { syncConversations, currentConversationId, syncMessages } = useConversationStore();
   const syncIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const lastSyncRef = useRef<Date>(new Date());
+  const syncDebounceRef = useRef<NodeJS.Timeout | null>(null);
 
   // Sync conversations and current conversation messages
   const performSync = useCallback(async () => {
@@ -29,11 +30,31 @@ export function useSync(options: SyncOptions = {}) {
     }
   }, [syncConversations, syncMessages, currentConversationId]);
 
-  // Initial sync on mount
+  // Debounced sync function
+  const performSyncDebounced = useCallback(() => {
+    // Clear existing debounce
+    if (syncDebounceRef.current) {
+      clearTimeout(syncDebounceRef.current);
+    }
+
+    // Debounce for 3 seconds to allow conversation creation to complete
+    syncDebounceRef.current = setTimeout(() => {
+      performSync();
+    }, 3000);
+  }, [performSync]);
+
+  // Initial sync on mount (with debounce)
   useEffect(() => {
     if (enabled) {
-      performSync();
+      performSyncDebounced();
     }
+
+    // Cleanup debounce on unmount
+    return () => {
+      if (syncDebounceRef.current) {
+        clearTimeout(syncDebounceRef.current);
+      }
+    };
   }, [enabled]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Set up periodic sync
