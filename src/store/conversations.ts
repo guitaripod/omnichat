@@ -284,37 +284,51 @@ export const useConversationStore = create<ConversationState>()(
           const response = await fetch(`/api/conversations/${conversationId}/messages`);
           if (response.ok) {
             const { messages } = (await response.json()) as { messages: any[] };
-            const formattedMessages = messages.map((m: any) => ({
+            const serverMessages = messages.map((m: any) => ({
               ...m,
               createdAt: new Date(m.createdAt),
               updatedAt: m.updatedAt ? new Date(m.updatedAt) : undefined,
             }));
 
-            set((state) => ({
-              messages: {
-                ...state.messages,
-                [conversationId]: formattedMessages,
-              },
-            }));
+            // Merge strategy for messages
+            set((state) => {
+              const localMessages = state.messages[conversationId] || [];
+              const messageMap = new Map<string, Message>();
 
-            // Update offline storage
-            await offlineStorage.saveMessages(formattedMessages);
+              // Add server messages first
+              for (const msg of serverMessages) {
+                messageMap.set(msg.id, msg);
+              }
+
+              // Preserve local messages with temp IDs or that aren't on server
+              for (const msg of localMessages) {
+                if (msg.id.startsWith('temp-') && !messageMap.has(msg.id)) {
+                  messageMap.set(msg.id, msg);
+                }
+              }
+
+              // Convert back to array sorted by creation time
+              const mergedMessages = Array.from(messageMap.values()).sort(
+                (a, b) => a.createdAt.getTime() - b.createdAt.getTime()
+              );
+
+              return {
+                messages: {
+                  ...state.messages,
+                  [conversationId]: mergedMessages,
+                },
+              };
+            });
+
+            // Update offline storage with server data
+            await offlineStorage.saveMessages(serverMessages);
+          } else {
+            console.error('Server returned error for messages:', response.status);
+            // Don't overwrite local messages on error
           }
         } catch (error) {
           console.error('Failed to sync messages:', error);
-
-          // Fallback to offline storage
-          try {
-            const offlineMessages = await offlineStorage.getMessages(conversationId);
-            set((state) => ({
-              messages: {
-                ...state.messages,
-                [conversationId]: offlineMessages,
-              },
-            }));
-          } catch (offlineError) {
-            console.error('Failed to load offline messages:', offlineError);
-          }
+          // Don't overwrite local messages on network error
         }
       },
     }),
