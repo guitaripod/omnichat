@@ -6,14 +6,14 @@ import { getConversationMessages, createMessage } from '@/lib/db/queries';
 export const runtime = 'edge';
 
 // GET /api/conversations/[id]/messages - Get messages for a conversation
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const user = await currentUser();
     if (!user) {
       return new Response('Unauthorized', { status: 401 });
     }
 
-    const conversationId = params.id;
+    const { id: conversationId } = await params;
     const db = getDb(process.env.DB as unknown as D1Database);
 
     // Verify user owns this conversation by checking if messages exist
@@ -28,14 +28,14 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 }
 
 // POST /api/conversations/[id]/messages - Create a new message
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const user = await currentUser();
     if (!user) {
       return new Response('Unauthorized', { status: 401 });
     }
 
-    const conversationId = params.id;
+    const { id: conversationId } = await params;
     const body = await req.json();
     const { role, content, model, parentId } = body;
 
