@@ -2,6 +2,7 @@
 
 import { Settings2, Moon, Sun } from 'lucide-react';
 import { useTheme } from '@/hooks/use-theme';
+import { SearchBar } from './search-bar';
 
 export function Header() {
   const { theme, toggleTheme, mounted } = useTheme();
@@ -12,6 +13,7 @@ export function Header() {
     <header className="flex h-16 items-center justify-between border-b border-gray-200 bg-white px-6 dark:border-gray-700 dark:bg-gray-800">
       <div className="flex items-center gap-4">
         <h1 className="text-lg font-semibold text-gray-900 dark:text-white">Chat</h1>
+        <SearchBar />
       </div>
 
       <div className="flex items-center gap-2">

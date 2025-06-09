@@ -26,7 +26,7 @@ export class SyncService {
               await this.syncUpdateConversation(item);
               break;
             case 'delete_conversation':
-              await this.syncDeleteConversation(item);
+              await this.syncDeleteConversation(item as any);
               break;
           }
 
