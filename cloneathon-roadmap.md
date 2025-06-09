@@ -89,13 +89,13 @@
 - [x] Implement message editing/deletion
 - [x] Add copy/regenerate functionality
 
-### Epic 2.4: Data Persistence
+### Epic 2.4: Data Persistence ✅ COMPLETED
 
-- [ ] Implement chat history saving to D1
-- [ ] Create sync mechanism for offline/online states
-- [ ] Build conversation search functionality
-- [ ] Add export chat feature (JSON, Markdown)
-- [ ] Add export feature that compiles a summary of the chat that creates a card-like widget .png that the user can save or copy to clipboard.
+- [x] Implement chat history saving to D1
+- [x] Create sync mechanism for offline/online states
+- [x] Build conversation search functionality
+- [x] Add export chat feature (JSON, Markdown)
+- [x] Add export feature that compiles a summary of the chat that creates a card-like widget .png that the user can save or copy to clipboard.
 
 ## Phase 3: Advanced Features (Days 5-6)
 

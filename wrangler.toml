@@ -17,7 +17,8 @@ compatibility_flags = ["nodejs_compat", "streams_enable_constructors", "transfor
 [[d1_databases]]
 binding = "DB"
 database_name = "omnichat-db"
-database_id = "to-be-generated"
+database_id = "90dedc77-4561-445e-b7a2-d136e008f42f"
+
 
 # R2 Storage Configuration
 [[r2_buckets]]
