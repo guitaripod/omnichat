@@ -2,6 +2,7 @@ import { User, Sparkles, Brain, Zap, Server } from 'lucide-react';
 import type { Message } from '@/types';
 import { cn } from '@/utils';
 import { AI_MODELS } from '@/services/ai';
+import { MarkdownRenderer } from './markdown-renderer';
 
 interface MessageItemProps {
   message: Message;
@@ -143,18 +144,15 @@ export function MessageItem({ message }: MessageItemProps) {
             {/* Message text */}
             <div
               className={cn(
-                'prose prose-sm max-w-none',
-                isUser ? 'prose-blue dark:prose-invert' : 'prose-gray dark:prose-invert'
+                'text-sm leading-relaxed',
+                isUser ? 'text-gray-800 dark:text-gray-100' : 'text-gray-700 dark:text-gray-200'
               )}
             >
-              <p
-                className={cn(
-                  'text-sm leading-relaxed whitespace-pre-wrap',
-                  isUser ? 'text-gray-800 dark:text-gray-100' : 'text-gray-700 dark:text-gray-200'
-                )}
-              >
-                {message.content}
-              </p>
+              {isUser ? (
+                <p className="whitespace-pre-wrap">{message.content}</p>
+              ) : (
+                <MarkdownRenderer content={message.content} />
+              )}
             </div>
           </div>
         </div>
