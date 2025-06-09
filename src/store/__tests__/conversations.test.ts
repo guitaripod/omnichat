@@ -24,6 +24,17 @@ vi.mock('@/services/storage/sync', () => ({
 // Mock fetch
 global.fetch = vi.fn();
 
+// Mock localStorage to prevent zustand persist warnings
+const localStorageMock = {
+  getItem: vi.fn(),
+  setItem: vi.fn(),
+  removeItem: vi.fn(),
+  clear: vi.fn(),
+  length: 0,
+  key: vi.fn(),
+};
+global.localStorage = localStorageMock as any;
+
 describe('Conversation Store - Sync Merge Logic', () => {
   beforeEach(() => {
     // Clear all mocks before each test
