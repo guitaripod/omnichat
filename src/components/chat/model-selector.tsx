@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { ChevronDown, Sparkles, Brain, Zap, Check, Server } from 'lucide-react';
 import { cn } from '@/utils';
 import { AIProvider, AIModel, AI_MODELS } from '@/services/ai';
+import { OllamaProvider } from '@/services/ai/providers/ollama';
 
 interface ModelSelectorProps {
   selectedModel: string;
@@ -46,14 +47,54 @@ export function ModelSelector({ selectedModel, onModelChange, className }: Model
   const [hoveredModel, setHoveredModel] = useState<string | null>(null);
 
   useEffect(() => {
-    // Get all models from AI_MODELS constant
-    const allModels = Object.values(AI_MODELS).flat();
-    setAvailableModels(allModels);
+    const loadModels = async () => {
+      // Get all static models from AI_MODELS constant
+      const staticModels = Object.entries(AI_MODELS)
+        .filter(([provider]) => provider !== 'ollama')
+        .flatMap(([_, models]) => models);
 
+      // Try to load Ollama models dynamically
+      const savedKeys = localStorage.getItem('apiKeys');
+      if (savedKeys) {
+        const keys = JSON.parse(savedKeys);
+        if (keys.ollama) {
+          try {
+            const provider = new OllamaProvider(keys.ollama);
+            const models = await provider.listModels();
+
+            // Convert Ollama model names to AIModel format
+            const ollamaAIModels: AIModel[] = models.map((name) => ({
+              id: `ollama/${name}`,
+              name: name,
+              provider: 'ollama' as AIProvider,
+              contextWindow: 4096, // Default context window
+              maxOutput: 4096,
+              supportsVision: false,
+              supportsTools: false,
+              description: `Local Ollama model: ${name}`,
+            }));
+
+            setAvailableModels([...staticModels, ...ollamaAIModels]);
+          } catch (error) {
+            console.error('Failed to load Ollama models:', error);
+            setAvailableModels(staticModels);
+          }
+        } else {
+          setAvailableModels(staticModels);
+        }
+      } else {
+        setAvailableModels(staticModels);
+      }
+    };
+
+    loadModels();
+  }, []);
+
+  useEffect(() => {
     // Set selected model info
-    const modelInfo = allModels.find((model) => model.id === selectedModel);
+    const modelInfo = availableModels.find((model) => model.id === selectedModel);
     setSelectedModelInfo(modelInfo);
-  }, [selectedModel]);
+  }, [selectedModel, availableModels]);
 
   const groupedModels = availableModels.reduce(
     (acc, model) => {

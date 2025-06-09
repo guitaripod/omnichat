@@ -29,18 +29,24 @@ export async function POST(req: NextRequest) {
       return new Response('API keys not configured', { status: 503 });
     }
 
+    // Parse request body
+    console.log('Parsing request body...');
+    const body = await req.json();
+    const { messages, model, temperature, maxTokens, stream = true, ollamaBaseUrl } = body;
+
     console.log('Initializing AI Provider Factory...');
     AIProviderFactory.initialize({
       openaiApiKey,
       anthropicApiKey,
       googleApiKey,
+      ollamaBaseUrl,
     });
-
-    // Parse request body
-    console.log('Parsing request body...');
-    const body = await req.json();
-    const { messages, model, temperature, maxTokens, stream = true } = body;
-    console.log('Request details:', { model, messagesCount: messages?.length, stream });
+    console.log('Request details:', {
+      model,
+      messagesCount: messages?.length,
+      stream,
+      ollamaBaseUrl,
+    });
 
     if (!messages || !model) {
       return new Response('Missing required fields: messages and model', { status: 400 });
@@ -49,16 +55,28 @@ export async function POST(req: NextRequest) {
     // Get model info to determine provider
     // Since factory isn't initialized on client, we need to find the model directly
     console.log('Finding model info...');
-    const allModels = Object.values(AI_MODELS).flat();
-    const modelInfo = allModels.find((m) => m.id === model);
-    if (!modelInfo) {
-      return new Response(`Invalid model: ${model}`, { status: 400 });
+
+    // Handle dynamic Ollama models
+    let provider;
+    let actualModelName = model;
+
+    if (model.startsWith('ollama/')) {
+      // This is an Ollama model
+      actualModelName = model.replace('ollama/', '');
+      provider = AIProviderFactory.getProvider('ollama');
+    } else {
+      // This is a static model from AI_MODELS
+      const allModels = Object.values(AI_MODELS).flat();
+      const modelInfo = allModels.find((m) => m.id === model);
+      if (!modelInfo) {
+        return new Response(`Invalid model: ${model}`, { status: 400 });
+      }
+      console.log('Model info found:', modelInfo.provider, modelInfo.id);
+      provider = AIProviderFactory.getProvider(modelInfo.provider);
     }
-    console.log('Model info found:', modelInfo.provider, modelInfo.id);
 
     // Get the provider instance
     console.log('Getting provider instance...');
-    const provider = AIProviderFactory.getProvider(modelInfo.provider);
     console.log('Provider retrieved successfully');
     console.log(`Provider type: ${provider.name}`);
     console.log(`Available models for provider: ${provider.models.map((m) => m.id).join(', ')}`);
@@ -75,7 +93,7 @@ export async function POST(req: NextRequest) {
     });
 
     const response = await provider.chatCompletion({
-      model,
+      model: actualModelName,
       messages,
       temperature,
       maxTokens,

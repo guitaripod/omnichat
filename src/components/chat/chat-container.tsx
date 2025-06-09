@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { MessageList } from './message-list';
 import { MessageInput } from './message-input';
 import type { Message } from '@/types';
@@ -9,20 +9,19 @@ import { AIProviderFactory } from '@/services/ai/provider-factory';
 import { useConversationStore } from '@/store/conversations';
 
 export function ChatContainer() {
-  const { currentConversationId, createConversation, getMessages, addMessage, updateMessage } =
+  const { currentConversationId, createConversation, addMessage, updateMessage } =
     useConversationStore();
+
+  // Subscribe to messages separately to ensure reactivity
+  const messages = useConversationStore((state) =>
+    currentConversationId ? state.messages[currentConversationId] || [] : []
+  );
 
   const [isLoading, setIsLoading] = useState(false);
   const [selectedModel, setSelectedModel] = useState('gpt-4o');
   const [, setStreamingMessage] = useState<string>('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
-
-  // Get messages for current conversation
-  const messages = useMemo(
-    () => (currentConversationId ? getMessages(currentConversationId) : []),
-    [currentConversationId, getMessages]
-  );
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -72,6 +71,10 @@ export function ChatContainer() {
     abortControllerRef.current = new AbortController();
 
     try {
+      // Get Ollama base URL from localStorage
+      const savedKeys = localStorage.getItem('apiKeys');
+      const ollamaBaseUrl = savedKeys ? JSON.parse(savedKeys).ollama : undefined;
+
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -82,6 +85,7 @@ export function ChatContainer() {
           })),
           model: selectedModel,
           stream: true,
+          ollamaBaseUrl,
         }),
         signal: abortControllerRef.current.signal,
       });
@@ -170,7 +174,7 @@ export function ChatContainer() {
     if (!currentConversationId || isLoading) return;
 
     // Get current messages
-    const messagesArray = getMessages(currentConversationId);
+    const messagesArray = messages;
     if (index !== messagesArray.length - 1 || messagesArray[index].role !== 'assistant') return;
 
     // Delete the last assistant message
@@ -187,6 +191,10 @@ export function ChatContainer() {
     abortControllerRef.current = new AbortController();
 
     try {
+      // Get Ollama base URL from localStorage
+      const savedKeys = localStorage.getItem('apiKeys');
+      const ollamaBaseUrl = savedKeys ? JSON.parse(savedKeys).ollama : undefined;
+
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -197,6 +205,7 @@ export function ChatContainer() {
           })),
           model: selectedModel,
           stream: true,
+          ollamaBaseUrl,
         }),
         signal: abortControllerRef.current.signal,
       });

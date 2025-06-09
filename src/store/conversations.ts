@@ -84,6 +84,9 @@ export const useConversationStore = create<ConversationState>()(
             ...state.messages,
             [conversationId]: [...(state.messages[conversationId] || []), message],
           },
+          conversations: state.conversations.map((c) =>
+            c.id === conversationId ? { ...c, updatedAt: new Date() } : c
+          ),
         }));
       },
 
@@ -92,7 +95,7 @@ export const useConversationStore = create<ConversationState>()(
           messages: {
             ...state.messages,
             [conversationId]: (state.messages[conversationId] || []).map((m) =>
-              m.id === messageId ? { ...m, content } : m
+              m.id === messageId ? { ...m, content, updatedAt: new Date() } : m
             ),
           },
         }));
