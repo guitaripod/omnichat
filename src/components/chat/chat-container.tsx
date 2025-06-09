@@ -56,7 +56,7 @@ export function ChatContainer() {
   // Create conversation if none exists
   useEffect(() => {
     if (!currentConversationId) {
-      createConversation('New Chat', selectedModel);
+      createConversation('New Chat', selectedModel).catch(console.error);
     }
   }, [currentConversationId, createConversation, selectedModel]);
 
@@ -71,7 +71,7 @@ export function ChatContainer() {
       createdAt: new Date(),
     };
 
-    addMessage(currentConversationId, userMessage);
+    await addMessage(currentConversationId, userMessage);
     setIsLoading(true);
     setStreamingMessage('');
 
@@ -118,6 +118,7 @@ export function ChatContainer() {
             model: selectedModel,
             stream: true,
             ollamaBaseUrl: isOllamaModel ? ollamaBaseUrl : undefined,
+            conversationId: currentConversationId,
           }),
           signal: abortControllerRef.current.signal,
         });
@@ -140,7 +141,7 @@ export function ChatContainer() {
         createdAt: new Date(),
       };
 
-      addMessage(currentConversationId, assistantMessage);
+      await addMessage(currentConversationId, assistantMessage);
 
       // Handle streaming response
       const decoder = new TextDecoder();
@@ -199,7 +200,7 @@ export function ChatContainer() {
           content: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
           createdAt: new Date(),
         };
-        addMessage(currentConversationId, errorMessage);
+        await addMessage(currentConversationId, errorMessage);
       }
     } finally {
       setIsLoading(false);
@@ -275,6 +276,7 @@ export function ChatContainer() {
             model: selectedModel,
             stream: true,
             ollamaBaseUrl: isOllamaModel ? ollamaBaseUrl : undefined,
+            conversationId: currentConversationId,
           }),
           signal: abortControllerRef.current.signal,
         });
@@ -296,7 +298,7 @@ export function ChatContainer() {
         createdAt: new Date(),
       };
 
-      addMessage(currentConversationId, newAssistantMessage);
+      await addMessage(currentConversationId, newAssistantMessage);
 
       // Handle streaming response (same as in handleSendMessage)
       const decoder = new TextDecoder();

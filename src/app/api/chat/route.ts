@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { currentUser } from '@clerk/nextjs/server';
 import { AIProviderFactory, AI_MODELS } from '@/services/ai';
+import { getDb } from '@/lib/db/client';
+import { createMessage, getUserByClerkId } from '@/lib/db/queries';
 
 export const runtime = 'edge';
 
@@ -32,7 +34,15 @@ export async function POST(req: NextRequest) {
     // Parse request body
     console.log('Parsing request body...');
     const body = await req.json();
-    const { messages, model, temperature, maxTokens, stream = true, ollamaBaseUrl } = body;
+    const {
+      messages,
+      model,
+      temperature,
+      maxTokens,
+      stream = true,
+      ollamaBaseUrl,
+      conversationId,
+    } = body;
 
     console.log('Initializing AI Provider Factory...');
     AIProviderFactory.initialize({
@@ -48,8 +58,18 @@ export async function POST(req: NextRequest) {
       ollamaBaseUrl,
     });
 
-    if (!messages || !model) {
-      return new Response('Missing required fields: messages and model', { status: 400 });
+    if (!messages || !model || !conversationId) {
+      return new Response('Missing required fields: messages, model, and conversationId', {
+        status: 400,
+      });
+    }
+
+    // Get database instance (Note: In production, this would come from the request context)
+    // For now, we'll handle database operations separately
+    let dbUser = null;
+    if (process.env.DB) {
+      const db = getDb(process.env.DB as unknown as D1Database);
+      dbUser = await getUserByClerkId(db, userId);
     }
 
     // Get model info to determine provider
@@ -100,6 +120,21 @@ export async function POST(req: NextRequest) {
       stream,
       userId,
     });
+
+    // Save messages to database if we have a DB connection
+    if (process.env.DB && dbUser && conversationId) {
+      const db = getDb(process.env.DB as unknown as D1Database);
+
+      // Save the user message
+      const userMessage = messages[messages.length - 1];
+      if (userMessage && userMessage.role === 'user') {
+        await createMessage(db, {
+          conversationId,
+          role: 'user',
+          content: userMessage.content,
+        });
+      }
+    }
 
     if (stream && typeof response === 'object' && 'stream' in response) {
       // Return streaming response with proper headers for Cloudflare
