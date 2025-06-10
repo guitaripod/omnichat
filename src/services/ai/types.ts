@@ -1,4 +1,4 @@
-export type AIProvider = 'openai' | 'anthropic' | 'google' | 'ollama';
+export type AIProvider = 'openai' | 'anthropic' | 'google' | 'ollama' | 'xai';
 
 export interface AIModel {
   id: string;
@@ -48,6 +48,7 @@ export interface AIServiceConfig {
   openaiApiKey?: string;
   anthropicApiKey?: string;
   googleApiKey?: string;
+  xaiApiKey?: string;
   ollamaBaseUrl?: string;
   defaultProvider?: AIProvider;
   defaultModel?: string;
@@ -276,4 +277,39 @@ export const AI_MODELS: Record<AIProvider, AIModel[]> = {
     },
   ],
   ollama: [], // Ollama models are dynamically loaded from the local server
+  xai: [
+    {
+      id: 'grok-beta',
+      name: 'Grok Beta',
+      provider: 'xai',
+      contextWindow: 131072,
+      maxOutput: 4096,
+      supportsVision: true,
+      supportsTools: true,
+      supportsWebSearch: false, // Will update when API docs available
+      description: 'Latest Grok model with advanced reasoning',
+    },
+    {
+      id: 'grok-2-beta',
+      name: 'Grok 2 Beta',
+      provider: 'xai',
+      contextWindow: 131072,
+      maxOutput: 4096,
+      supportsVision: true,
+      supportsTools: true,
+      supportsWebSearch: false, // Will update when API docs available
+      description: 'Next generation Grok with improved capabilities',
+    },
+    {
+      id: 'grok-2-mini',
+      name: 'Grok 2 Mini',
+      provider: 'xai',
+      contextWindow: 131072,
+      maxOutput: 4096,
+      supportsVision: true,
+      supportsTools: true,
+      supportsWebSearch: false, // Will update when API docs available
+      description: 'Smaller, faster Grok 2 for efficient processing',
+    },
+  ],
 };

@@ -16,6 +16,7 @@ const providerIcons: Record<AIProvider, React.ReactNode> = {
   anthropic: <Brain className="h-4 w-4" />,
   google: <Zap className="h-4 w-4" />,
   ollama: <Server className="h-4 w-4" />,
+  xai: <Sparkles className="h-4 w-4" />,
 };
 
 const providerColors: Record<AIProvider, string> = {
@@ -23,6 +24,7 @@ const providerColors: Record<AIProvider, string> = {
   anthropic: 'text-orange-600 dark:text-orange-400',
   google: 'text-blue-600 dark:text-blue-400',
   ollama: 'text-purple-600 dark:text-purple-400',
+  xai: 'text-indigo-600 dark:text-indigo-400',
 };
 
 const providerBgColors: Record<AIProvider, string> = {
@@ -30,6 +32,7 @@ const providerBgColors: Record<AIProvider, string> = {
   anthropic: 'bg-orange-50 dark:bg-orange-900/10 border-orange-200 dark:border-orange-800',
   google: 'bg-blue-50 dark:bg-blue-900/10 border-blue-200 dark:border-blue-800',
   ollama: 'bg-purple-50 dark:bg-purple-900/10 border-purple-200 dark:border-purple-800',
+  xai: 'bg-indigo-50 dark:bg-indigo-900/10 border-indigo-200 dark:border-indigo-800',
 };
 
 const formatContextSize = (tokens: number): string => {

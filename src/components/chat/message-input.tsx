@@ -34,6 +34,7 @@ const providerIcons: Record<AIProvider, React.ReactNode> = {
   anthropic: <Brain className="h-3.5 w-3.5" />,
   google: <Zap className="h-3.5 w-3.5" />,
   ollama: <Server className="h-3.5 w-3.5" />,
+  xai: <Sparkles className="h-3.5 w-3.5" />,
 };
 
 const providerColors: Record<AIProvider, string> = {
@@ -41,6 +42,7 @@ const providerColors: Record<AIProvider, string> = {
   anthropic: 'text-orange-600 dark:text-orange-400',
   google: 'text-blue-600 dark:text-blue-400',
   ollama: 'text-purple-600 dark:text-purple-400',
+  xai: 'text-indigo-600 dark:text-indigo-400',
 };
 
 export function MessageInput({

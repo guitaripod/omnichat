@@ -9,6 +9,7 @@ export default function ApiSettings() {
     openai: '',
     anthropic: '',
     google: '',
+    xai: '',
     ollama: 'http://localhost:11434',
   });
 
@@ -16,6 +17,7 @@ export default function ApiSettings() {
     openai: false,
     anthropic: false,
     google: false,
+    xai: false,
   });
 
   const [ollamaStatus, setOllamaStatus] = useState<'checking' | 'connected' | 'disconnected'>(
@@ -71,6 +73,9 @@ export default function ApiSettings() {
         break;
       case 'google':
         AIProviderFactory.updateApiKey('google', apiKeys.google);
+        break;
+      case 'xai':
+        AIProviderFactory.updateApiKey('xai', apiKeys.xai);
         break;
       case 'ollama':
         AIProviderFactory.updateApiKey('ollama', apiKeys.ollama);
@@ -165,6 +170,34 @@ export default function ApiSettings() {
           </button>
           <button
             onClick={() => handleSave('google')}
+            className="rounded-md bg-blue-500 px-4 py-2 text-sm text-white hover:bg-blue-600"
+          >
+            Save
+          </button>
+        </div>
+      </div>
+
+      {/* xAI */}
+      <div className="mb-6 border-b border-gray-200 pb-6 dark:border-gray-700">
+        <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+          xAI API Key (Grok)
+        </label>
+        <div className="flex gap-2">
+          <input
+            type={showKeys.xai ? 'text' : 'password'}
+            value={apiKeys.xai}
+            onChange={(e) => setApiKeys({ ...apiKeys, xai: e.target.value })}
+            placeholder="xai-..."
+            className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+          />
+          <button
+            onClick={() => toggleShowKey('xai')}
+            className="rounded-md bg-gray-100 px-3 py-2 text-sm hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
+          >
+            {showKeys.xai ? 'Hide' : 'Show'}
+          </button>
+          <button
+            onClick={() => handleSave('xai')}
             className="rounded-md bg-blue-500 px-4 py-2 text-sm text-white hover:bg-blue-600"
           >
             Save

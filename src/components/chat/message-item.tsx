@@ -24,6 +24,7 @@ const providerIcons = {
   anthropic: Brain,
   google: Zap,
   ollama: Server,
+  xai: Sparkles,
 };
 
 const providerColors = {
@@ -50,6 +51,12 @@ const providerColors = {
     border: 'border-purple-200 dark:border-purple-800',
     icon: 'text-purple-600 dark:text-purple-400',
     iconBg: 'bg-purple-100 dark:bg-purple-900/30',
+  },
+  xai: {
+    bg: 'bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-950/20 dark:to-blue-950/20',
+    border: 'border-indigo-200 dark:border-indigo-800',
+    icon: 'text-indigo-600 dark:text-indigo-400',
+    iconBg: 'bg-indigo-100 dark:bg-indigo-900/30',
   },
 };
 
