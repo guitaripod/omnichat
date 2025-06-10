@@ -73,16 +73,9 @@
       "provider": "openai"
     },
     {
-      "id": "gpt-4o-audio-preview-2025-06-03",
+      "id": "o3-pro-2025-06-10",
       "object": "model",
-      "created": 1748908498,
-      "owned_by": "system",
-      "provider": "openai"
-    },
-    {
-      "id": "gpt-4.1-nano",
-      "object": "model",
-      "created": 1744321707,
+      "created": 1749166761,
       "owned_by": "system",
       "provider": "openai"
     },
@@ -104,6 +97,13 @@
       "id": "gpt-4o-realtime-preview-2025-06-03",
       "object": "model",
       "created": 1748907838,
+      "owned_by": "system",
+      "provider": "openai"
+    },
+    {
+      "id": "gpt-4o-audio-preview-2025-06-03",
+      "object": "model",
+      "created": 1748908498,
       "owned_by": "system",
       "provider": "openai"
     },
@@ -563,6 +563,13 @@
       "provider": "openai"
     },
     {
+      "id": "gpt-4.1-nano",
+      "object": "model",
+      "created": 1744321707,
+      "owned_by": "system",
+      "provider": "openai"
+    },
+    {
       "id": "gpt-3.5-turbo-16k",
       "object": "model",
       "created": 1683758102,
@@ -593,6 +600,27 @@
   ],
   "anthropic": [
     {
+      "id": "claude-opus-4-20250514",
+      "object": "model",
+      "created": 1747872000,
+      "owned_by": "anthropic",
+      "provider": "anthropic"
+    },
+    {
+      "id": "claude-sonnet-4-20250514",
+      "object": "model",
+      "created": 1747872000,
+      "owned_by": "anthropic",
+      "provider": "anthropic"
+    },
+    {
+      "id": "claude-3-7-sonnet-20250219",
+      "object": "model",
+      "created": 1740355200,
+      "owned_by": "anthropic",
+      "provider": "anthropic"
+    },
+    {
       "id": "claude-3-5-sonnet-20241022",
       "object": "model",
       "created": 1729555200,
@@ -607,16 +635,9 @@
       "provider": "anthropic"
     },
     {
-      "id": "claude-3-opus-20240229",
+      "id": "claude-3-5-sonnet-20240620",
       "object": "model",
-      "created": 1709251200,
-      "owned_by": "anthropic",
-      "provider": "anthropic"
-    },
-    {
-      "id": "claude-3-sonnet-20240229",
-      "object": "model",
-      "created": 1709251200,
+      "created": 1718841600,
       "owned_by": "anthropic",
       "provider": "anthropic"
     },
@@ -626,332 +647,360 @@
       "created": 1709769600,
       "owned_by": "anthropic",
       "provider": "anthropic"
+    },
+    {
+      "id": "claude-3-opus-20240229",
+      "object": "model",
+      "created": 1709164800,
+      "owned_by": "anthropic",
+      "provider": "anthropic"
+    },
+    {
+      "id": "claude-3-sonnet-20240229",
+      "object": "model",
+      "created": 1709164800,
+      "owned_by": "anthropic",
+      "provider": "anthropic"
+    },
+    {
+      "id": "claude-2.1",
+      "object": "model",
+      "created": 1700524800,
+      "owned_by": "anthropic",
+      "provider": "anthropic"
+    },
+    {
+      "id": "claude-2.0",
+      "object": "model",
+      "created": 1689033600,
+      "owned_by": "anthropic",
+      "provider": "anthropic"
     }
   ],
   "google": [
     {
       "id": "gemini-1.0-pro-vision-latest",
       "object": "model",
-      "created": 1749582947,
+      "created": 1749586178,
       "owned_by": "google",
       "provider": "google"
     },
     {
       "id": "gemini-pro-vision",
       "object": "model",
-      "created": 1749582947,
+      "created": 1749586178,
       "owned_by": "google",
       "provider": "google"
     },
     {
       "id": "gemini-1.5-pro-latest",
       "object": "model",
-      "created": 1749582947,
+      "created": 1749586178,
       "owned_by": "google",
       "provider": "google"
     },
     {
       "id": "gemini-1.5-pro-001",
       "object": "model",
-      "created": 1749582947,
+      "created": 1749586178,
       "owned_by": "google",
       "provider": "google"
     },
     {
       "id": "gemini-1.5-pro-002",
       "object": "model",
-      "created": 1749582947,
+      "created": 1749586178,
       "owned_by": "google",
       "provider": "google"
     },
     {
       "id": "gemini-1.5-pro",
       "object": "model",
-      "created": 1749582947,
+      "created": 1749586178,
       "owned_by": "google",
       "provider": "google"
     },
     {
       "id": "gemini-1.5-flash-latest",
       "object": "model",
-      "created": 1749582947,
+      "created": 1749586178,
       "owned_by": "google",
       "provider": "google"
     },
     {
       "id": "gemini-1.5-flash-001",
       "object": "model",
-      "created": 1749582947,
+      "created": 1749586178,
       "owned_by": "google",
       "provider": "google"
     },
     {
       "id": "gemini-1.5-flash-001-tuning",
       "object": "model",
-      "created": 1749582947,
+      "created": 1749586178,
       "owned_by": "google",
       "provider": "google"
     },
     {
       "id": "gemini-1.5-flash",
       "object": "model",
-      "created": 1749582947,
+      "created": 1749586178,
       "owned_by": "google",
       "provider": "google"
     },
     {
       "id": "gemini-1.5-flash-002",
       "object": "model",
-      "created": 1749582947,
+      "created": 1749586178,
       "owned_by": "google",
       "provider": "google"
     },
     {
       "id": "gemini-1.5-flash-8b",
       "object": "model",
-      "created": 1749582947,
+      "created": 1749586178,
       "owned_by": "google",
       "provider": "google"
     },
     {
       "id": "gemini-1.5-flash-8b-001",
       "object": "model",
-      "created": 1749582947,
+      "created": 1749586178,
       "owned_by": "google",
       "provider": "google"
     },
     {
       "id": "gemini-1.5-flash-8b-latest",
       "object": "model",
-      "created": 1749582947,
+      "created": 1749586178,
       "owned_by": "google",
       "provider": "google"
     },
     {
       "id": "gemini-1.5-flash-8b-exp-0827",
       "object": "model",
-      "created": 1749582947,
+      "created": 1749586178,
       "owned_by": "google",
       "provider": "google"
     },
     {
       "id": "gemini-1.5-flash-8b-exp-0924",
       "object": "model",
-      "created": 1749582947,
+      "created": 1749586178,
       "owned_by": "google",
       "provider": "google"
     },
     {
       "id": "gemini-2.5-pro-exp-03-25",
       "object": "model",
-      "created": 1749582947,
+      "created": 1749586178,
       "owned_by": "google",
       "provider": "google"
     },
     {
       "id": "gemini-2.5-pro-preview-03-25",
       "object": "model",
-      "created": 1749582947,
+      "created": 1749586178,
       "owned_by": "google",
       "provider": "google"
     },
     {
       "id": "gemini-2.5-flash-preview-04-17",
       "object": "model",
-      "created": 1749582947,
+      "created": 1749586178,
       "owned_by": "google",
       "provider": "google"
     },
     {
       "id": "gemini-2.5-flash-preview-05-20",
       "object": "model",
-      "created": 1749582947,
+      "created": 1749586178,
       "owned_by": "google",
       "provider": "google"
     },
     {
       "id": "gemini-2.5-flash-preview-04-17-thinking",
       "object": "model",
-      "created": 1749582947,
+      "created": 1749586178,
       "owned_by": "google",
       "provider": "google"
     },
     {
       "id": "gemini-2.5-pro-preview-05-06",
       "object": "model",
-      "created": 1749582947,
+      "created": 1749586178,
       "owned_by": "google",
       "provider": "google"
     },
     {
       "id": "gemini-2.5-pro-preview-06-05",
       "object": "model",
-      "created": 1749582947,
+      "created": 1749586178,
       "owned_by": "google",
       "provider": "google"
     },
     {
       "id": "gemini-2.0-flash-exp",
       "object": "model",
-      "created": 1749582947,
+      "created": 1749586178,
       "owned_by": "google",
       "provider": "google"
     },
     {
       "id": "gemini-2.0-flash",
       "object": "model",
-      "created": 1749582947,
+      "created": 1749586178,
       "owned_by": "google",
       "provider": "google"
     },
     {
       "id": "gemini-2.0-flash-001",
       "object": "model",
-      "created": 1749582947,
+      "created": 1749586178,
       "owned_by": "google",
       "provider": "google"
     },
     {
       "id": "gemini-2.0-flash-exp-image-generation",
       "object": "model",
-      "created": 1749582947,
+      "created": 1749586178,
       "owned_by": "google",
       "provider": "google"
     },
     {
       "id": "gemini-2.0-flash-lite-001",
       "object": "model",
-      "created": 1749582947,
+      "created": 1749586178,
       "owned_by": "google",
       "provider": "google"
     },
     {
       "id": "gemini-2.0-flash-lite",
       "object": "model",
-      "created": 1749582947,
+      "created": 1749586178,
       "owned_by": "google",
       "provider": "google"
     },
     {
       "id": "gemini-2.0-flash-preview-image-generation",
       "object": "model",
-      "created": 1749582947,
+      "created": 1749586178,
       "owned_by": "google",
       "provider": "google"
     },
     {
       "id": "gemini-2.0-flash-lite-preview-02-05",
       "object": "model",
-      "created": 1749582947,
+      "created": 1749586178,
       "owned_by": "google",
       "provider": "google"
     },
     {
       "id": "gemini-2.0-flash-lite-preview",
       "object": "model",
-      "created": 1749582947,
+      "created": 1749586178,
       "owned_by": "google",
       "provider": "google"
     },
     {
       "id": "gemini-2.0-pro-exp",
       "object": "model",
-      "created": 1749582947,
+      "created": 1749586178,
       "owned_by": "google",
       "provider": "google"
     },
     {
       "id": "gemini-2.0-pro-exp-02-05",
       "object": "model",
-      "created": 1749582947,
+      "created": 1749586178,
       "owned_by": "google",
       "provider": "google"
     },
     {
       "id": "gemini-exp-1206",
       "object": "model",
-      "created": 1749582947,
+      "created": 1749586178,
       "owned_by": "google",
       "provider": "google"
     },
     {
       "id": "gemini-2.0-flash-thinking-exp-01-21",
       "object": "model",
-      "created": 1749582947,
+      "created": 1749586178,
       "owned_by": "google",
       "provider": "google"
     },
     {
       "id": "gemini-2.0-flash-thinking-exp",
       "object": "model",
-      "created": 1749582947,
+      "created": 1749586178,
       "owned_by": "google",
       "provider": "google"
     },
     {
       "id": "gemini-2.0-flash-thinking-exp-1219",
       "object": "model",
-      "created": 1749582947,
+      "created": 1749586178,
       "owned_by": "google",
       "provider": "google"
     },
     {
       "id": "gemini-2.5-flash-preview-tts",
       "object": "model",
-      "created": 1749582947,
+      "created": 1749586178,
       "owned_by": "google",
       "provider": "google"
     },
     {
       "id": "gemini-2.5-pro-preview-tts",
       "object": "model",
-      "created": 1749582947,
+      "created": 1749586178,
       "owned_by": "google",
       "provider": "google"
     },
     {
       "id": "learnlm-2.0-flash-experimental",
       "object": "model",
-      "created": 1749582947,
+      "created": 1749586178,
       "owned_by": "google",
       "provider": "google"
     },
     {
       "id": "gemma-3-1b-it",
       "object": "model",
-      "created": 1749582947,
+      "created": 1749586178,
       "owned_by": "google",
       "provider": "google"
     },
     {
       "id": "gemma-3-4b-it",
       "object": "model",
-      "created": 1749582947,
+      "created": 1749586178,
       "owned_by": "google",
       "provider": "google"
     },
     {
       "id": "gemma-3-12b-it",
       "object": "model",
-      "created": 1749582947,
+      "created": 1749586178,
       "owned_by": "google",
       "provider": "google"
     },
     {
       "id": "gemma-3-27b-it",
       "object": "model",
-      "created": 1749582947,
+      "created": 1749586178,
       "owned_by": "google",
       "provider": "google"
     },
     {
       "id": "gemma-3n-e4b-it",
       "object": "model",
-      "created": 1749582947,
+      "created": 1749586178,
       "owned_by": "google",
       "provider": "google"
     }
   ],
-  "updatedAt": "2025-06-10T19:15:46Z",
-  "deepseek": []
+  "deepseek": null,
+  "updatedAt": "2025-06-10T20:09:37Z"
 }
