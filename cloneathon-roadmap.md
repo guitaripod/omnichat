@@ -171,10 +171,7 @@
 
 ### Epic 5.1: Web Search Integration
 
-- [ ] Integrate Perplexity or Brave Search API
-- [ ] Create search-augmented chat mode
-- [ ] Build source citation UI
-- [ ] Implement fact-checking mode
+- [x] Implement Web Search API from Anthropic and Google
 
 ### Epic 5.2: Advanced Features
 
