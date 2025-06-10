@@ -69,7 +69,7 @@ export const AI_MODELS: Record<AIProvider, AIModel[]> = {
       maxOutput: 16384,
       supportsVision: true,
       supportsTools: true,
-      supportsWebSearch: true,
+      supportsWebSearch: false,
       description: 'Latest model - excels at coding & instruction following',
     },
     {
@@ -80,7 +80,7 @@ export const AI_MODELS: Record<AIProvider, AIModel[]> = {
       maxOutput: 16384,
       supportsVision: true,
       supportsTools: true,
-      supportsWebSearch: true,
+      supportsWebSearch: false,
       description: 'Smaller, faster GPT-4.1 - available for free users',
     },
     {
@@ -102,7 +102,7 @@ export const AI_MODELS: Record<AIProvider, AIModel[]> = {
       maxOutput: 65536,
       supportsVision: true,
       supportsTools: true,
-      supportsWebSearch: true,
+      supportsWebSearch: false,
       description: 'Advanced reasoning - 20% fewer errors than O1',
     },
     {
@@ -113,8 +113,8 @@ export const AI_MODELS: Record<AIProvider, AIModel[]> = {
       maxOutput: 65536,
       supportsVision: true,
       supportsTools: true,
-      supportsWebSearch: true,
-      description: 'Cost-effective reasoning model with web search',
+      supportsWebSearch: false,
+      description: 'Cost-effective reasoning model',
     },
     {
       id: 'gpt-4o',
@@ -124,7 +124,7 @@ export const AI_MODELS: Record<AIProvider, AIModel[]> = {
       maxOutput: 16384,
       supportsVision: true,
       supportsTools: true,
-      supportsWebSearch: true,
+      supportsWebSearch: false,
       description: 'Previous generation - still capable',
     },
     {
@@ -135,7 +135,7 @@ export const AI_MODELS: Record<AIProvider, AIModel[]> = {
       maxOutput: 16384,
       supportsVision: true,
       supportsTools: true,
-      supportsWebSearch: true,
+      supportsWebSearch: false,
       description: 'Smaller GPT-4o - balanced performance',
     },
   ],

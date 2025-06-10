@@ -47,14 +47,10 @@ export class OpenAIProvider implements ChatProvider {
       stream,
     };
 
-    // Add web search tool if enabled
+    // OpenAI web search is not yet supported through their standard API
+    // The web_search_preview tool type is only available in specific endpoints
     if (webSearch) {
-      body.tools = [
-        {
-          type: 'web_search_preview',
-        },
-      ];
-      console.log('[OpenAI] Web search enabled');
+      console.log('[OpenAI] Web search requested but not supported through standard API');
     }
 
     console.log('[OpenAI] Request body:', JSON.stringify(body, null, 2));
