@@ -29,6 +29,7 @@
     "@clerk/nextjs": "^6.21.0",
     "clsx": "^2.1.1",
     "drizzle-orm": "^0.44.2",
+    "html2canvas": "^1.4.1",
     "katex": "^0.16.22",
     "lucide-react": "^0.513.0",
     "nanoid": "^5.1.5",

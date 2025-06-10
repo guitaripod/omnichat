@@ -116,7 +116,7 @@
 - [x] ~~Create custom code block component~~ Using built-in markdown renderer
 - [x] Add language detection
 - [x] Implement copy code button
-- [x] ~~Implement copy code as a beautiful card image that can be shared~~ Removed for simplicity
+- [x] Implement copy code as a beautiful card image that can be shared
 - [x] Support inline code formatting
 
 ### Epic 3.3: Resumable Streams
