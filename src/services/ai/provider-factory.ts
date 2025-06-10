@@ -30,10 +30,13 @@ export class AIProviderFactory {
     }
 
     if (config.xaiApiKey) {
+      console.log('[AIProviderFactory] Initializing xAI provider...');
       const xaiProvider = new XAIProvider(config.xaiApiKey);
       this.providers.set('xai', xaiProvider);
       // Ensure xAI models are loaded
+      console.log('[AIProviderFactory] Loading xAI models...');
       await xaiProvider.ensureModelsLoaded();
+      console.log('[AIProviderFactory] xAI models loaded:', xaiProvider.getModels().length);
     }
 
     this.initialized = true;

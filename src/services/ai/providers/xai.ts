@@ -58,6 +58,7 @@ export class XAIProvider implements ChatProvider {
       throw new Error('xAI API key is required');
     }
     this.apiKey = apiKey;
+    console.log('[xAI] Provider initialized with API key:', apiKey.substring(0, 10) + '...');
     // Load models asynchronously
     this.loadModels();
   }
@@ -87,10 +88,14 @@ export class XAIProvider implements ChatProvider {
   }
 
   private async loadModels(): Promise<void> {
+    console.log('[xAI] loadModels called, already loaded?', this.modelsLoaded);
     if (this.modelsLoaded) return;
 
     try {
+      console.log('[xAI] Calling fetchAvailableModels...');
       const modelIds = await XAIProvider.fetchAvailableModels(this.apiKey);
+      console.log('[xAI] fetchAvailableModels returned:', modelIds);
+
       if (modelIds.length > 0) {
         this.models = modelIds.map((id) => this.createModelFromId(id));
         this.modelsLoaded = true;
@@ -98,7 +103,12 @@ export class XAIProvider implements ChatProvider {
         // Update the global AI_MODELS with the fetched models
         AI_MODELS.xai = this.models;
 
-        console.log('[xAI] Models loaded successfully:', this.models.length);
+        console.log(
+          '[xAI] Models loaded successfully:',
+          this.models.length,
+          'models:',
+          this.models.map((m) => m.id)
+        );
       } else {
         // No models returned
         this.models = [];
@@ -288,25 +298,37 @@ export class XAIProvider implements ChatProvider {
 
   // Static method to fetch available models
   static async fetchAvailableModels(apiKey: string): Promise<string[]> {
-    console.log('[xAI] Fetching available models');
+    console.log('[xAI] Fetching available models from https://api.x.ai/v1/models');
+    console.log('[xAI] Using API key:', apiKey ? apiKey.substring(0, 10) + '...' : 'NO KEY!');
+
     try {
       const response = await fetch('https://api.x.ai/v1/models', {
         headers: {
           Authorization: `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
         },
       });
 
+      console.log('[xAI] Models API response status:', response.status);
+      console.log('[xAI] Models API response headers:', response.headers);
+
       if (!response.ok) {
-        console.error('[xAI] Failed to fetch models:', response.status);
+        const errorText = await response.text();
+        console.error('[xAI] Failed to fetch models:', response.status, errorText);
         return [];
       }
 
       const data: XAIModelResponse = await response.json();
+      console.log('[xAI] Models API response data:', JSON.stringify(data, null, 2));
+
       const modelIds = data.data.map((model) => model.id);
-      console.log('[xAI] Available models:', modelIds);
+      console.log('[xAI] Available model IDs:', modelIds);
       return modelIds;
     } catch (error) {
       console.error('[xAI] Error fetching models:', error);
+      if (error instanceof Error) {
+        console.error('[xAI] Error details:', error.message, error.stack);
+      }
       return [];
     }
   }

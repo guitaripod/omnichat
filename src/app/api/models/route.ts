@@ -15,9 +15,12 @@ interface ModelsResponse {
 }
 
 export async function GET(_req: NextRequest) {
+  console.log('[API/models] Starting model fetch request');
+
   try {
     // Authenticate user
     const clerkUser = await currentUser();
+    console.log('[API/models] User authenticated:', !!clerkUser);
 
     if (!clerkUser && !isDevMode()) {
       return new Response('Unauthorized', { status: 401 });
@@ -45,6 +48,13 @@ export async function GET(_req: NextRequest) {
       anthropicApiKey = env.ANTHROPIC_API_KEY;
       googleApiKey = env.GOOGLE_API_KEY;
       xaiApiKey = env.XAI_API_KEY;
+      console.log('[/api/models] Environment variables from Cloudflare:', {
+        hasOpenAI: !!openaiApiKey,
+        hasAnthropic: !!anthropicApiKey,
+        hasGoogle: !!googleApiKey,
+        hasXAI: !!xaiApiKey,
+        xaiKeyPreview: xaiApiKey ? xaiApiKey.substring(0, 10) + '...' : 'none',
+      });
     } catch (error) {
       // Fallback for local development
       console.log('getRequestContext failed (local dev?), trying process.env:', error);
@@ -52,6 +62,13 @@ export async function GET(_req: NextRequest) {
       anthropicApiKey = process.env.ANTHROPIC_API_KEY;
       googleApiKey = process.env.GOOGLE_API_KEY;
       xaiApiKey = process.env.XAI_API_KEY;
+      console.log('[/api/models] Environment variables from process.env:', {
+        hasOpenAI: !!openaiApiKey,
+        hasAnthropic: !!anthropicApiKey,
+        hasGoogle: !!googleApiKey,
+        hasXAI: !!xaiApiKey,
+        xaiKeyPreview: xaiApiKey ? xaiApiKey.substring(0, 10) + '...' : 'none',
+      });
     }
 
     // Initialize the factory with available keys
@@ -68,6 +85,7 @@ export async function GET(_req: NextRequest) {
     };
 
     const availableProviders = AIProviderFactory.getAvailableProviders();
+    console.log('[/api/models] Available providers after initialization:', availableProviders);
 
     // Fetch models for each provider
     for (const provider of availableProviders) {

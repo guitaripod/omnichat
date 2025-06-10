@@ -20,17 +20,30 @@ export function useModels(): UseModelsReturn {
   const [error, setError] = useState<string | null>(null);
 
   const fetchModels = async () => {
+    console.log('[useModels] Starting model fetch...');
     setIsLoading(true);
     setError(null);
 
     try {
+      console.log('[useModels] Fetching from /api/models...');
       const response = await fetch('/api/models');
 
       if (!response.ok) {
+        console.error('[useModels] API response not OK:', response.status);
         throw new Error('Failed to fetch models');
       }
 
       const data = (await response.json()) as { providers: Record<string, AIModel[]> };
+      console.log('[useModels] Received data:', {
+        providers: Object.keys(data.providers || {}),
+        modelCounts: Object.entries(data.providers || {}).reduce(
+          (acc, [key, models]) => {
+            acc[key] = models.length;
+            return acc;
+          },
+          {} as Record<string, number>
+        ),
+      });
 
       // Merge fetched models with empty defaults for missing providers
       const mergedModels: Record<AIProvider, AIModel[]> = {

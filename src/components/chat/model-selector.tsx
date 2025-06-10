@@ -87,14 +87,14 @@ export function ModelSelector({ selectedModel, onModelChange, className }: Model
 
   // Combine fetched models with Ollama models
   useEffect(() => {
+    console.log('[ModelSelector] Fetched models updated:', fetchedModels);
     const allModels = Object.values(fetchedModels).flat();
+    console.log('[ModelSelector] All models count:', allModels.length);
     setAvailableModels(allModels);
 
-    // Auto-expand provider of selected model
-    const selectedModelProvider = allModels.find((m) => m.id === selectedModel)?.provider;
-    if (selectedModelProvider) {
-      setExpandedProviders(new Set([selectedModelProvider]));
-    }
+    // Don't auto-expand - keep all collapsed by default
+    // Only expand when user clicks
+    console.log('[ModelSelector] Keeping all providers collapsed');
   }, [fetchedModels, selectedModel]);
 
   // Load Ollama models when URL is available
