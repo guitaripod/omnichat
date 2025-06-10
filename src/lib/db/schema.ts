@@ -155,6 +155,34 @@ export const subscriptions = sqliteTable(
   })
 );
 
+// Audit logs table
+export const auditLogs = sqliteTable(
+  'audit_logs',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id').references(() => users.id, { onDelete: 'set null' }),
+    action: text('action').notNull(),
+    resource: text('resource').notNull(),
+    resourceId: text('resource_id'),
+    ipAddress: text('ip_address'),
+    userAgent: text('user_agent'),
+    metadata: text('metadata'), // JSON string for additional data
+    status: text('status', { enum: ['success', 'failure', 'error'] }).notNull(),
+    errorMessage: text('error_message'),
+    createdAt: integer('created_at', { mode: 'timestamp' })
+      .notNull()
+      .default(sql`(unixepoch())`),
+  },
+  (table) => ({
+    userIdIdx: index('idx_audit_logs_user_id').on(table.userId),
+    actionIdx: index('idx_audit_logs_action').on(table.action),
+    createdAtIdx: index('idx_audit_logs_created_at').on(table.createdAt),
+    statusIdx: index('idx_audit_logs_status').on(table.status),
+    resourceIdx: index('idx_audit_logs_resource').on(table.resource),
+    userTimeIdx: index('idx_audit_logs_user_time').on(table.userId, table.createdAt),
+  })
+);
+
 // Types for TypeScript
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
@@ -168,3 +196,5 @@ export type ApiUsage = typeof apiUsage.$inferSelect;
 export type NewApiUsage = typeof apiUsage.$inferInsert;
 export type Subscription = typeof subscriptions.$inferSelect;
 export type NewSubscription = typeof subscriptions.$inferInsert;
+export type AuditLog = typeof auditLogs.$inferSelect;
+export type NewAuditLog = typeof auditLogs.$inferInsert;
