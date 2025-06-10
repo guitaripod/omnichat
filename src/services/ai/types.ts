@@ -8,6 +8,7 @@ export interface AIModel {
   maxOutput: number;
   supportsVision?: boolean;
   supportsTools?: boolean;
+  supportsWebSearch?: boolean;
   description?: string;
 }
 
@@ -68,6 +69,7 @@ export const AI_MODELS: Record<AIProvider, AIModel[]> = {
       maxOutput: 16384,
       supportsVision: true,
       supportsTools: true,
+      supportsWebSearch: true,
       description: 'Latest model - excels at coding & instruction following',
     },
     {
@@ -78,6 +80,7 @@ export const AI_MODELS: Record<AIProvider, AIModel[]> = {
       maxOutput: 16384,
       supportsVision: true,
       supportsTools: true,
+      supportsWebSearch: true,
       description: 'Smaller, faster GPT-4.1 - available for free users',
     },
     {
@@ -88,6 +91,7 @@ export const AI_MODELS: Record<AIProvider, AIModel[]> = {
       maxOutput: 8192,
       supportsVision: true,
       supportsTools: true,
+      supportsWebSearch: true,
       description: 'Smallest GPT-4.1 - ultra-fast responses',
     },
     {
@@ -98,6 +102,7 @@ export const AI_MODELS: Record<AIProvider, AIModel[]> = {
       maxOutput: 65536,
       supportsVision: true,
       supportsTools: true,
+      supportsWebSearch: true,
       description: 'Advanced reasoning - 20% fewer errors than O1',
     },
     {
@@ -108,6 +113,7 @@ export const AI_MODELS: Record<AIProvider, AIModel[]> = {
       maxOutput: 65536,
       supportsVision: true,
       supportsTools: true,
+      supportsWebSearch: true,
       description: 'Cost-effective reasoning model with web search',
     },
     {
@@ -118,6 +124,7 @@ export const AI_MODELS: Record<AIProvider, AIModel[]> = {
       maxOutput: 16384,
       supportsVision: true,
       supportsTools: true,
+      supportsWebSearch: true,
       description: 'Previous generation - still capable',
     },
     {
@@ -128,6 +135,7 @@ export const AI_MODELS: Record<AIProvider, AIModel[]> = {
       maxOutput: 16384,
       supportsVision: true,
       supportsTools: true,
+      supportsWebSearch: true,
       description: 'Smaller GPT-4o - balanced performance',
     },
   ],
@@ -140,6 +148,7 @@ export const AI_MODELS: Record<AIProvider, AIModel[]> = {
       maxOutput: 8192,
       supportsVision: true,
       supportsTools: true,
+      supportsWebSearch: true,
       description: 'Most capable - Level 3 safety rating',
     },
     {
@@ -150,6 +159,7 @@ export const AI_MODELS: Record<AIProvider, AIModel[]> = {
       maxOutput: 8192,
       supportsVision: true,
       supportsTools: true,
+      supportsWebSearch: true,
       description: 'High performance with exceptional reasoning',
     },
     {
@@ -160,6 +170,7 @@ export const AI_MODELS: Record<AIProvider, AIModel[]> = {
       maxOutput: 8192,
       supportsVision: true,
       supportsTools: true,
+      supportsWebSearch: true,
       description: 'Hybrid reasoning - standard & deep thinking modes',
     },
     {
@@ -170,6 +181,7 @@ export const AI_MODELS: Record<AIProvider, AIModel[]> = {
       maxOutput: 8192,
       supportsVision: true,
       supportsTools: true,
+      supportsWebSearch: true,
       description: 'Upgraded version with computer use capability',
     },
     {
@@ -180,6 +192,7 @@ export const AI_MODELS: Record<AIProvider, AIModel[]> = {
       maxOutput: 8192,
       supportsVision: true,
       supportsTools: true,
+      supportsWebSearch: true,
       description: 'Fast - surpasses Claude 3 Opus on benchmarks',
     },
     {
@@ -190,6 +203,7 @@ export const AI_MODELS: Record<AIProvider, AIModel[]> = {
       maxOutput: 4096,
       supportsVision: true,
       supportsTools: true,
+      supportsWebSearch: false,
       description: 'Previous flagship - still powerful',
     },
     {
@@ -200,6 +214,7 @@ export const AI_MODELS: Record<AIProvider, AIModel[]> = {
       maxOutput: 4096,
       supportsVision: true,
       supportsTools: true,
+      supportsWebSearch: false,
       description: 'Balanced performance and cost',
     },
   ],
@@ -212,6 +227,7 @@ export const AI_MODELS: Record<AIProvider, AIModel[]> = {
       maxOutput: 8192,
       supportsVision: true,
       supportsTools: true,
+      supportsWebSearch: false,
       description: 'Latest preview - multimodal with audio/video',
     },
     {
@@ -222,6 +238,7 @@ export const AI_MODELS: Record<AIProvider, AIModel[]> = {
       maxOutput: 8192,
       supportsVision: true,
       supportsTools: true,
+      supportsWebSearch: false,
       description: 'Fast preview model with multimodal support',
     },
     {
@@ -232,6 +249,7 @@ export const AI_MODELS: Record<AIProvider, AIModel[]> = {
       maxOutput: 8192,
       supportsVision: true,
       supportsTools: true,
+      supportsWebSearch: false,
       description: 'Latest stable - fast multimodal generation',
     },
     {
@@ -242,6 +260,7 @@ export const AI_MODELS: Record<AIProvider, AIModel[]> = {
       maxOutput: 8192,
       supportsVision: true,
       supportsTools: true,
+      supportsWebSearch: true,
       description: 'Advanced reasoning and long context',
     },
     {
@@ -252,6 +271,7 @@ export const AI_MODELS: Record<AIProvider, AIModel[]> = {
       maxOutput: 8192,
       supportsVision: true,
       supportsTools: true,
+      supportsWebSearch: true,
       description: 'Fast and efficient for most tasks',
     },
   ],

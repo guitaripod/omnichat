@@ -63,7 +63,7 @@ export class AnthropicProvider implements ChatProvider {
 
     // Add web search tool if enabled
     if (webSearch) {
-      body.tools = [{ type: 'web_search' }];
+      body.tools = [{ type: 'web_search_20250305' }];
       console.log('[Anthropic] Web search enabled');
     }
 

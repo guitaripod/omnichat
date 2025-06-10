@@ -261,6 +261,11 @@ export function ModelSelector({ selectedModel, onModelChange, className }: Model
                                 Tools
                               </span>
                             )}
+                            {model.supportsWebSearch && (
+                              <span className="text-[10px] text-blue-600 dark:text-blue-400">
+                                Search
+                              </span>
+                            )}
                             {selectedModel === model.id && (
                               <Check className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
                             )}

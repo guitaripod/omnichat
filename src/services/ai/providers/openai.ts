@@ -49,7 +49,25 @@ export class OpenAIProvider implements ChatProvider {
 
     // Add web search tool if enabled
     if (webSearch) {
-      body.tools = [{ type: 'web_search' }];
+      body.tools = [
+        {
+          type: 'function',
+          function: {
+            name: 'web_search',
+            description: 'Search the web for information',
+            parameters: {
+              type: 'object',
+              properties: {
+                query: {
+                  type: 'string',
+                  description: 'The search query',
+                },
+              },
+              required: ['query'],
+            },
+          },
+        },
+      ];
       console.log('[OpenAI] Web search enabled');
     }
 
