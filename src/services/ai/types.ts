@@ -43,6 +43,7 @@ export interface ChatProvider {
   chatCompletion(options: ChatCompletionOptions): Promise<StreamResponse | string>;
   validateApiKey(apiKey: string): Promise<boolean>;
   ensureModelsLoaded?(): Promise<void>;
+  fetchModels?(): Promise<AIModel[]>;
 }
 
 export interface AIServiceConfig {

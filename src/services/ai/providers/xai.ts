@@ -69,8 +69,21 @@ export class XAIProvider implements ChatProvider {
   }
 
   getModels(): AIModel[] {
-    // Return current models, even if still loading
-    return this.models.length > 0 ? this.models : this.getFallbackModels();
+    return this.models;
+  }
+
+  async fetchModels(): Promise<AIModel[]> {
+    try {
+      const modelIds = await XAIProvider.fetchAvailableModels(this.apiKey);
+      if (modelIds.length > 0) {
+        const models = modelIds.map((id) => this.createModelFromId(id));
+        return models;
+      }
+      return [];
+    } catch (error) {
+      console.error('[xAI] Error fetching models:', error);
+      return [];
+    }
   }
 
   private async loadModels(): Promise<void> {
@@ -78,18 +91,25 @@ export class XAIProvider implements ChatProvider {
 
     try {
       const modelIds = await XAIProvider.fetchAvailableModels(this.apiKey);
-      this.models = modelIds.map((id) => this.createModelFromId(id));
-      this.modelsLoaded = true;
+      if (modelIds.length > 0) {
+        this.models = modelIds.map((id) => this.createModelFromId(id));
+        this.modelsLoaded = true;
 
-      // Update the global AI_MODELS with the fetched models
-      AI_MODELS.xai = this.models;
+        // Update the global AI_MODELS with the fetched models
+        AI_MODELS.xai = this.models;
 
-      console.log('[xAI] Models loaded successfully:', this.models.length);
+        console.log('[xAI] Models loaded successfully:', this.models.length);
+      } else {
+        // No models returned
+        this.models = [];
+        this.modelsLoaded = true;
+        console.log('[xAI] No models returned from API');
+      }
     } catch (error) {
       console.error('[xAI] Failed to load models:', error);
-      // Use fallback models if API fails
-      this.models = this.getFallbackModels();
-      AI_MODELS.xai = this.models;
+      // Keep empty models array
+      this.models = [];
+      this.modelsLoaded = true;
     }
   }
 
@@ -111,23 +131,6 @@ export class XAIProvider implements ChatProvider {
       supportsWebSearch: false, // Will update when documented
       description: `xAI ${name} model`,
     };
-  }
-
-  private getFallbackModels(): AIModel[] {
-    // Fallback models based on common patterns
-    return [
-      {
-        id: 'grok-beta',
-        name: 'Grok Beta',
-        provider: 'xai',
-        contextWindow: 131072,
-        maxOutput: 4096,
-        supportsVision: true,
-        supportsTools: true,
-        supportsWebSearch: false,
-        description: 'Latest Grok model',
-      },
-    ];
   }
 
   async chatCompletion(options: ChatCompletionOptions): Promise<StreamResponse | string> {
