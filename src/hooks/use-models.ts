@@ -49,6 +49,13 @@ export function useModels(): UseModelsReturn {
           {} as Record<string, number>
         ),
       });
+      console.error('[useModels] DEBUG: xAI models received:', data.providers.xai?.length || 0);
+      if (data.providers.xai) {
+        console.error(
+          '[useModels] DEBUG: xAI model IDs:',
+          data.providers.xai.map((m) => m.id).join(', ')
+        );
+      }
 
       // Merge fetched models with empty defaults for missing providers
       const mergedModels: Record<AIProvider, AIModel[]> = {
@@ -90,6 +97,7 @@ export function useModels(): UseModelsReturn {
         }
       }
 
+      console.error('[useModels] DEBUG: Setting models, xAI count:', mergedModels.xai.length);
       setModels(mergedModels);
     } catch (err) {
       console.error('Error fetching models:', err);

@@ -93,8 +93,11 @@ export function ModelSelector({ selectedModel, onModelChange, className }: Model
   // Combine fetched models with Ollama models
   useEffect(() => {
     console.log('[ModelSelector] Fetched models updated:', fetchedModels);
+    console.error('[ModelSelector] DEBUG: fetchedModels:', JSON.stringify(fetchedModels, null, 2));
     const allModels = Object.values(fetchedModels).flat();
     console.log('[ModelSelector] All models count:', allModels.length);
+    console.error('[ModelSelector] DEBUG: All models count:', allModels.length);
+    console.error('[ModelSelector] DEBUG: xAI models:', fetchedModels.xai?.length || 0);
     setAvailableModels(allModels);
 
     // Don't auto-expand - keep all collapsed by default
@@ -157,6 +160,9 @@ export function ModelSelector({ selectedModel, onModelChange, className }: Model
     },
     {} as Record<AIProvider, AIModel[]>
   );
+
+  console.error('[ModelSelector] DEBUG: Grouped models:', Object.keys(groupedModels));
+  console.error('[ModelSelector] DEBUG: xAI grouped models:', groupedModels.xai?.length || 0);
 
   return (
     <div className={cn('relative', className)}>
