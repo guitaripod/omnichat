@@ -1,0 +1,93 @@
+{
+  "xai": [
+    {
+      "id": "grok-3-beta",
+      "object": "model",
+      "created": 1743724800,
+      "owned_by": "xai",
+      "provider": "xai"
+    },
+    {
+      "id": "grok-3-fast-beta",
+      "object": "model",
+      "created": 1743724800,
+      "owned_by": "xai",
+      "provider": "xai"
+    },
+    {
+      "id": "grok-3-mini-beta",
+      "object": "model",
+      "created": 1743724800,
+      "owned_by": "xai",
+      "provider": "xai"
+    },
+    {
+      "id": "grok-3-mini-fast-beta",
+      "object": "model",
+      "created": 1743724800,
+      "owned_by": "xai",
+      "provider": "xai"
+    },
+    {
+      "id": "grok-2-image-1212",
+      "object": "model",
+      "created": 1736726400,
+      "owned_by": "xai",
+      "provider": "xai"
+    },
+    {
+      "id": "grok-2-1212",
+      "object": "model",
+      "created": 1733961600,
+      "owned_by": "xai",
+      "provider": "xai"
+    },
+    {
+      "id": "grok-2-vision-1212",
+      "object": "model",
+      "created": 1733961600,
+      "owned_by": "xai",
+      "provider": "xai"
+    }
+  ],
+  "openai": [],
+  "anthropic": [
+    {
+      "id": "claude-3-5-sonnet-20241022",
+      "object": "model",
+      "created": 1729555200,
+      "owned_by": "anthropic",
+      "provider": "anthropic"
+    },
+    {
+      "id": "claude-3-5-haiku-20241022",
+      "object": "model",
+      "created": 1729555200,
+      "owned_by": "anthropic",
+      "provider": "anthropic"
+    },
+    {
+      "id": "claude-3-opus-20240229",
+      "object": "model",
+      "created": 1709251200,
+      "owned_by": "anthropic",
+      "provider": "anthropic"
+    },
+    {
+      "id": "claude-3-sonnet-20240229",
+      "object": "model",
+      "created": 1709251200,
+      "owned_by": "anthropic",
+      "provider": "anthropic"
+    },
+    {
+      "id": "claude-3-haiku-20240307",
+      "object": "model",
+      "created": 1709769600,
+      "owned_by": "anthropic",
+      "provider": "anthropic"
+    }
+  ],
+  "google": [],
+  "updatedAt": "2025-01-06T00:00:00Z"
+}

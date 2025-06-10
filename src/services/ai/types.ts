@@ -62,6 +62,8 @@ export interface StreamChunk {
   error?: Error;
 }
 
+import { getXAIModels } from '@/lib/ai/available-models';
+
 export const AI_MODELS: Record<AIProvider, AIModel[]> = {
   openai: [
     {
@@ -279,5 +281,5 @@ export const AI_MODELS: Record<AIProvider, AIModel[]> = {
     },
   ],
   ollama: [], // Ollama models are dynamically loaded from the local server
-  xai: [], // xAI models are dynamically loaded from the API
+  xai: getXAIModels(), // xAI models are loaded from static JSON at build time
 };

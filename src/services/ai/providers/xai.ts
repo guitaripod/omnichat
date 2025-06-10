@@ -51,7 +51,6 @@ export class XAIProvider implements ChatProvider {
   models: AIModel[] = [];
   private apiKey: string;
   private baseUrl = 'https://api.x.ai/v1';
-  private modelsLoaded = false;
 
   constructor(apiKey: string) {
     if (!apiKey) {
@@ -59,88 +58,12 @@ export class XAIProvider implements ChatProvider {
     }
     this.apiKey = apiKey;
     console.log('[xAI] Provider initialized with API key:', apiKey.substring(0, 10) + '...');
-    // Load models asynchronously
-    this.loadModels();
-  }
-
-  async ensureModelsLoaded(): Promise<void> {
-    if (!this.modelsLoaded) {
-      await this.loadModels();
-    }
+    // Models are now loaded from static JSON at build time
+    this.models = AI_MODELS.xai || [];
   }
 
   getModels(): AIModel[] {
     return this.models;
-  }
-
-  async fetchModels(): Promise<AIModel[]> {
-    try {
-      const modelIds = await XAIProvider.fetchAvailableModels(this.apiKey);
-      if (modelIds.length > 0) {
-        const models = modelIds.map((id) => this.createModelFromId(id));
-        return models;
-      }
-      return [];
-    } catch (error) {
-      console.error('[xAI] Error fetching models:', error);
-      return [];
-    }
-  }
-
-  private async loadModels(): Promise<void> {
-    console.log('[xAI] loadModels called, already loaded?', this.modelsLoaded);
-    if (this.modelsLoaded) return;
-
-    try {
-      console.log('[xAI] Calling fetchAvailableModels...');
-      const modelIds = await XAIProvider.fetchAvailableModels(this.apiKey);
-      console.log('[xAI] fetchAvailableModels returned:', modelIds);
-
-      if (modelIds.length > 0) {
-        this.models = modelIds.map((id) => this.createModelFromId(id));
-        this.modelsLoaded = true;
-
-        // Update the global AI_MODELS with the fetched models
-        AI_MODELS.xai = this.models;
-
-        console.log(
-          '[xAI] Models loaded successfully:',
-          this.models.length,
-          'models:',
-          this.models.map((m) => m.id)
-        );
-      } else {
-        // No models returned
-        this.models = [];
-        this.modelsLoaded = true;
-        console.log('[xAI] No models returned from API');
-      }
-    } catch (error) {
-      console.error('[xAI] Failed to load models:', error);
-      // Keep empty models array
-      this.models = [];
-      this.modelsLoaded = true;
-    }
-  }
-
-  private createModelFromId(modelId: string): AIModel {
-    // Parse model ID to create a proper display name
-    const name = modelId
-      .split('-')
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
-
-    return {
-      id: modelId,
-      name,
-      provider: 'xai',
-      contextWindow: 131072, // Default context window
-      maxOutput: 4096, // Default max output
-      supportsVision: true, // Assume vision support
-      supportsTools: true, // Assume tools support
-      supportsWebSearch: false, // Will update when documented
-      description: `xAI ${name} model`,
-    };
   }
 
   async chatCompletion(options: ChatCompletionOptions): Promise<StreamResponse | string> {
@@ -294,42 +217,5 @@ export class XAIProvider implements ChatProvider {
         content: msg.content,
       };
     });
-  }
-
-  // Static method to fetch available models
-  static async fetchAvailableModels(apiKey: string): Promise<string[]> {
-    console.log('[xAI] Fetching available models from https://api.x.ai/v1/models');
-    console.log('[xAI] Using API key:', apiKey ? apiKey.substring(0, 10) + '...' : 'NO KEY!');
-
-    try {
-      const response = await fetch('https://api.x.ai/v1/models', {
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      console.log('[xAI] Models API response status:', response.status);
-      console.log('[xAI] Models API response headers:', response.headers);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('[xAI] Failed to fetch models:', response.status, errorText);
-        return [];
-      }
-
-      const data: XAIModelResponse = await response.json();
-      console.log('[xAI] Models API response data:', JSON.stringify(data, null, 2));
-
-      const modelIds = data.data.map((model) => model.id);
-      console.log('[xAI] Available model IDs:', modelIds);
-      return modelIds;
-    } catch (error) {
-      console.error('[xAI] Error fetching models:', error);
-      if (error instanceof Error) {
-        console.error('[xAI] Error details:', error.message, error.stack);
-      }
-      return [];
-    }
   }
 }

@@ -16,6 +16,12 @@ import {
 import { cn } from '@/utils';
 import { AIProvider, AIModel } from '@/services/ai';
 import { useModels } from '@/hooks/use-models';
+import {
+  getXAIModels,
+  getOpenAIModels,
+  getAnthropicModels,
+  getGoogleModels,
+} from '@/lib/ai/available-models';
 
 interface ModelSelectorProps {
   selectedModel: string;
@@ -67,7 +73,7 @@ export function ModelSelector({ selectedModel, onModelChange, className }: Model
     console.error('[ModelSelector] Component mounted - v2 with collapsible UI');
   }, []);
 
-  // Use the models hook
+  // Use the models hook for API key validation and dynamic models (like Ollama)
   const { models: fetchedModels, isLoading, error, refetch } = useModels();
   const [availableModels, setAvailableModels] = useState<AIModel[]>([]);
 
@@ -92,19 +98,63 @@ export function ModelSelector({ selectedModel, onModelChange, className }: Model
     }
   }, []);
 
-  // Combine fetched models with Ollama models
+  // Combine static models with API-configured models
   useEffect(() => {
-    console.log('[ModelSelector] Fetched models updated:', fetchedModels);
-    console.error('[ModelSelector] DEBUG: fetchedModels:', JSON.stringify(fetchedModels, null, 2));
-    const allModels = Object.values(fetchedModels).flat();
-    console.log('[ModelSelector] All models count:', allModels.length);
-    console.error('[ModelSelector] DEBUG: All models count:', allModels.length);
-    console.error('[ModelSelector] DEBUG: xAI models:', fetchedModels.xai?.length || 0);
-    setAvailableModels(allModels);
+    console.log('[ModelSelector] Combining static and fetched models');
 
-    // Don't auto-expand - keep all collapsed by default
-    // Only expand when user clicks
-    console.log('[ModelSelector] Keeping all providers collapsed');
+    // Get static models for each provider
+    const staticXAI = getXAIModels();
+    const staticOpenAI = getOpenAIModels();
+    const staticAnthropic = getAnthropicModels();
+    const staticGoogle = getGoogleModels();
+
+    // Get API keys to determine which models should be shown
+    const savedKeys = localStorage.getItem('apiKeys');
+    let hasXAIKey = false;
+    let hasOpenAIKey = false;
+    let hasGoogleKey = false;
+
+    if (savedKeys) {
+      try {
+        const parsed = JSON.parse(savedKeys);
+        hasXAIKey = !!parsed.xai;
+        hasOpenAIKey = !!parsed.openai;
+        hasGoogleKey = !!parsed.google;
+      } catch (e) {
+        console.error('Failed to parse API keys:', e);
+      }
+    }
+
+    // Build combined models list
+    const combinedModels: AIModel[] = [];
+
+    // Always show Anthropic models (since they're hardcoded)
+    combinedModels.push(...staticAnthropic);
+
+    // Show other providers' models if they have API keys
+    if (hasXAIKey) {
+      // Use fetched models if available, otherwise use static
+      const xaiModels = fetchedModels.xai?.length > 0 ? fetchedModels.xai : staticXAI;
+      combinedModels.push(...xaiModels);
+    }
+
+    if (hasOpenAIKey) {
+      const openaiModels = fetchedModels.openai?.length > 0 ? fetchedModels.openai : staticOpenAI;
+      combinedModels.push(...openaiModels);
+    }
+
+    if (hasGoogleKey) {
+      const googleModels = fetchedModels.google?.length > 0 ? fetchedModels.google : staticGoogle;
+      combinedModels.push(...googleModels);
+    }
+
+    // Add Ollama models if available
+    if (fetchedModels.ollama?.length > 0) {
+      combinedModels.push(...fetchedModels.ollama);
+    }
+
+    console.log('[ModelSelector] Combined models count:', combinedModels.length);
+    setAvailableModels(combinedModels);
   }, [fetchedModels, selectedModel]);
 
   // Load Ollama models when URL is available
