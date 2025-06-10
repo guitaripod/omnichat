@@ -49,10 +49,23 @@ jobs:
       - name: Check if models changed
         id: check_changes
         run: |
-          if git diff --quiet scripts/available-models.json; then
+          # Save the current version
+          cp scripts/available-models.json scripts/available-models-new.json
+
+          # Get the previous version from git
+          git checkout HEAD -- scripts/available-models.json
+
+          # Compare models ignoring timestamps
+          cd scripts
+          go run compare-models.go available-models.json available-models-new.json
+          if [ $? -eq 0 ]; then
             echo "changed=false" >> $GITHUB_OUTPUT
+            # Restore the new version without committing
+            mv available-models-new.json available-models.json
           else
             echo "changed=true" >> $GITHUB_OUTPUT
+            # Use the new version with updated models
+            mv available-models-new.json available-models.json
           fi
 
       - name: Commit and push if changed
