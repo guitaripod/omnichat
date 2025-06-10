@@ -23,14 +23,11 @@ export function useOllama(customBaseUrl?: string): UseOllamaResult {
 
   const checkOllamaConnection = useCallback(async (): Promise<boolean> => {
     setIsChecking(true);
-    console.log('Checking Ollama connection at:', ollamaBaseUrl);
     try {
       const available = await OllamaClientProvider.isAvailable(ollamaBaseUrl);
-      console.log('Ollama available:', available);
       setIsOllamaAvailable(available);
       return available;
-    } catch (error) {
-      console.error('Error checking Ollama connection:', error);
+    } catch {
       setIsOllamaAvailable(false);
       return false;
     } finally {
@@ -53,15 +50,6 @@ export function useOllama(customBaseUrl?: string): UseOllamaResult {
   // Check Ollama availability on mount and when URL changes
   useEffect(() => {
     checkOllamaConnection();
-  }, [checkOllamaConnection]);
-
-  // Periodically check Ollama availability (every 30 seconds)
-  useEffect(() => {
-    const interval = setInterval(() => {
-      checkOllamaConnection();
-    }, 30000);
-
-    return () => clearInterval(interval);
   }, [checkOllamaConnection]);
 
   return {

@@ -82,12 +82,10 @@ export function ModelSelector({ selectedModel, onModelChange, className }: Model
 
     const loadOllamaModels = async () => {
       try {
-        console.log('Loading Ollama models from:', ollamaBaseUrl);
         const response = await fetch(`${ollamaBaseUrl}/api/tags`);
         if (response.ok) {
           const data = (await response.json()) as { models?: { name: string }[] };
           const ollamaModelNames = data.models?.map((m: { name: string }) => m.name) || [];
-          console.log('Found Ollama models:', ollamaModelNames);
 
           // Convert to AIModel format
           const ollamaModels: AIModel[] = ollamaModelNames.map((name: string) => ({
@@ -107,8 +105,8 @@ export function ModelSelector({ selectedModel, onModelChange, className }: Model
             return [...nonOllamaModels, ...ollamaModels];
           });
         }
-      } catch (error) {
-        console.error('Failed to load Ollama models:', error);
+      } catch {
+        // Silently fail - Ollama might not be running
       }
     };
 
@@ -132,15 +130,6 @@ export function ModelSelector({ selectedModel, onModelChange, className }: Model
     },
     {} as Record<AIProvider, AIModel[]>
   );
-
-  // Debug log - only depend on availableModels
-  useEffect(() => {
-    console.log('ModelSelector render:', {
-      availableModels: availableModels.length,
-      providers: Object.keys(groupedModels),
-      ollamaModels: availableModels.filter((m) => m.provider === 'ollama').length,
-    });
-  }, [availableModels]);
 
   return (
     <div className={cn('relative', className)}>

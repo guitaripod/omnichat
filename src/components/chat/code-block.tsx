@@ -155,18 +155,29 @@ export function CodeBlock({ code, language = '', className = '' }: CodeBlockProp
           )}
         </button>
       </div>
-      {normalizedLanguage && (
-        <div className="absolute top-2 left-4 z-10 text-xs text-gray-400">{normalizedLanguage}</div>
-      )}
       {highlightedCode ? (
-        <div
-          className="shiki-code-block overflow-x-auto rounded-lg [&>pre]:m-0 [&>pre]:!bg-gray-900 [&>pre]:p-4 [&>pre]:pt-8"
-          dangerouslySetInnerHTML={{ __html: highlightedCode }}
-        />
+        <div className="relative">
+          {normalizedLanguage && (
+            <div className="absolute -top-3 left-4 z-10 rounded bg-gray-800 px-2 py-0.5 text-xs text-gray-400">
+              {normalizedLanguage}
+            </div>
+          )}
+          <div
+            className="shiki-code-block overflow-x-auto rounded-lg [&>pre]:m-0 [&>pre]:!bg-gray-900 [&>pre]:p-4"
+            dangerouslySetInnerHTML={{ __html: highlightedCode }}
+          />
+        </div>
       ) : (
-        <pre className="overflow-x-auto rounded-lg bg-gray-900 p-4 pt-8 text-sm">
-          <code>{code}</code>
-        </pre>
+        <div className="relative">
+          {normalizedLanguage && (
+            <div className="absolute -top-3 left-4 z-10 rounded bg-gray-800 px-2 py-0.5 text-xs text-gray-400">
+              {normalizedLanguage}
+            </div>
+          )}
+          <pre className="overflow-x-auto rounded-lg bg-gray-900 p-4 text-sm">
+            <code>{code}</code>
+          </pre>
+        </div>
       )}
     </div>
   );
