@@ -153,6 +153,7 @@ export function MessageInput({
             maxOutput: 4096,
             supportsVision: false,
             supportsTools: false,
+            supportsWebSearch: false,
             description: `Local Ollama model: ${name}`,
           }));
 
@@ -466,19 +467,21 @@ export function MessageInput({
                 />
               </div>
 
-              <button
-                onClick={() => setWebSearchEnabled(!webSearchEnabled)}
-                className={cn(
-                  'rounded-lg p-2 transition-all duration-200',
-                  webSearchEnabled
-                    ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400'
-                    : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700'
-                )}
-                aria-label="Toggle web search"
-                title={webSearchEnabled ? 'Web search enabled' : 'Enable web search'}
-              >
-                <Globe size={20} />
-              </button>
+              {currentModel?.supportsWebSearch && (
+                <button
+                  onClick={() => setWebSearchEnabled(!webSearchEnabled)}
+                  className={cn(
+                    'rounded-lg p-2 transition-all duration-200',
+                    webSearchEnabled
+                      ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400'
+                      : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700'
+                  )}
+                  aria-label="Toggle web search"
+                  title={webSearchEnabled ? 'Web search enabled' : 'Enable web search'}
+                >
+                  <Globe size={20} />
+                </button>
+              )}
 
               {onToggleBranches && (
                 <button

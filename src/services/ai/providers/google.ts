@@ -53,12 +53,28 @@ export class GoogleProvider implements ChatProvider {
 
     // Add grounding (web search) if enabled
     if (webSearch) {
-      body.tools = [
-        {
-          googleSearchRetrieval: {},
-        },
-      ];
-      console.log('[Google] Web search (grounding) enabled');
+      // Use different format based on model version
+      if (model.includes('2.0') || model.includes('2.5')) {
+        // Gemini 2.0 and 2.5 use google_search
+        body.tools = [
+          {
+            google_search: {},
+          },
+        ];
+      } else if (model.includes('1.5')) {
+        // Gemini 1.5 uses google_search_retrieval
+        body.tools = [
+          {
+            google_search_retrieval: {
+              dynamic_retrieval_config: {
+                mode: 'MODE_DYNAMIC',
+                dynamic_threshold: 0.5,
+              },
+            },
+          },
+        ];
+      }
+      console.log('[Google] Web search (grounding) enabled for model:', model);
     }
 
     console.log('[Google] Request body:', JSON.stringify(body, null, 2));

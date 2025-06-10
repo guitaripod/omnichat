@@ -91,7 +91,7 @@ export const AI_MODELS: Record<AIProvider, AIModel[]> = {
       maxOutput: 8192,
       supportsVision: true,
       supportsTools: true,
-      supportsWebSearch: true,
+      supportsWebSearch: false,
       description: 'Smallest GPT-4.1 - ultra-fast responses',
     },
     {

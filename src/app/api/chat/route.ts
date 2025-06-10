@@ -136,6 +136,7 @@ export async function POST(req: NextRequest) {
     // Handle dynamic Ollama models
     let provider;
     let actualModelName = model;
+    let modelSupportsWebSearch = false;
 
     if (model.startsWith('ollama/')) {
       // This is an Ollama model
@@ -149,6 +150,7 @@ export async function POST(req: NextRequest) {
       }
       actualModelName = model.replace('ollama/', '');
       provider = AIProviderFactory.getProvider('ollama');
+      modelSupportsWebSearch = false; // Ollama doesn't support web search
     } else {
       // This is a static model from AI_MODELS
       const allModels = Object.values(AI_MODELS).flat();
@@ -158,6 +160,7 @@ export async function POST(req: NextRequest) {
       }
       console.log('Model info found:', modelInfo.provider, modelInfo.id);
       provider = AIProviderFactory.getProvider(modelInfo.provider);
+      modelSupportsWebSearch = modelInfo.supportsWebSearch || false;
     }
 
     // Get the provider instance
@@ -184,7 +187,7 @@ export async function POST(req: NextRequest) {
       maxTokens,
       stream,
       userId,
-      webSearch,
+      webSearch: webSearch && modelSupportsWebSearch,
     });
 
     // Note: Messages are already saved client-side in chat-container.tsx

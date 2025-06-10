@@ -96,6 +96,7 @@ export function ModelSelector({ selectedModel, onModelChange, className }: Model
             maxOutput: 4096,
             supportsVision: false,
             supportsTools: false,
+            supportsWebSearch: false,
             description: `Local Ollama model: ${name}`,
           }));
 
