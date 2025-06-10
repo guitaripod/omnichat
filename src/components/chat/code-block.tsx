@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { Copy, Check, Download } from 'lucide-react';
-import { createHighlighter, type Highlighter } from 'shiki';
 import html2canvas from 'html2canvas';
+import { getHighlighter, normalizeLanguage } from '@/lib/shiki';
 
 interface CodeBlockProps {
   code: string;
@@ -11,97 +11,40 @@ interface CodeBlockProps {
   className?: string;
 }
 
-// Language aliases mapping
-const languageAliases: Record<string, string> = {
-  js: 'javascript',
-  ts: 'typescript',
-  sh: 'bash',
-  yml: 'yaml',
-  dockerfile: 'docker',
-  makefile: 'make',
-  plaintext: 'text',
-  mdx: 'markdown',
-};
-
-// Supported languages by Shiki
-const supportedLanguages = [
-  'javascript',
-  'typescript',
-  'python',
-  'json',
-  'bash',
-  'shell',
-  'jsx',
-  'tsx',
-  'css',
-  'html',
-  'markdown',
-  'yaml',
-  'toml',
-  'sql',
-  'graphql',
-  'rust',
-  'go',
-  'java',
-  'cpp',
-  'c',
-  'csharp',
-  'php',
-  'ruby',
-  'swift',
-  'kotlin',
-  'scala',
-  'r',
-  'matlab',
-  'lua',
-  'perl',
-  'docker',
-  'make',
-  'nginx',
-  'apache',
-  'xml',
-  'ini',
-  'diff',
-  'text',
-];
-
 export function CodeBlock({ code, language = '', className = '' }: CodeBlockProps) {
   const [copied, setCopied] = useState(false);
-  const [highlighter, setHighlighter] = useState<Highlighter | null>(null);
   const [highlightedCode, setHighlightedCode] = useState<string>('');
   const [isExporting, setIsExporting] = useState(false);
 
   // Normalize language name
-  const normalizedLanguage = languageAliases[language.toLowerCase()] || language.toLowerCase();
-  const isSupported = supportedLanguages.includes(normalizedLanguage);
-  const displayLanguage = isSupported ? normalizedLanguage : 'text';
+  const normalizedLanguage = normalizeLanguage(language);
 
   useEffect(() => {
-    createHighlighter({
-      themes: ['github-dark', 'github-light'],
-      langs: supportedLanguages,
-    }).then(setHighlighter);
-  }, []);
+    let isMounted = true;
 
-  useEffect(() => {
-    if (highlighter && code) {
+    async function highlightCode() {
+      if (!code) return;
+
       try {
+        const highlighter = await getHighlighter();
+        if (!isMounted) return;
+
         const html = highlighter.codeToHtml(code, {
-          lang: displayLanguage,
+          lang: normalizedLanguage,
           theme: 'github-dark',
         });
         setHighlightedCode(html);
       } catch (error) {
         console.error('Shiki highlighting error:', error);
-        // Fallback to plain text
-        const html = highlighter.codeToHtml(code, {
-          lang: 'text',
-          theme: 'github-dark',
-        });
-        setHighlightedCode(html);
       }
     }
-  }, [highlighter, code, displayLanguage]);
+
+    highlightCode();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [code, normalizedLanguage]);
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(code);
