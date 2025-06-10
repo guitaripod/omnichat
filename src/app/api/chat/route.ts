@@ -48,7 +48,6 @@ export async function POST(req: NextRequest) {
     let openaiApiKey: string | undefined;
     let anthropicApiKey: string | undefined;
     let googleApiKey: string | undefined;
-    let braveApiKey: string | undefined;
 
     try {
       // In Cloudflare Pages, secrets are accessed via getRequestContext
@@ -58,14 +57,12 @@ export async function POST(req: NextRequest) {
       openaiApiKey = env.OPENAI_API_KEY;
       anthropicApiKey = env.ANTHROPIC_API_KEY;
       googleApiKey = env.GOOGLE_API_KEY;
-      braveApiKey = env.BRAVE_API_KEY;
 
       console.log('Cloudflare env keys available:', Object.keys(env));
       console.log('Secrets found:', {
         openai: !!openaiApiKey,
         anthropic: !!anthropicApiKey,
         google: !!googleApiKey,
-        brave: !!braveApiKey,
       });
     } catch (error) {
       // Fallback for local development
@@ -73,7 +70,6 @@ export async function POST(req: NextRequest) {
       openaiApiKey = process.env.OPENAI_API_KEY;
       anthropicApiKey = process.env.ANTHROPIC_API_KEY;
       googleApiKey = process.env.GOOGLE_API_KEY;
-      braveApiKey = process.env.BRAVE_API_KEY;
     }
 
     // Parse request body
@@ -108,7 +104,6 @@ export async function POST(req: NextRequest) {
       anthropicApiKey,
       googleApiKey,
       ollamaBaseUrl,
-      braveApiKey,
     });
     console.log('Request details:', {
       model,

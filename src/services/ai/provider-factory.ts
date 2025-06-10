@@ -24,7 +24,7 @@ export class AIProviderFactory {
     }
 
     if (config.ollamaBaseUrl) {
-      this.providers.set('ollama', new OllamaProvider(config.ollamaBaseUrl, config.braveApiKey));
+      this.providers.set('ollama', new OllamaProvider(config.ollamaBaseUrl));
     }
   }
 
@@ -75,7 +75,7 @@ export class AIProviderFactory {
           break;
         case 'ollama':
           // For Ollama, apiKey is actually the base URL
-          tempProvider = new OllamaProvider(apiKey, this.config.braveApiKey);
+          tempProvider = new OllamaProvider(apiKey);
           break;
         default:
           return false;
@@ -105,7 +105,7 @@ export class AIProviderFactory {
       case 'ollama':
         // For Ollama, apiKey is actually the base URL
         this.config.ollamaBaseUrl = apiKey;
-        this.providers.set('ollama', new OllamaProvider(apiKey, this.config.braveApiKey));
+        this.providers.set('ollama', new OllamaProvider(apiKey));
         break;
     }
   }

@@ -48,7 +48,6 @@ export interface AIServiceConfig {
   anthropicApiKey?: string;
   googleApiKey?: string;
   ollamaBaseUrl?: string;
-  braveApiKey?: string;
   defaultProvider?: AIProvider;
   defaultModel?: string;
 }
