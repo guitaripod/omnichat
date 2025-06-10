@@ -12,6 +12,7 @@ import {
   Wifi,
   WifiOff,
   Loader2,
+  Fish,
 } from 'lucide-react';
 import { cn } from '@/utils';
 import { AIProvider, AIModel } from '@/services/ai';
@@ -35,6 +36,7 @@ const providerIcons: Record<AIProvider, React.ReactNode> = {
   google: <Zap className="h-4 w-4" />,
   ollama: <Server className="h-4 w-4" />,
   xai: <Sparkles className="h-4 w-4" />,
+  deepseek: <Fish className="h-4 w-4" />,
 };
 
 const providerColors: Record<AIProvider, string> = {
@@ -43,6 +45,7 @@ const providerColors: Record<AIProvider, string> = {
   google: 'text-blue-600 dark:text-blue-400',
   ollama: 'text-purple-600 dark:text-purple-400',
   xai: 'text-indigo-600 dark:text-indigo-400',
+  deepseek: 'text-cyan-600 dark:text-cyan-400',
 };
 
 const providerBgColors: Record<AIProvider, string> = {
@@ -51,6 +54,7 @@ const providerBgColors: Record<AIProvider, string> = {
   google: 'bg-blue-50 dark:bg-blue-900/10 border-blue-200 dark:border-blue-800',
   ollama: 'bg-purple-50 dark:bg-purple-900/10 border-purple-200 dark:border-purple-800',
   xai: 'bg-indigo-50 dark:bg-indigo-900/10 border-indigo-200 dark:border-indigo-800',
+  deepseek: 'bg-cyan-50 dark:bg-cyan-900/10 border-cyan-200 dark:border-cyan-800',
 };
 
 const formatContextSize = (tokens: number): string => {
@@ -114,6 +118,7 @@ export function ModelSelector({ selectedModel, onModelChange, className }: Model
     let hasOpenAIKey = false;
     let hasAnthropicKey = false;
     let hasGoogleKey = false;
+    let hasDeepSeekKey = false;
 
     if (savedKeys) {
       try {
@@ -122,6 +127,7 @@ export function ModelSelector({ selectedModel, onModelChange, className }: Model
         hasOpenAIKey = !!parsed.openai;
         hasAnthropicKey = !!parsed.anthropic;
         hasGoogleKey = !!parsed.google;
+        hasDeepSeekKey = !!parsed.deepseek;
       } catch (e) {
         console.error('Failed to parse API keys:', e);
       }
@@ -152,6 +158,12 @@ export function ModelSelector({ selectedModel, onModelChange, className }: Model
     if (hasGoogleKey) {
       const googleModels = fetchedModels.google?.length > 0 ? fetchedModels.google : staticGoogle;
       combinedModels.push(...googleModels);
+    }
+
+    if (hasDeepSeekKey) {
+      const deepseekModels =
+        fetchedModels.deepseek?.length > 0 ? fetchedModels.deepseek : staticDeepSeek;
+      combinedModels.push(...deepseekModels);
     }
 
     // Add Ollama models if available

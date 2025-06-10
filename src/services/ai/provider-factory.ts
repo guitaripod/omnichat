@@ -3,6 +3,7 @@ import { AnthropicProvider } from './providers/anthropic';
 import { GoogleProvider } from './providers/google';
 import { OllamaProvider } from './providers/ollama';
 import { XAIProvider } from './providers/xai';
+import { DeepSeekProvider } from './providers/deepseek';
 import { ChatProvider, AIProvider, AIServiceConfig, AI_MODELS, AIModel } from './types';
 
 export class AIProviderFactory {
@@ -38,6 +39,11 @@ export class AIProviderFactory {
         xaiProvider.getModels().length,
         'models'
       );
+    }
+
+    if (config.deepseekApiKey) {
+      console.log('[AIProviderFactory] Initializing DeepSeek provider...');
+      this.providers.set('deepseek', new DeepSeekProvider(config.deepseekApiKey));
     }
 
     this.initialized = true;
@@ -113,6 +119,9 @@ export class AIProviderFactory {
         case 'xai':
           tempProvider = new XAIProvider(apiKey);
           break;
+        case 'deepseek':
+          tempProvider = new DeepSeekProvider(apiKey);
+          break;
         default:
           return false;
       }
@@ -146,6 +155,10 @@ export class AIProviderFactory {
       case 'xai':
         this.config.xaiApiKey = apiKey;
         this.providers.set('xai', new XAIProvider(apiKey));
+        break;
+      case 'deepseek':
+        this.config.deepseekApiKey = apiKey;
+        this.providers.set('deepseek', new DeepSeekProvider(apiKey));
         break;
     }
   }

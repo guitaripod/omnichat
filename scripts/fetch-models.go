@@ -44,6 +44,7 @@ type ProviderModels struct {
 	OpenAI   []Model `json:"openai"`
 	Anthropic []Model `json:"anthropic"`
 	Google   []Model `json:"google"`
+	DeepSeek []Model `json:"deepseek"`
 	UpdatedAt string  `json:"updatedAt"`
 }
 
@@ -225,12 +226,48 @@ func fetchGoogleModels(apiKey string) ([]Model, error) {
 	return models, nil
 }
 
+func fetchDeepSeekModels(apiKey string) ([]Model, error) {
+	url := "https://api.deepseek.com/models"
+	
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	
+	req.Header.Set("Authorization", "Bearer "+apiKey)
+	
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("DeepSeek API error: %d - %s", resp.StatusCode, string(body))
+	}
+	
+	var modelsResp ModelsResponse
+	if err := json.NewDecoder(resp.Body).Decode(&modelsResp); err != nil {
+		return nil, err
+	}
+	
+	// Add provider field
+	for i := range modelsResp.Data {
+		modelsResp.Data[i].Provider = "deepseek"
+	}
+	
+	return modelsResp.Data, nil
+}
+
 func main() {
 	// Check for API keys from environment variables
 	xaiKey := os.Getenv("XAI_API_KEY")
 	openaiKey := os.Getenv("OPENAI_API_KEY")
 	anthropicKey := os.Getenv("ANTHROPIC_API_KEY")
 	googleKey := os.Getenv("GOOGLE_API_KEY")
+	deepseekKey := os.Getenv("DEEPSEEK_API_KEY")
 	
 	allModels := ProviderModels{
 		UpdatedAt: time.Now().UTC().Format(time.RFC3339),
@@ -292,6 +329,20 @@ func main() {
 		fmt.Println("GOOGLE_API_KEY not set, skipping Google models")
 	}
 	
+	// Fetch DeepSeek models
+	if deepseekKey != "" {
+		fmt.Println("Fetching DeepSeek models...")
+		models, err := fetchDeepSeekModels(deepseekKey)
+		if err != nil {
+			fmt.Printf("Error fetching DeepSeek models: %v\n", err)
+		} else {
+			allModels.DeepSeek = models
+			fmt.Printf("Found %d DeepSeek models\n", len(models))
+		}
+	} else {
+		fmt.Println("DEEPSEEK_API_KEY not set, skipping DeepSeek models")
+	}
+	
 	// Write to JSON file
 	outputFile := "available-models.json"
 	file, err := os.Create(outputFile)
@@ -311,6 +362,6 @@ func main() {
 	fmt.Printf("\nModels saved to %s\n", outputFile)
 	
 	// Print summary
-	totalModels := len(allModels.XAI) + len(allModels.OpenAI) + len(allModels.Anthropic) + len(allModels.Google)
+	totalModels := len(allModels.XAI) + len(allModels.OpenAI) + len(allModels.Anthropic) + len(allModels.Google) + len(allModels.DeepSeek)
 	fmt.Printf("\nTotal models fetched: %d\n", totalModels)
 }

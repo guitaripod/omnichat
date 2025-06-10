@@ -17,6 +17,7 @@ export interface AvailableModels {
   openai: APIModel[];
   anthropic: APIModel[];
   google: APIModel[];
+  deepseek: APIModel[];
   updatedAt: string;
 }
 
@@ -137,6 +138,25 @@ const convertToAIModel = (model: APIModel, provider: string): ServiceAIModel => 
       supportsWebSearch: false,
       description: 'Fastest Claude 3 model',
     },
+    // DeepSeek models
+    'deepseek-chat': {
+      name: 'DeepSeek Chat',
+      contextWindow: 64000,
+      maxOutput: 4096,
+      supportsVision: false,
+      supportsTools: true,
+      supportsWebSearch: false,
+      description: 'Advanced reasoning and chat capabilities',
+    },
+    'deepseek-reasoner': {
+      name: 'DeepSeek Reasoner',
+      contextWindow: 64000,
+      maxOutput: 8192,
+      supportsVision: false,
+      supportsTools: true,
+      supportsWebSearch: false,
+      description: 'Specialized for complex reasoning tasks',
+    },
     // Add more model mappings as needed
   };
 
@@ -165,10 +185,18 @@ export const getAnthropicModels = () =>
   (availableModels.anthropic || []).map((m) => convertToAIModel(m, 'anthropic'));
 export const getGoogleModels = () =>
   (availableModels.google || []).map((m) => convertToAIModel(m, 'google'));
+export const getDeepSeekModels = () =>
+  (availableModels.deepseek || []).map((m) => convertToAIModel(m, 'deepseek'));
 
 // Get all models as a flat array
 export const getAllModels = (): ServiceAIModel[] => {
-  return [...getXAIModels(), ...getOpenAIModels(), ...getAnthropicModels(), ...getGoogleModels()];
+  return [
+    ...getXAIModels(),
+    ...getOpenAIModels(),
+    ...getAnthropicModels(),
+    ...getGoogleModels(),
+    ...getDeepSeekModels(),
+  ];
 };
 
 // Get model by ID

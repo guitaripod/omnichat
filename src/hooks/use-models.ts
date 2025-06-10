@@ -15,6 +15,7 @@ export function useModels(): UseModelsReturn {
     google: [],
     ollama: [],
     xai: [],
+    deepseek: [],
   });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -64,6 +65,7 @@ export function useModels(): UseModelsReturn {
         google: data.providers.google || [],
         ollama: data.providers.ollama || [],
         xai: data.providers.xai || [],
+        deepseek: data.providers.deepseek || [],
       };
 
       // Also try to fetch Ollama models if configured

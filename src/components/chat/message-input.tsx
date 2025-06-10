@@ -13,6 +13,7 @@ import {
   Server,
   GitBranch,
   Globe,
+  Fish,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AIProvider, AIModel, AI_MODELS } from '@/services/ai';
@@ -36,6 +37,7 @@ const providerIcons: Record<AIProvider, React.ReactNode> = {
   google: <Zap className="h-3.5 w-3.5" />,
   ollama: <Server className="h-3.5 w-3.5" />,
   xai: <Sparkles className="h-3.5 w-3.5" />,
+  deepseek: <Fish className="h-3.5 w-3.5" />,
 };
 
 const providerColors: Record<AIProvider, string> = {
@@ -44,6 +46,7 @@ const providerColors: Record<AIProvider, string> = {
   google: 'text-blue-600 dark:text-blue-400',
   ollama: 'text-purple-600 dark:text-purple-400',
   xai: 'text-indigo-600 dark:text-indigo-400',
+  deepseek: 'text-cyan-600 dark:text-cyan-400',
 };
 
 export function MessageInput({

@@ -952,5 +952,6 @@
       "provider": "google"
     }
   ],
-  "updatedAt": "2025-06-10T19:15:46Z"
+  "updatedAt": "2025-06-10T19:15:46Z",
+  "deepseek": []
 }

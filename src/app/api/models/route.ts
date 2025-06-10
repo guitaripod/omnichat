@@ -38,6 +38,7 @@ export async function GET(_req: NextRequest) {
     let anthropicApiKey: string | undefined;
     let googleApiKey: string | undefined;
     let xaiApiKey: string | undefined;
+    let deepseekApiKey: string | undefined;
 
     try {
       // In Cloudflare Pages, secrets are accessed via getRequestContext
@@ -48,11 +49,13 @@ export async function GET(_req: NextRequest) {
       anthropicApiKey = env.ANTHROPIC_API_KEY;
       googleApiKey = env.GOOGLE_API_KEY;
       xaiApiKey = env.XAI_API_KEY;
+      deepseekApiKey = env.DEEPSEEK_API_KEY;
       console.log('[/api/models] Environment variables from Cloudflare:', {
         hasOpenAI: !!openaiApiKey,
         hasAnthropic: !!anthropicApiKey,
         hasGoogle: !!googleApiKey,
         hasXAI: !!xaiApiKey,
+        hasDeepSeek: !!deepseekApiKey,
         xaiKeyPreview: xaiApiKey ? xaiApiKey.substring(0, 10) + '...' : 'none',
       });
     } catch (error) {
@@ -62,11 +65,13 @@ export async function GET(_req: NextRequest) {
       anthropicApiKey = process.env.ANTHROPIC_API_KEY;
       googleApiKey = process.env.GOOGLE_API_KEY;
       xaiApiKey = process.env.XAI_API_KEY;
+      deepseekApiKey = process.env.DEEPSEEK_API_KEY;
       console.log('[/api/models] Environment variables from process.env:', {
         hasOpenAI: !!openaiApiKey,
         hasAnthropic: !!anthropicApiKey,
         hasGoogle: !!googleApiKey,
         hasXAI: !!xaiApiKey,
+        hasDeepSeek: !!deepseekApiKey,
         xaiKeyPreview: xaiApiKey ? xaiApiKey.substring(0, 10) + '...' : 'none',
       });
     }
@@ -77,6 +82,7 @@ export async function GET(_req: NextRequest) {
       anthropicApiKey,
       googleApiKey,
       xaiApiKey,
+      deepseekApiKey,
     });
 
     // Get all available providers and their models

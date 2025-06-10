@@ -1,4 +1,4 @@
-import { User, Sparkles, Brain, Zap, Server, Copy, Check, RefreshCw } from 'lucide-react';
+import { User, Sparkles, Brain, Zap, Server, Copy, Check, RefreshCw, Fish } from 'lucide-react';
 import { useState } from 'react';
 import type { Message } from '@/types';
 import { cn } from '@/utils';
@@ -25,6 +25,7 @@ const providerIcons = {
   google: Zap,
   ollama: Server,
   xai: Sparkles,
+  deepseek: Fish,
 };
 
 const providerColors = {
@@ -57,6 +58,12 @@ const providerColors = {
     border: 'border-indigo-200 dark:border-indigo-800',
     icon: 'text-indigo-600 dark:text-indigo-400',
     iconBg: 'bg-indigo-100 dark:bg-indigo-900/30',
+  },
+  deepseek: {
+    bg: 'bg-gradient-to-br from-cyan-50 to-teal-50 dark:from-cyan-950/20 dark:to-teal-950/20',
+    border: 'border-cyan-200 dark:border-cyan-800',
+    icon: 'text-cyan-600 dark:text-cyan-400',
+    iconBg: 'bg-cyan-100 dark:bg-cyan-900/30',
   },
 };
 

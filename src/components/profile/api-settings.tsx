@@ -10,6 +10,7 @@ export default function ApiSettings() {
     anthropic: '',
     google: '',
     xai: '',
+    deepseek: '',
     ollama: 'http://localhost:11434',
   });
 
@@ -18,6 +19,7 @@ export default function ApiSettings() {
     anthropic: false,
     google: false,
     xai: false,
+    deepseek: false,
   });
 
   const [ollamaStatus, setOllamaStatus] = useState<'checking' | 'connected' | 'disconnected'>(
@@ -76,6 +78,9 @@ export default function ApiSettings() {
         break;
       case 'xai':
         AIProviderFactory.updateApiKey('xai', apiKeys.xai);
+        break;
+      case 'deepseek':
+        AIProviderFactory.updateApiKey('deepseek', apiKeys.deepseek);
         break;
       case 'ollama':
         AIProviderFactory.updateApiKey('ollama', apiKeys.ollama);
@@ -198,6 +203,34 @@ export default function ApiSettings() {
           </button>
           <button
             onClick={() => handleSave('xai')}
+            className="rounded-md bg-blue-500 px-4 py-2 text-sm text-white hover:bg-blue-600"
+          >
+            Save
+          </button>
+        </div>
+      </div>
+
+      {/* DeepSeek */}
+      <div className="mb-6 border-b border-gray-200 pb-6 dark:border-gray-700">
+        <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+          DeepSeek API Key
+        </label>
+        <div className="flex gap-2">
+          <input
+            type={showKeys.deepseek ? 'text' : 'password'}
+            value={apiKeys.deepseek}
+            onChange={(e) => setApiKeys({ ...apiKeys, deepseek: e.target.value })}
+            placeholder="sk-..."
+            className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+          />
+          <button
+            onClick={() => toggleShowKey('deepseek')}
+            className="rounded-md bg-gray-100 px-3 py-2 text-sm hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
+          >
+            {showKeys.deepseek ? 'Hide' : 'Show'}
+          </button>
+          <button
+            onClick={() => handleSave('deepseek')}
             className="rounded-md bg-blue-500 px-4 py-2 text-sm text-white hover:bg-blue-600"
           >
             Save

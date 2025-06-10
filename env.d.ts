@@ -18,6 +18,7 @@ export interface CloudflareEnv {
   ANTHROPIC_API_KEY: string;
   GOOGLE_API_KEY: string;
   XAI_API_KEY: string;
+  DEEPSEEK_API_KEY: string;
 
   // Bindings
   DB: D1Database;
