@@ -4,13 +4,27 @@ import { getDb } from '@/lib/db/client';
 import { getUserByClerkId } from '@/lib/db/queries';
 import { conversations, messages } from '@/lib/db/schema';
 import { eq, and, like, desc } from 'drizzle-orm';
+import { isDevMode, getDevUser } from '@/lib/auth/dev-auth';
 
 export const runtime = 'edge';
 
 export async function GET(req: NextRequest) {
   try {
-    const user = await currentUser();
-    if (!user) {
+    const clerkUser = await currentUser();
+
+    let userId: string;
+
+    if (clerkUser) {
+      userId = clerkUser.id;
+    } else if (isDevMode()) {
+      // Use dev user in dev mode
+      const devUser = await getDevUser();
+      if (devUser) {
+        userId = devUser.id;
+      } else {
+        return new Response('Unauthorized', { status: 401 });
+      }
+    } else {
       return new Response('Unauthorized', { status: 401 });
     }
 
@@ -25,7 +39,7 @@ export async function GET(req: NextRequest) {
     const db = getDb(process.env.DB as unknown as D1Database);
 
     // Get user from database
-    const dbUser = await getUserByClerkId(db, user.id);
+    const dbUser = await getUserByClerkId(db, userId);
     if (!dbUser) {
       return NextResponse.json({ results: [] });
     }

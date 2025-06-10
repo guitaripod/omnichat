@@ -1,5 +1,6 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
 const isProtectedRoute = createRouteMatcher([
   '/chat(.*)',
@@ -10,14 +11,18 @@ const isProtectedRoute = createRouteMatcher([
   '/settings(.*)',
 ]);
 
-// Only apply Clerk middleware if the key is present
-const middleware = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
-  ? clerkMiddleware(async (auth, req) => {
-      if (isProtectedRoute(req)) {
-        await auth.protect();
-      }
-    })
-  : () => NextResponse.next();
+// Skip authentication in dev mode
+const isDevMode = process.env.NEXT_PUBLIC_DEV_MODE === 'true';
+
+// Only apply Clerk middleware if not in dev mode and key is present
+const middleware =
+  !isDevMode && process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+    ? clerkMiddleware(async (auth, req) => {
+        if (isProtectedRoute(req)) {
+          await auth.protect();
+        }
+      })
+    : (_req: NextRequest) => NextResponse.next();
 
 export default middleware;
 

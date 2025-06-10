@@ -1,8 +1,15 @@
 import { SignIn } from '@clerk/nextjs';
+import { redirect } from 'next/navigation';
+import { isDevMode } from '@/lib/auth/dev-auth';
 
 export const runtime = 'edge';
 
 export default function SignInPage() {
+  // In dev mode, redirect directly to chat
+  if (isDevMode()) {
+    redirect('/chat');
+  }
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-gray-900">
       <SignIn

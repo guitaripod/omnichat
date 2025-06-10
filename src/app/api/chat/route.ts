@@ -6,6 +6,7 @@ import { getD1Database } from '@/lib/db/get-db';
 import { getUserByClerkId } from '@/lib/db/queries';
 import { getRequestContext } from '@cloudflare/next-on-pages';
 import type { CloudflareEnv } from '../../../../env';
+import { isDevMode, getDevUser } from '@/lib/auth/dev-auth';
 
 export const runtime = 'edge';
 
@@ -22,11 +23,23 @@ interface ChatRequest {
 export async function POST(req: NextRequest) {
   try {
     // Authenticate user
-    const user = await currentUser();
-    if (!user) {
+    const clerkUser = await currentUser();
+
+    let userId: string;
+
+    if (clerkUser) {
+      userId = clerkUser.id;
+    } else if (isDevMode()) {
+      // Use dev user in dev mode
+      const devUser = await getDevUser();
+      if (devUser) {
+        userId = devUser.id;
+      } else {
+        return new Response('Unauthorized', { status: 401 });
+      }
+    } else {
       return new Response('Unauthorized', { status: 401 });
     }
-    const userId = user.id;
 
     // Initialize AI providers from Cloudflare secrets
     console.log('Accessing Cloudflare secrets...');
@@ -58,15 +71,6 @@ export async function POST(req: NextRequest) {
       googleApiKey = process.env.GOOGLE_API_KEY;
     }
 
-    if (!openaiApiKey || !anthropicApiKey || !googleApiKey) {
-      console.error('Missing API keys:', {
-        openai: !!openaiApiKey,
-        anthropic: !!anthropicApiKey,
-        google: !!googleApiKey,
-      });
-      return new Response('API keys not configured', { status: 503 });
-    }
-
     // Parse request body
     console.log('Parsing request body...');
     const body = (await req.json()) as ChatRequest;
@@ -79,6 +83,18 @@ export async function POST(req: NextRequest) {
       ollamaBaseUrl,
       conversationId,
     } = body;
+
+    // Only require API keys for non-Ollama models
+    const isOllamaModel = model?.startsWith('ollama/');
+
+    if (!isOllamaModel && (!openaiApiKey || !anthropicApiKey || !googleApiKey)) {
+      console.error('Missing API keys:', {
+        openai: !!openaiApiKey,
+        anthropic: !!anthropicApiKey,
+        google: !!googleApiKey,
+      });
+      return new Response('API keys not configured', { status: 503 });
+    }
 
     console.log('Initializing AI Provider Factory...');
     AIProviderFactory.initialize({

@@ -8,14 +8,37 @@ import {
   createConversation,
   updateConversation,
 } from '@/lib/db/queries';
+import { isDevMode, getDevUser } from '@/lib/auth/dev-auth';
 
 export const runtime = 'edge';
 
 // GET /api/conversations - Get user's conversations
 export async function GET(_req: NextRequest) {
   try {
-    const user = await currentUser();
-    if (!user) {
+    const clerkUser = await currentUser();
+
+    let userId: string;
+    let userEmail: string = '';
+    let userName: string = '';
+    let userImageUrl: string | null = null;
+
+    if (clerkUser) {
+      userId = clerkUser.id;
+      userEmail = clerkUser.primaryEmailAddress?.emailAddress || '';
+      userName = clerkUser.fullName || clerkUser.username || '';
+      userImageUrl = clerkUser.imageUrl;
+    } else if (isDevMode()) {
+      // Use dev user in dev mode
+      const devUser = await getDevUser();
+      if (devUser) {
+        userId = devUser.id;
+        userEmail = devUser.primaryEmailAddress?.emailAddress || '';
+        userName = devUser.fullName || devUser.username || '';
+        userImageUrl = devUser.imageUrl;
+      } else {
+        return new Response('Unauthorized', { status: 401 });
+      }
+    } else {
       return new Response('Unauthorized', { status: 401 });
     }
 
@@ -24,13 +47,13 @@ export async function GET(_req: NextRequest) {
     const db = getDb(process.env.DB as unknown as D1Database);
 
     // Get or create user
-    let dbUser = await getUserByClerkId(db, user.id);
+    let dbUser = await getUserByClerkId(db, userId);
     if (!dbUser) {
       dbUser = await createUser(db, {
-        clerkId: user.id,
-        email: user.primaryEmailAddress?.emailAddress || '',
-        name: user.fullName || user.username || '',
-        imageUrl: user.imageUrl,
+        clerkId: userId,
+        email: userEmail,
+        name: userName,
+        imageUrl: userImageUrl,
       });
     }
 
@@ -47,8 +70,21 @@ export async function GET(_req: NextRequest) {
 // POST /api/conversations - Create new conversation
 export async function POST(req: NextRequest) {
   try {
-    const user = await currentUser();
-    if (!user) {
+    const clerkUser = await currentUser();
+
+    let userId: string;
+
+    if (clerkUser) {
+      userId = clerkUser.id;
+    } else if (isDevMode()) {
+      // Use dev user in dev mode
+      const devUser = await getDevUser();
+      if (devUser) {
+        userId = devUser.id;
+      } else {
+        return new Response('Unauthorized', { status: 401 });
+      }
+    } else {
       return new Response('Unauthorized', { status: 401 });
     }
 
@@ -62,13 +98,15 @@ export async function POST(req: NextRequest) {
     const db = getDb(process.env.DB as unknown as D1Database);
 
     // Get user
-    let dbUser = await getUserByClerkId(db, user.id);
+    let dbUser = await getUserByClerkId(db, userId);
     if (!dbUser) {
+      // Create user if not exists - for dev mode
+      const devUser = await getDevUser();
       dbUser = await createUser(db, {
-        clerkId: user.id,
-        email: user.primaryEmailAddress?.emailAddress || '',
-        name: user.fullName || user.username || '',
-        imageUrl: user.imageUrl,
+        clerkId: userId,
+        email: devUser?.primaryEmailAddress?.emailAddress || '',
+        name: devUser?.fullName || devUser?.username || '',
+        imageUrl: devUser?.imageUrl || undefined,
       });
     }
 
@@ -89,9 +127,18 @@ export async function POST(req: NextRequest) {
 // PATCH /api/conversations/[id] - Update conversation
 export async function PATCH(req: NextRequest) {
   try {
-    const user = await currentUser();
-    if (!user) {
+    const clerkUser = await currentUser();
+
+    if (!clerkUser && !isDevMode()) {
       return new Response('Unauthorized', { status: 401 });
+    }
+
+    // In dev mode, allow access without authentication
+    if (!clerkUser && isDevMode()) {
+      const devUser = await getDevUser();
+      if (!devUser) {
+        return new Response('Unauthorized', { status: 401 });
+      }
     }
 
     const url = new URL(req.url);

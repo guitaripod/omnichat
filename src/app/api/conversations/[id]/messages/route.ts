@@ -2,15 +2,25 @@ import { NextRequest, NextResponse } from 'next/server';
 import { currentUser } from '@clerk/nextjs/server';
 import { getDb } from '@/lib/db/client';
 import { getConversationMessages, createMessage } from '@/lib/db/queries';
+import { isDevMode, getDevUser } from '@/lib/auth/dev-auth';
 
 export const runtime = 'edge';
 
 // GET /api/conversations/[id]/messages - Get messages for a conversation
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const user = await currentUser();
-    if (!user) {
+    const clerkUser = await currentUser();
+
+    if (!clerkUser && !isDevMode()) {
       return new Response('Unauthorized', { status: 401 });
+    }
+
+    // In dev mode, allow access without authentication
+    if (!clerkUser && isDevMode()) {
+      const devUser = await getDevUser();
+      if (!devUser) {
+        return new Response('Unauthorized', { status: 401 });
+      }
     }
 
     const { id: conversationId } = await params;
@@ -30,9 +40,18 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 // POST /api/conversations/[id]/messages - Create a new message
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const user = await currentUser();
-    if (!user) {
+    const clerkUser = await currentUser();
+
+    if (!clerkUser && !isDevMode()) {
       return new Response('Unauthorized', { status: 401 });
+    }
+
+    // In dev mode, allow access without authentication
+    if (!clerkUser && isDevMode()) {
+      const devUser = await getDevUser();
+      if (!devUser) {
+        return new Response('Unauthorized', { status: 401 });
+      }
     }
 
     const { id: conversationId } = await params;

@@ -1,10 +1,16 @@
 import Link from 'next/link';
 import { currentUser } from '@clerk/nextjs/server';
 import { redirect } from 'next/navigation';
+import { isDevMode } from '@/lib/auth/dev-auth';
 
 export const runtime = 'edge';
 
 export default async function Home() {
+  // In dev mode, redirect directly to chat
+  if (isDevMode()) {
+    redirect('/chat');
+  }
+
   // Only check for user if Clerk is configured
   if (process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) {
     try {

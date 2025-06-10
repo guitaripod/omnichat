@@ -7,9 +7,11 @@ import { Menu, X, Settings, User } from 'lucide-react';
 import { UserButton } from '@clerk/nextjs';
 import { MockUserButton } from '@/components/ui/mock-user-button';
 import { ConversationList } from './conversation-list';
+import { useDevMode } from '@/hooks/use-dev-mode';
 
 export function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
+  const isDevMode = useDevMode();
 
   return (
     <>
@@ -55,7 +57,7 @@ export function Sidebar() {
               Settings
             </Link>
             <div className="pt-2">
-              {process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ? (
+              {!isDevMode && process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ? (
                 <UserButton afterSignOutUrl="/" />
               ) : (
                 <MockUserButton />
