@@ -110,14 +110,14 @@
 - [x] Implement file size/type validation
 - [x] Build attachment viewer modal
 
-### Epic 3.2: Code Syntax Highlighting
+### Epic 3.2: Code Syntax Highlighting ✅ COMPLETED
 
-- [ ] Integrate Shiki
-- [ ] Create custom code block component
-- [ ] Add language detection
-- [ ] Implement copy code button
-- [ ] Implement copy code as a beautiful card image that can be shared
-- [ ] Support inline code formatting
+- [x] Integrate Shiki
+- [x] Create custom code block component
+- [x] Add language detection
+- [x] Implement copy code button
+- [x] Implement copy code as a beautiful card image that can be shared
+- [x] Support inline code formatting
 
 ### Epic 3.3: Resumable Streams
 
