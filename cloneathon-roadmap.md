@@ -70,7 +70,7 @@
 - [x] Implement custom Anthropic API integration with native fetch
 - [x] Implement custom Google Gemini API integration with native fetch
 - [x] Implement custom xAi API integration with native fetch
-- [ ] Implement custom DeepSeek API integration with native fetch
+- [x] Implement custom DeepSeek API integration with native fetch
 - [x] Create model selector UI
 - [x] Implement SSE streaming parser for responses
 
