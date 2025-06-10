@@ -59,7 +59,7 @@ export function ModelSelector({ selectedModel, onModelChange, className }: Model
   const [selectedModelInfo, setSelectedModelInfo] = useState<AIModel | undefined>();
   const [hoveredModel, setHoveredModel] = useState<string | null>(null);
   const [expandedProviders, setExpandedProviders] = useState<Set<AIProvider>>(new Set());
-  const [ollamaBaseUrl, setOllamaBaseUrl] = useState<string>('http://localhost:11434');
+  const [ollamaBaseUrl, setOllamaBaseUrl] = useState<string | undefined>(undefined);
   const [isOllamaAvailable, setIsOllamaAvailable] = useState(false);
 
   // Debug - force visible error
@@ -77,16 +77,18 @@ export function ModelSelector({ selectedModel, onModelChange, className }: Model
     if (savedKeys) {
       try {
         const parsed = JSON.parse(savedKeys);
-        if (parsed.ollama) {
-          setOllamaBaseUrl(parsed.ollama);
-          // Check if Ollama is available
-          fetch(`${parsed.ollama}/api/tags`)
-            .then((res) => res.ok && setIsOllamaAvailable(true))
-            .catch(() => setIsOllamaAvailable(false));
-        }
+        const url = parsed.ollama || 'http://localhost:11434';
+        setOllamaBaseUrl(url);
+        // Check if Ollama is available
+        fetch(`${url}/api/tags`)
+          .then((res) => res.ok && setIsOllamaAvailable(true))
+          .catch(() => setIsOllamaAvailable(false));
       } catch (error) {
         console.error('Failed to parse saved API keys:', error);
+        setOllamaBaseUrl('http://localhost:11434');
       }
+    } else {
+      setOllamaBaseUrl('http://localhost:11434');
     }
   }, []);
 

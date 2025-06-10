@@ -6,6 +6,7 @@ import {
   Paperclip,
   Square,
   ChevronDown,
+  ChevronRight,
   Sparkles,
   Brain,
   Zap,
@@ -59,6 +60,7 @@ export function MessageInput({
   const [isModelSelectorOpen, setIsModelSelectorOpen] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const [hoveredModel, setHoveredModel] = useState<string | null>(null);
+  const [expandedProviders, setExpandedProviders] = useState<Set<AIProvider>>(new Set());
   const [attachments, setAttachments] = useState<FileAttachment[]>([]);
   const [showFileUpload, setShowFileUpload] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -253,89 +255,114 @@ export function MessageInput({
             >
               <div className="overflow-hidden">
                 <div className="border-b border-gray-200 bg-white dark:border-gray-600 dark:bg-gray-800">
-                  <div className="max-h-[300px] overflow-y-auto p-2">
+                  <div className="relative max-h-[500px] overflow-y-auto p-2">
                     {Object.entries(groupedModels).map(([provider, models]) => (
                       <div key={provider} className="mb-2 last:mb-0">
-                        <div className="mb-1 flex items-center gap-2 px-2 py-1">
+                        <button
+                          onClick={() => {
+                            const newExpanded = new Set(expandedProviders);
+                            if (newExpanded.has(provider as AIProvider)) {
+                              newExpanded.delete(provider as AIProvider);
+                            } else {
+                              newExpanded.add(provider as AIProvider);
+                            }
+                            setExpandedProviders(newExpanded);
+                          }}
+                          className="mb-1 flex w-full items-center gap-2 rounded px-2 py-1 hover:bg-gray-100 dark:hover:bg-gray-700/50"
+                        >
+                          <ChevronRight
+                            className={cn(
+                              'h-3 w-3 text-gray-400 transition-transform duration-300',
+                              expandedProviders.has(provider as AIProvider) && 'rotate-90'
+                            )}
+                          />
                           <span className={providerColors[provider as AIProvider]}>
                             {providerIcons[provider as AIProvider]}
                           </span>
                           <span className="text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
                             {provider}
                           </span>
-                        </div>
-                        <div className="space-y-0.5">
-                          {models.map((model) => (
-                            <div key={model.id} className="relative">
-                              <button
-                                onClick={() => {
-                                  onModelChange(model.id);
-                                  setIsModelSelectorOpen(false);
-                                }}
-                                onMouseEnter={() => setHoveredModel(model.id)}
-                                onMouseLeave={() => setHoveredModel(null)}
-                                className={cn(
-                                  'flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left transition-all duration-150',
-                                  selectedModel === model.id
-                                    ? 'bg-blue-100 text-blue-900 dark:bg-blue-900/30 dark:text-blue-100'
-                                    : hoveredModel === model.id
-                                      ? 'bg-gray-100 dark:bg-gray-700/70'
-                                      : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'
-                                )}
-                              >
-                                <span
-                                  className={cn(
-                                    'text-sm transition-colors',
-                                    selectedModel === model.id
-                                      ? 'font-medium'
-                                      : 'text-gray-900 dark:text-white'
-                                  )}
-                                >
-                                  {model.name}
-                                </span>
-                                <div className="flex items-center gap-2">
-                                  <span
+                          <span className="text-xs text-gray-400">({models.length})</span>
+                        </button>
+                        <div
+                          className={cn(
+                            'grid transition-[grid-template-rows] duration-300 ease-in-out',
+                            expandedProviders.has(provider as AIProvider)
+                              ? 'grid-rows-[1fr] opacity-100'
+                              : 'grid-rows-[0fr] opacity-0'
+                          )}
+                        >
+                          <div className="overflow-hidden transition-opacity duration-300">
+                            <div className="space-y-0.5 pb-1 pl-6">
+                              {models.map((model) => (
+                                <div key={model.id} className="group relative">
+                                  <button
+                                    onClick={() => {
+                                      onModelChange(model.id);
+                                      setIsModelSelectorOpen(false);
+                                    }}
+                                    onMouseEnter={() => setHoveredModel(model.id)}
+                                    onMouseLeave={() => setHoveredModel(null)}
                                     className={cn(
-                                      'text-xs',
+                                      'flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left transition-all duration-150',
                                       selectedModel === model.id
-                                        ? 'text-blue-700 dark:text-blue-300'
-                                        : 'text-gray-500 dark:text-gray-400'
+                                        ? 'bg-blue-100 text-blue-900 dark:bg-blue-900/30 dark:text-blue-100'
+                                        : hoveredModel === model.id
+                                          ? 'bg-gray-100 dark:bg-gray-700/70'
+                                          : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'
                                     )}
                                   >
-                                    {Math.round(model.contextWindow / 1000)}k
-                                  </span>
-                                  {model.supportsVision && (
-                                    <span
-                                      className={cn(
-                                        'text-xs',
-                                        selectedModel === model.id
-                                          ? 'text-blue-700 dark:text-blue-300'
-                                          : 'text-purple-600 dark:text-purple-400'
+                                    <div className="flex min-w-0 items-center gap-2">
+                                      <span
+                                        className={cn(
+                                          'text-sm transition-colors',
+                                          selectedModel === model.id
+                                            ? 'font-medium'
+                                            : 'text-gray-900 dark:text-white'
+                                        )}
+                                      >
+                                        {model.name}
+                                      </span>
+                                      <span
+                                        className={cn(
+                                          'truncate text-xs text-gray-500 transition-all duration-200 dark:text-gray-400',
+                                          hoveredModel === model.id && model.description
+                                            ? 'max-w-xs opacity-100'
+                                            : 'max-w-0 opacity-0'
+                                        )}
+                                      >
+                                        {model.description && `• ${model.description}`}
+                                      </span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <span
+                                        className={cn(
+                                          'text-xs',
+                                          selectedModel === model.id
+                                            ? 'text-blue-700 dark:text-blue-300'
+                                            : 'text-gray-500 dark:text-gray-400'
+                                        )}
+                                      >
+                                        {Math.round(model.contextWindow / 1000)}k
+                                      </span>
+                                      {model.supportsVision && (
+                                        <span
+                                          className={cn(
+                                            'text-xs',
+                                            selectedModel === model.id
+                                              ? 'text-blue-700 dark:text-blue-300'
+                                              : 'text-purple-600 dark:text-purple-400'
+                                          )}
+                                        >
+                                          Vision
+                                        </span>
                                       )}
-                                    >
-                                      Vision
-                                    </span>
-                                  )}
+                                    </div>
+                                  </button>
                                 </div>
-                              </button>
-
-                              {/* Hover tooltip */}
-                              {hoveredModel === model.id && model.description && (
-                                <div
-                                  className={cn(
-                                    'absolute top-full right-0 left-0 z-50 mt-1 rounded-lg',
-                                    'border bg-white p-2 shadow-lg',
-                                    'border-gray-200 dark:border-gray-700 dark:bg-gray-800',
-                                    'pointer-events-none'
-                                  )}
-                                >
-                                  <p className="text-xs text-gray-600 dark:text-gray-300">
-                                    {model.description}
-                                  </p>
-                                </div>
-                              )}
+                              ))}
                             </div>
-                          ))}
+                          </div>
                         </div>
                       </div>
                     ))}

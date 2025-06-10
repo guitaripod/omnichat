@@ -39,17 +39,17 @@ export function ChatContainer() {
   const isCreatingConversationRef = useRef(false);
 
   // Get Ollama connection status
-  // Initialize with default value to avoid hydration mismatch
-  const [ollamaBaseUrl, setOllamaBaseUrl] = useState<string>('http://localhost:11434');
+  // Initialize with undefined to avoid hydration mismatch
+  const [ollamaBaseUrl, setOllamaBaseUrl] = useState<string | undefined>();
 
   useEffect(() => {
     // Only access localStorage after mount to avoid SSR issues
     const savedKeys = localStorage.getItem('apiKeys');
     if (savedKeys) {
       const keys = JSON.parse(savedKeys);
-      if (keys.ollama) {
-        setOllamaBaseUrl(keys.ollama);
-      }
+      setOllamaBaseUrl(keys.ollama || 'http://localhost:11434');
+    } else {
+      setOllamaBaseUrl('http://localhost:11434');
     }
   }, []);
 
