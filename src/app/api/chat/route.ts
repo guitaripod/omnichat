@@ -7,6 +7,7 @@ import { getUserByClerkId } from '@/lib/db/queries';
 import { getRequestContext } from '@cloudflare/next-on-pages';
 import type { CloudflareEnv } from '../../../../env';
 import { isDevMode, getDevUser } from '@/lib/auth/dev-auth';
+import { AuditLogger } from '@/services/security';
 
 export const runtime = 'edge';
 
@@ -22,6 +23,9 @@ interface ChatRequest {
 }
 
 export async function POST(req: NextRequest) {
+  let user: any = null;
+  let conversationId: string | undefined;
+
   try {
     // Authenticate user
     const clerkUser = await currentUser();
@@ -30,11 +34,13 @@ export async function POST(req: NextRequest) {
 
     if (clerkUser) {
       userId = clerkUser.id;
+      user = clerkUser;
     } else if (isDevMode()) {
       // Use dev user in dev mode
       const devUser = await getDevUser();
       if (devUser) {
         userId = devUser.id;
+        user = devUser;
       } else {
         return new Response('Unauthorized', { status: 401 });
       }
@@ -90,9 +96,10 @@ export async function POST(req: NextRequest) {
       maxTokens,
       stream = true,
       ollamaBaseUrl,
-      conversationId,
       webSearch = false,
     } = body;
+
+    conversationId = body.conversationId;
 
     // Only require API keys for non-Ollama models
     const isOllamaModel = model?.startsWith('ollama/');
@@ -204,6 +211,14 @@ export async function POST(req: NextRequest) {
     // to avoid duplication, we don't save them here
 
     if (stream && typeof response === 'object' && 'stream' in response) {
+      // Log successful streaming chat
+      AuditLogger.logApiRequest(req, user, 'api.chat.stream', 'chat', {
+        model,
+        conversationId,
+        messageCount: messages.length,
+        webSearch,
+      }).catch(console.error);
+
       // Return streaming response with proper headers for Cloudflare
       return new NextResponse(response.stream, {
         headers: {
@@ -216,6 +231,14 @@ export async function POST(req: NextRequest) {
         },
       });
     } else {
+      // Log successful non-streaming chat
+      AuditLogger.logApiRequest(req, user, 'api.chat.create', 'chat', {
+        model,
+        conversationId,
+        messageCount: messages.length,
+        webSearch,
+      }).catch(console.error);
+
       // Return non-streaming response
       return NextResponse.json({ message: response });
     }
@@ -225,6 +248,11 @@ export async function POST(req: NextRequest) {
     console.error('Error stack:', error instanceof Error ? error.stack : 'No stack');
 
     const errorMessage = error instanceof Error ? error.message : 'An error occurred';
+
+    // Log error to audit log
+    AuditLogger.logApiError(req, user, 'api.chat.create', 'chat', error as Error, {
+      conversationId,
+    }).catch(console.error);
 
     // Handle specific error types
     if (errorMessage.includes('not initialized')) {
