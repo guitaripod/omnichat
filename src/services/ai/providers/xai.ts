@@ -48,15 +48,86 @@ interface XAIModelResponse {
 
 export class XAIProvider implements ChatProvider {
   name = 'xai' as const;
-  models: AIModel[] = AI_MODELS.xai || [];
+  models: AIModel[] = [];
   private apiKey: string;
   private baseUrl = 'https://api.x.ai/v1';
+  private modelsLoaded = false;
 
   constructor(apiKey: string) {
     if (!apiKey) {
       throw new Error('xAI API key is required');
     }
     this.apiKey = apiKey;
+    // Load models asynchronously
+    this.loadModels();
+  }
+
+  async ensureModelsLoaded(): Promise<void> {
+    if (!this.modelsLoaded) {
+      await this.loadModels();
+    }
+  }
+
+  getModels(): AIModel[] {
+    // Return current models, even if still loading
+    return this.models.length > 0 ? this.models : this.getFallbackModels();
+  }
+
+  private async loadModels(): Promise<void> {
+    if (this.modelsLoaded) return;
+
+    try {
+      const modelIds = await XAIProvider.fetchAvailableModels(this.apiKey);
+      this.models = modelIds.map((id) => this.createModelFromId(id));
+      this.modelsLoaded = true;
+
+      // Update the global AI_MODELS with the fetched models
+      AI_MODELS.xai = this.models;
+
+      console.log('[xAI] Models loaded successfully:', this.models.length);
+    } catch (error) {
+      console.error('[xAI] Failed to load models:', error);
+      // Use fallback models if API fails
+      this.models = this.getFallbackModels();
+      AI_MODELS.xai = this.models;
+    }
+  }
+
+  private createModelFromId(modelId: string): AIModel {
+    // Parse model ID to create a proper display name
+    const name = modelId
+      .split('-')
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+
+    return {
+      id: modelId,
+      name,
+      provider: 'xai',
+      contextWindow: 131072, // Default context window
+      maxOutput: 4096, // Default max output
+      supportsVision: true, // Assume vision support
+      supportsTools: true, // Assume tools support
+      supportsWebSearch: false, // Will update when documented
+      description: `xAI ${name} model`,
+    };
+  }
+
+  private getFallbackModels(): AIModel[] {
+    // Fallback models based on common patterns
+    return [
+      {
+        id: 'grok-beta',
+        name: 'Grok Beta',
+        provider: 'xai',
+        contextWindow: 131072,
+        maxOutput: 4096,
+        supportsVision: true,
+        supportsTools: true,
+        supportsWebSearch: false,
+        description: 'Latest Grok model',
+      },
+    ];
   }
 
   async chatCompletion(options: ChatCompletionOptions): Promise<StreamResponse | string> {

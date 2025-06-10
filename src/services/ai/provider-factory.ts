@@ -8,8 +8,9 @@ import { ChatProvider, AIProvider, AIServiceConfig, AI_MODELS, AIModel } from '.
 export class AIProviderFactory {
   private static providers: Map<AIProvider, ChatProvider> = new Map();
   private static config: AIServiceConfig = {};
+  private static initialized = false;
 
-  static initialize(config: AIServiceConfig) {
+  static async initialize(config: AIServiceConfig) {
     this.config = config;
 
     if (config.openaiApiKey) {
@@ -29,8 +30,13 @@ export class AIProviderFactory {
     }
 
     if (config.xaiApiKey) {
-      this.providers.set('xai', new XAIProvider(config.xaiApiKey));
+      const xaiProvider = new XAIProvider(config.xaiApiKey);
+      this.providers.set('xai', xaiProvider);
+      // Ensure xAI models are loaded
+      await xaiProvider.ensureModelsLoaded();
     }
+
+    this.initialized = true;
   }
 
   static getProvider(provider: AIProvider): ChatProvider {
@@ -49,13 +55,31 @@ export class AIProviderFactory {
 
   static getAllModels(): AIModel[] {
     const availableProviders = this.getAvailableProviders();
-    return availableProviders.flatMap((provider) => AI_MODELS[provider]);
+    return availableProviders.flatMap((provider) => {
+      // For xAI, get models from the provider instance
+      if (provider === 'xai') {
+        const xaiProvider = this.providers.get('xai') as XAIProvider;
+        if (xaiProvider) {
+          return xaiProvider.getModels();
+        }
+      }
+      return AI_MODELS[provider];
+    });
   }
 
   static getModelsForProvider(provider: AIProvider): AIModel[] {
     if (!this.providers.has(provider)) {
       return [];
     }
+
+    // For xAI, get models from the provider instance
+    if (provider === 'xai') {
+      const xaiProvider = this.providers.get('xai') as XAIProvider;
+      if (xaiProvider) {
+        return xaiProvider.getModels();
+      }
+    }
+
     return AI_MODELS[provider];
   }
 

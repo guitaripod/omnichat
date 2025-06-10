@@ -42,6 +42,7 @@ export interface ChatProvider {
   models: AIModel[];
   chatCompletion(options: ChatCompletionOptions): Promise<StreamResponse | string>;
   validateApiKey(apiKey: string): Promise<boolean>;
+  ensureModelsLoaded?(): Promise<void>;
 }
 
 export interface AIServiceConfig {
@@ -277,39 +278,5 @@ export const AI_MODELS: Record<AIProvider, AIModel[]> = {
     },
   ],
   ollama: [], // Ollama models are dynamically loaded from the local server
-  xai: [
-    {
-      id: 'grok-beta',
-      name: 'Grok Beta',
-      provider: 'xai',
-      contextWindow: 131072,
-      maxOutput: 4096,
-      supportsVision: true,
-      supportsTools: true,
-      supportsWebSearch: false, // Will update when API docs available
-      description: 'Latest Grok model with advanced reasoning',
-    },
-    {
-      id: 'grok-2-beta',
-      name: 'Grok 2 Beta',
-      provider: 'xai',
-      contextWindow: 131072,
-      maxOutput: 4096,
-      supportsVision: true,
-      supportsTools: true,
-      supportsWebSearch: false, // Will update when API docs available
-      description: 'Next generation Grok with improved capabilities',
-    },
-    {
-      id: 'grok-2-mini',
-      name: 'Grok 2 Mini',
-      provider: 'xai',
-      contextWindow: 131072,
-      maxOutput: 4096,
-      supportsVision: true,
-      supportsTools: true,
-      supportsWebSearch: false, // Will update when API docs available
-      description: 'Smaller, faster Grok 2 for efficient processing',
-    },
-  ],
+  xai: [], // xAI models are dynamically loaded from the API
 };

@@ -103,7 +103,7 @@ export async function POST(req: NextRequest) {
     }
 
     console.log('Initializing AI Provider Factory...');
-    AIProviderFactory.initialize({
+    await AIProviderFactory.initialize({
       openaiApiKey,
       anthropicApiKey,
       googleApiKey,
