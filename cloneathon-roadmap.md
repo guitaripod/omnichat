@@ -119,20 +119,20 @@
 - [x] Implement copy code as a beautiful card image that can be shared
 - [x] Support inline code formatting
 
-### Epic 3.3: Resumable Streams
+### Epic 3.3: Resumable Streams ✅ COMPLETED
 
-- [ ] Implement stream state persistence
-- [ ] Create resume mechanism with partial messages
-- [ ] Handle connection recovery
-- [ ] Add progress indicators
+- [x] Implement stream state persistence
+- [x] Create resume mechanism with partial messages
+- [x] Handle connection recovery
+- [x] Add progress indicators
 
-### Epic 3.4: Chat Branching
+### Epic 3.4: Chat Branching ✅ COMPLETED
 
-- [ ] Design branching UI/UX
-- [ ] Implement message tree structure
-- [ ] Create branch visualization
-- [ ] Add branch switching interface
-- [ ] Enable branch comparison view
+- [x] Design branching UI/UX
+- [x] Implement message tree structure
+- [x] Create branch visualization
+- [x] Add branch switching interface
+- [x] Enable branch comparison view
 
 ## Phase 4: Monetization & Security (Day 7)
 
