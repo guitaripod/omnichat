@@ -35,6 +35,8 @@ function CodeBlock({ className, children, ...props }: React.HTMLAttributes<HTMLE
   const match = /language-(\w+)/.exec(className || '');
   const language = match ? match[1] : '';
   const codeString = String(children).replace(/\n$/, '');
+  // Generate a unique ID for this code block
+  const codeId = `code-${Math.random().toString(36).substring(7)}`;
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(codeString);
@@ -109,7 +111,7 @@ function CodeBlock({ className, children, ...props }: React.HTMLAttributes<HTMLE
       codeContainer.style.overflow = 'hidden';
 
       // Clone the code block
-      const codeBlock = document.querySelector(`[data-code-id="${codeString.substring(0, 20)}"]`);
+      const codeBlock = document.querySelector(`[data-code-id="${codeId}"]`);
       if (codeBlock) {
         const clonedCode = codeBlock.cloneNode(true) as HTMLElement;
         clonedCode.style.margin = '0';
@@ -220,7 +222,7 @@ function CodeBlock({ className, children, ...props }: React.HTMLAttributes<HTMLE
       {language && <div className="absolute top-2 left-4 text-xs text-gray-400">{language}</div>}
       <pre
         className="overflow-x-auto rounded-lg bg-gray-900 p-4 pt-8 text-sm"
-        data-code-id={codeString.substring(0, 20)}
+        data-code-id={codeId}
       >
         <code className={className} {...props}>
           {children}
