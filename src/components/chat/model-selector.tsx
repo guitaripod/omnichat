@@ -22,6 +22,7 @@ import {
   getOpenAIModels,
   getAnthropicModels,
   getGoogleModels,
+  getDeepSeekModels,
 } from '@/lib/ai/available-models';
 
 interface ModelSelectorProps {
@@ -111,6 +112,7 @@ export function ModelSelector({ selectedModel, onModelChange, className }: Model
     const staticOpenAI = getOpenAIModels();
     const staticAnthropic = getAnthropicModels();
     const staticGoogle = getGoogleModels();
+    const staticDeepSeek = getDeepSeekModels();
 
     // Get API keys to determine which models should be shown
     const savedKeys = localStorage.getItem('apiKeys');

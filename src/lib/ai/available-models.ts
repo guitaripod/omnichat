@@ -22,7 +22,10 @@ export interface AvailableModels {
 }
 
 // Export the models data with proper typing
-export const availableModels: AvailableModels = modelsData;
+export const availableModels: AvailableModels = {
+  ...modelsData,
+  deepseek: modelsData.deepseek || [],
+};
 
 // Convert from API format to AIModel format
 const convertToAIModel = (model: APIModel, provider: string): ServiceAIModel => {
