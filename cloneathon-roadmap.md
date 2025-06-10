@@ -182,7 +182,7 @@
 
 ### Epic 5.3: AI Image Generation
 
-- [ ] Integrate DALL-E 3 or Stability AI
+- [ ] Integrate OpenAI Images
 - [ ] Create image generation UI
 - [ ] Implement image history gallery
 - [ ] Add image editing capabilities
@@ -201,6 +201,7 @@
 
 ### Epic 6.1: UI/UX Polish
 
+- [ ] Expand input textbox as the user types text into it or starts a new line
 - [ ] Refine all animations and transitions
 - [ ] Ensure full responsive design
 - [ ] Add keyboard shortcuts
@@ -212,6 +213,8 @@
 
 - [ ] Write comprehensive README
 - [ ] Create API documentation
+- [ ] Create beautiful SVG bird eye views about the project tech architecture
+- [ ] Convert SVGs to 4K PNGs and put them in the README for previewing on GitHub.
 - [ ] Add contribution guidelines
 - [ ] Write deployment guide
 - [ ] Create demo video/GIF
