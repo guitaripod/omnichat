@@ -112,11 +112,11 @@
 
 ### Epic 3.2: Code Syntax Highlighting ✅ COMPLETED
 
-- [x] Integrate Shiki
-- [x] Create custom code block component
+- [x] ~~Integrate Shiki~~ Using rehype-highlight for better dark/light mode support
+- [x] ~~Create custom code block component~~ Using built-in markdown renderer
 - [x] Add language detection
 - [x] Implement copy code button
-- [x] Implement copy code as a beautiful card image that can be shared
+- [x] ~~Implement copy code as a beautiful card image that can be shared~~ Removed for simplicity
 - [x] Support inline code formatting
 
 ### Epic 3.3: Resumable Streams

@@ -4,8 +4,11 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
-import { CodeBlock } from './code-block';
+import rehypeHighlight from 'rehype-highlight';
+import { Copy, Check } from 'lucide-react';
+import { useState } from 'react';
 import 'katex/dist/katex.min.css';
+import 'highlight.js/styles/github-dark.css';
 
 interface MarkdownRendererProps {
   content: string;
@@ -15,18 +18,57 @@ interface CodeProps extends React.HTMLAttributes<HTMLElement> {
   inline?: boolean;
 }
 
+function CodeBlock({ className, children, ...props }: React.HTMLAttributes<HTMLElement>) {
+  const [copied, setCopied] = useState(false);
+  const match = /language-(\w+)/.exec(className || '');
+  const language = match ? match[1] : '';
+  const codeString = String(children).replace(/\n$/, '');
+
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(codeString);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="group relative my-4">
+      <div className="absolute top-2 right-2 opacity-0 transition-opacity group-hover:opacity-100">
+        <button
+          onClick={handleCopy}
+          className="flex items-center gap-1.5 rounded-md bg-gray-700 px-2 py-1 text-xs text-gray-300 hover:bg-gray-600"
+          title="Copy code"
+        >
+          {copied ? (
+            <>
+              <Check className="h-3 w-3" />
+              Copied!
+            </>
+          ) : (
+            <>
+              <Copy className="h-3 w-3" />
+              Copy
+            </>
+          )}
+        </button>
+      </div>
+      {language && <div className="absolute top-2 left-4 text-xs text-gray-400">{language}</div>}
+      <pre className="overflow-x-auto rounded-lg bg-gray-900 p-4 pt-8 text-sm">
+        <code className={className} {...props}>
+          {children}
+        </code>
+      </pre>
+    </div>
+  );
+}
+
 export function MarkdownRenderer({ content }: MarkdownRendererProps) {
   return (
     <div className="prose prose-sm dark:prose-invert prose-p:my-1 prose-p:last:mb-0 prose-pre:my-2 prose-headings:mt-3 prose-headings:mb-2 max-w-none">
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkMath]}
-        rehypePlugins={[rehypeKatex]}
+        rehypePlugins={[rehypeKatex, rehypeHighlight]}
         components={{
           code({ inline, className, children, ...props }: CodeProps) {
-            const match = /language-(\w+)/.exec(className || '');
-            const language = match ? match[1] : '';
-            const codeString = String(children).replace(/\n$/, '');
-
             if (inline) {
               return (
                 <code
@@ -37,7 +79,11 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
                 </code>
               );
             }
-            return <CodeBlock code={codeString} language={language} />;
+            return (
+              <CodeBlock className={className} {...props}>
+                {children}
+              </CodeBlock>
+            );
           },
           pre({ children }) {
             return <>{children}</>;
