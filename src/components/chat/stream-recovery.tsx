@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { StreamState, StreamStateManager } from '@/services/streaming/stream-state-manager';
-import { Button } from '@/components/ui/button';
 import { RefreshCw, X, AlertCircle } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface StreamRecoveryProps {
   conversationId: string;
@@ -100,22 +100,28 @@ export function StreamRecovery({ conversationId, onResume }: StreamRecoveryProps
       </div>
 
       <div className="flex gap-2">
-        <Button
+        <button
           onClick={() => handleResume(latestStream)}
-          size="sm"
-          className="flex-1 bg-yellow-600 hover:bg-yellow-700"
+          className={cn(
+            'flex flex-1 items-center justify-center rounded-md px-3 py-1.5 text-sm font-medium',
+            'bg-yellow-600 text-white hover:bg-yellow-700',
+            'transition-colors focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 focus:outline-none'
+          )}
         >
           <RefreshCw className="mr-1 h-3 w-3" />
           Resume
-        </Button>
-        <Button
+        </button>
+        <button
           onClick={() => handleDismiss(latestStream.streamId)}
-          size="sm"
-          variant="outline"
-          className="flex-1 border-yellow-300 hover:bg-yellow-100 dark:border-yellow-700 dark:hover:bg-yellow-800"
+          className={cn(
+            'flex flex-1 items-center justify-center rounded-md px-3 py-1.5 text-sm font-medium',
+            'border border-yellow-300 dark:border-yellow-700',
+            'hover:bg-yellow-100 dark:hover:bg-yellow-800',
+            'transition-colors focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 focus:outline-none'
+          )}
         >
           Dismiss
-        </Button>
+        </button>
       </div>
 
       {incompleteStreams.length > 1 && (
