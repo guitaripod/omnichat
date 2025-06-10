@@ -116,6 +116,10 @@ jobs:
       github.event_name == 'push' &&
       (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
 
+    permissions:
+      contents: read
+      deployments: write # Required for Cloudflare Pages deployment
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
