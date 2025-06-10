@@ -103,12 +103,12 @@
 
 ### Epic 3.1: File Attachments
 
-- [ ] Set up Cloudflare R2 for file storage
-- [ ] Implement drag-and-drop file upload
-- [ ] Create image preview components
-- [ ] Add PDF parsing with pdf.js
-- [ ] Implement file size/type validation
-- [ ] Build attachment viewer modal
+- [x] Set up Cloudflare R2 for file storage
+- [x] Implement drag-and-drop file upload
+- [x] Create image preview components
+- [x] Add PDF parsing with pdf.js
+- [x] Implement file size/type validation
+- [x] Build attachment viewer modal
 
 ### Epic 3.2: Code Syntax Highlighting
 
