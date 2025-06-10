@@ -62,6 +62,12 @@ export const messages = sqliteTable(
     content: text('content').notNull(),
     model: text('model'),
     parentId: text('parent_id'),
+    // Streaming state fields
+    isComplete: integer('is_complete', { mode: 'boolean' }).notNull().default(true),
+    streamState: text('stream_state'), // JSON string containing streaming metadata
+    tokensGenerated: integer('tokens_generated').notNull().default(0),
+    totalTokens: integer('total_tokens'), // Estimated total tokens (if available)
+    streamId: text('stream_id'), // Unique ID for resuming streams
     createdAt: integer('created_at', { mode: 'timestamp' })
       .notNull()
       .default(sql`(unixepoch())`),
@@ -70,6 +76,8 @@ export const messages = sqliteTable(
     conversationIdx: index('conversation_idx').on(table.conversationId),
     parentIdx: index('parent_idx').on(table.parentId),
     createdAtIdx: index('msg_created_at_idx').on(table.createdAt),
+    incompleteIdx: index('idx_messages_incomplete').on(table.conversationId, table.isComplete),
+    streamIdIdx: index('idx_messages_stream_id').on(table.streamId),
   })
 );
 

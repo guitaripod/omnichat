@@ -6,12 +6,16 @@ import { AI_MODELS } from '@/services/ai';
 import { MarkdownRenderer } from './markdown-renderer';
 import { StreamingIndicator } from './streaming-indicator';
 import { AttachmentPreview } from './attachment-preview';
+import { BranchSelector } from './branch-selector';
 
 interface MessageItemProps {
   message: Message;
+  messages: Message[];
   isStreaming?: boolean;
   onRegenerate?: () => void;
   canRegenerate?: boolean;
+  onBranchSwitch?: (messageId: string) => void;
+  onCreateBranch?: (fromMessageId: string) => void;
 }
 
 // Provider icons and colors
@@ -59,9 +63,12 @@ function getProviderFromModel(modelId?: string) {
 
 export function MessageItem({
   message,
+  messages,
   isStreaming = false,
   onRegenerate,
   canRegenerate = false,
+  onBranchSwitch,
+  onCreateBranch,
 }: MessageItemProps) {
   const [copied, setCopied] = useState(false);
   const isUser = message.role === 'user';
@@ -76,8 +83,14 @@ export function MessageItem({
   };
 
   return (
-    <div className={cn('flex', isUser ? 'justify-end' : 'justify-start', 'px-4 py-3')}>
-      <div className={cn('flex max-w-[80%] gap-3 lg:max-w-[70%]', isUser && 'flex-row-reverse')}>
+    <div
+      className={cn(
+        'flex',
+        isUser ? 'justify-end' : 'justify-start',
+        'mx-auto w-full max-w-5xl px-4 py-2'
+      )}
+    >
+      <div className={cn('flex max-w-[85%] gap-3', isUser && 'flex-row-reverse')}>
         {/* Avatar */}
         <div className="flex-shrink-0">
           <div
@@ -138,7 +151,7 @@ export function MessageItem({
 
           {/* Content */}
           <div className="relative px-4 py-3">
-            {/* Timestamp and model info */}
+            {/* Timestamp, model info, and branch selector */}
             <div
               className={cn(
                 'mb-1 flex items-center gap-2 text-xs',
@@ -157,6 +170,15 @@ export function MessageItem({
                   minute: '2-digit',
                 })}
               </span>
+              {/* Branch selector for assistant messages */}
+              {!isUser && onBranchSwitch && onCreateBranch && (
+                <BranchSelector
+                  message={message}
+                  messages={messages}
+                  onBranchSwitch={onBranchSwitch}
+                  onCreateBranch={() => onCreateBranch(message.id)}
+                />
+              )}
             </div>
 
             {/* Message text */}

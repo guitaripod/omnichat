@@ -1,7 +1,17 @@
 'use client';
 
 import { useState, useRef, KeyboardEvent, useEffect } from 'react';
-import { Send, Paperclip, Square, ChevronDown, Sparkles, Brain, Zap, Server } from 'lucide-react';
+import {
+  Send,
+  Paperclip,
+  Square,
+  ChevronDown,
+  Sparkles,
+  Brain,
+  Zap,
+  Server,
+  GitBranch,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AIProvider, AIModel, AI_MODELS } from '@/services/ai';
 import { FileUpload, FileAttachmentDisplay } from './file-upload';
@@ -14,6 +24,8 @@ interface MessageInputProps {
   selectedModel: string;
   onModelChange: (modelId: string) => void;
   conversationId: string;
+  onToggleBranches?: () => void;
+  showBranches?: boolean;
 }
 
 const providerIcons: Record<AIProvider, React.ReactNode> = {
@@ -37,6 +49,8 @@ export function MessageInput({
   selectedModel,
   onModelChange,
   conversationId,
+  onToggleBranches,
+  showBranches,
 }: MessageInputProps) {
   const [message, setMessage] = useState('');
   const [isModelSelectorOpen, setIsModelSelectorOpen] = useState(false);
@@ -170,8 +184,8 @@ export function MessageInput({
   );
 
   return (
-    <div className="border-t border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
-      <div className="mx-auto max-w-4xl">
+    <div className="border-t border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-800">
+      <div className="mx-auto max-w-5xl">
         <div className="relative">
           {/* Integrated Input Box */}
           <div
@@ -445,6 +459,21 @@ export function MessageInput({
                   }}
                 />
               </div>
+
+              {onToggleBranches && (
+                <button
+                  onClick={onToggleBranches}
+                  className={cn(
+                    'rounded-lg p-2 transition-all duration-200',
+                    showBranches
+                      ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400'
+                      : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700'
+                  )}
+                  aria-label="Toggle branches"
+                >
+                  <GitBranch size={20} />
+                </button>
+              )}
 
               <button
                 onClick={isLoading ? onStop : handleSubmit}
