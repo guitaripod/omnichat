@@ -91,6 +91,52 @@ const convertToAIModel = (model: APIModel, provider: string): ServiceAIModel => 
       supportsWebSearch: false,
       description: 'Grok 2 with vision capabilities',
     },
+    // Anthropic models
+    'claude-3-5-sonnet-20241022': {
+      name: 'Claude 3.5 Sonnet',
+      contextWindow: 200000,
+      maxOutput: 8192,
+      supportsVision: true,
+      supportsTools: true,
+      supportsWebSearch: true,
+      description: 'Latest Sonnet with computer use capability',
+    },
+    'claude-3-5-haiku-20241022': {
+      name: 'Claude 3.5 Haiku',
+      contextWindow: 200000,
+      maxOutput: 8192,
+      supportsVision: true,
+      supportsTools: true,
+      supportsWebSearch: true,
+      description: 'Fast model that surpasses Claude 3 Opus',
+    },
+    'claude-3-opus-20240229': {
+      name: 'Claude 3 Opus',
+      contextWindow: 200000,
+      maxOutput: 4096,
+      supportsVision: true,
+      supportsTools: true,
+      supportsWebSearch: false,
+      description: 'Previous flagship model',
+    },
+    'claude-3-sonnet-20240229': {
+      name: 'Claude 3 Sonnet',
+      contextWindow: 200000,
+      maxOutput: 4096,
+      supportsVision: true,
+      supportsTools: true,
+      supportsWebSearch: false,
+      description: 'Balanced performance and cost',
+    },
+    'claude-3-haiku-20240307': {
+      name: 'Claude 3 Haiku',
+      contextWindow: 200000,
+      maxOutput: 4096,
+      supportsVision: true,
+      supportsTools: true,
+      supportsWebSearch: false,
+      description: 'Fastest Claude 3 model',
+    },
     // Add more model mappings as needed
   };
 

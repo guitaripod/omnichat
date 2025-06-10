@@ -11,6 +11,7 @@ A Go script to fetch available models from various AI providers (XAI, OpenAI, An
    ```bash
    export XAI_API_KEY="your-xai-api-key"
    export OPENAI_API_KEY="your-openai-api-key"
+   export ANTHROPIC_API_KEY="your-anthropic-api-key"
    export GOOGLE_API_KEY="your-google-api-key"
    ```
 
@@ -37,6 +38,7 @@ To set up:
 1. Add your API keys as GitHub Secrets:
    - `XAI_API_KEY`
    - `OPENAI_API_KEY`
+   - `ANTHROPIC_API_KEY`
    - `GOOGLE_API_KEY`
 2. The workflow will run automatically
 
@@ -52,7 +54,7 @@ The fetched models are imported at build time in the application:
 ## Notes
 
 - The script will skip providers if their API keys are not set
-- Anthropic models are hardcoded as they don't provide a models endpoint
+- All providers now fetch models from their respective APIs
 - The output file includes a timestamp of when the models were fetched
 - Models are organized by provider in the JSON output
 

@@ -16,6 +16,7 @@ To enable full CI/CD functionality, add these secrets to your GitHub repository:
 
 - `XAI_API_KEY` - Your xAI API key
 - `OPENAI_API_KEY` - Your OpenAI API key
+- `ANTHROPIC_API_KEY` - Your Anthropic API key
 - `GOOGLE_API_KEY` - Your Google AI API key
 
 ### For Cloudflare Deployment

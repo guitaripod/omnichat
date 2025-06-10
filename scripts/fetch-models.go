@@ -117,45 +117,60 @@ func fetchOpenAIModels(apiKey string) ([]Model, error) {
 	return modelsResp.Data, nil
 }
 
-func fetchAnthropicModels() ([]Model, error) {
-	// Anthropic doesn't provide a models endpoint, so we'll hardcode the available models
-	// These are the currently available models as of the latest update
-	models := []Model{
-		{
-			ID:       "claude-3-5-sonnet-20241022",
+// AnthropicModelsResponse represents the response from Anthropic's API
+type AnthropicModelsResponse struct {
+	Data []AnthropicModel `json:"data"`
+}
+
+// AnthropicModel represents a model from Anthropic's API
+type AnthropicModel struct {
+	ID          string `json:"id"`
+	DisplayName string `json:"display_name"`
+	CreatedAt   string `json:"created_at"`
+}
+
+func fetchAnthropicModels(apiKey string) ([]Model, error) {
+	url := "https://api.anthropic.com/v1/models"
+	
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	
+	req.Header.Set("x-api-key", apiKey)
+	req.Header.Set("anthropic-version", "2023-06-01")
+	
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("Anthropic API error: %d - %s", resp.StatusCode, string(body))
+	}
+	
+	var anthropicResp AnthropicModelsResponse
+	if err := json.NewDecoder(resp.Body).Decode(&anthropicResp); err != nil {
+		return nil, err
+	}
+	
+	// Convert Anthropic models to our standard format
+	var models []Model
+	for _, am := range anthropicResp.Data {
+		// Parse created_at timestamp
+		createdAt, _ := time.Parse(time.RFC3339, am.CreatedAt)
+		
+		model := Model{
+			ID:       am.ID,
 			Object:   "model",
-			Created:  1729555200, // October 22, 2024
+			Created:  createdAt.Unix(),
 			OwnedBy:  "anthropic",
 			Provider: "anthropic",
-		},
-		{
-			ID:       "claude-3-5-haiku-20241022",
-			Object:   "model",
-			Created:  1729555200, // October 22, 2024
-			OwnedBy:  "anthropic",
-			Provider: "anthropic",
-		},
-		{
-			ID:       "claude-3-opus-20240229",
-			Object:   "model",
-			Created:  1709251200, // February 29, 2024
-			OwnedBy:  "anthropic",
-			Provider: "anthropic",
-		},
-		{
-			ID:       "claude-3-sonnet-20240229",
-			Object:   "model",
-			Created:  1709251200, // February 29, 2024
-			OwnedBy:  "anthropic",
-			Provider: "anthropic",
-		},
-		{
-			ID:       "claude-3-haiku-20240307",
-			Object:   "model",
-			Created:  1709769600, // March 7, 2024
-			OwnedBy:  "anthropic",
-			Provider: "anthropic",
-		},
+		}
+		models = append(models, model)
 	}
 	
 	return models, nil
@@ -214,6 +229,7 @@ func main() {
 	// Check for API keys from environment variables
 	xaiKey := os.Getenv("XAI_API_KEY")
 	openaiKey := os.Getenv("OPENAI_API_KEY")
+	anthropicKey := os.Getenv("ANTHROPIC_API_KEY")
 	googleKey := os.Getenv("GOOGLE_API_KEY")
 	
 	allModels := ProviderModels{
@@ -248,14 +264,18 @@ func main() {
 		fmt.Println("OPENAI_API_KEY not set, skipping OpenAI models")
 	}
 	
-	// Fetch Anthropic models (hardcoded)
-	fmt.Println("Fetching Anthropic models...")
-	models, err := fetchAnthropicModels()
-	if err != nil {
-		fmt.Printf("Error fetching Anthropic models: %v\n", err)
+	// Fetch Anthropic models
+	if anthropicKey != "" {
+		fmt.Println("Fetching Anthropic models...")
+		models, err := fetchAnthropicModels(anthropicKey)
+		if err != nil {
+			fmt.Printf("Error fetching Anthropic models: %v\n", err)
+		} else {
+			allModels.Anthropic = models
+			fmt.Printf("Found %d Anthropic models\n", len(models))
+		}
 	} else {
-		allModels.Anthropic = models
-		fmt.Printf("Found %d Anthropic models\n", len(models))
+		fmt.Println("ANTHROPIC_API_KEY not set, skipping Anthropic models")
 	}
 	
 	// Fetch Google models

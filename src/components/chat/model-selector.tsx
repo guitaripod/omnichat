@@ -112,6 +112,7 @@ export function ModelSelector({ selectedModel, onModelChange, className }: Model
     const savedKeys = localStorage.getItem('apiKeys');
     let hasXAIKey = false;
     let hasOpenAIKey = false;
+    let hasAnthropicKey = false;
     let hasGoogleKey = false;
 
     if (savedKeys) {
@@ -119,6 +120,7 @@ export function ModelSelector({ selectedModel, onModelChange, className }: Model
         const parsed = JSON.parse(savedKeys);
         hasXAIKey = !!parsed.xai;
         hasOpenAIKey = !!parsed.openai;
+        hasAnthropicKey = !!parsed.anthropic;
         hasGoogleKey = !!parsed.google;
       } catch (e) {
         console.error('Failed to parse API keys:', e);
@@ -128,8 +130,12 @@ export function ModelSelector({ selectedModel, onModelChange, className }: Model
     // Build combined models list
     const combinedModels: AIModel[] = [];
 
-    // Always show Anthropic models (since they're hardcoded)
-    combinedModels.push(...staticAnthropic);
+    // Show Anthropic models if API key is configured
+    if (hasAnthropicKey) {
+      const anthropicModels =
+        fetchedModels.anthropic?.length > 0 ? fetchedModels.anthropic : staticAnthropic;
+      combinedModels.push(...anthropicModels);
+    }
 
     // Show other providers' models if they have API keys
     if (hasXAIKey) {
