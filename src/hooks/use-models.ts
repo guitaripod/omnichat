@@ -19,6 +19,11 @@ export function useModels(): UseModelsReturn {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Force console log in production
+  if (typeof window !== 'undefined') {
+    (window as any).__OMNICHAT_DEBUG__ = true;
+  }
+
   const fetchModels = async () => {
     console.log('[useModels] Starting model fetch...');
     setIsLoading(true);
@@ -103,7 +108,11 @@ export function useModels(): UseModelsReturn {
   };
 
   useEffect(() => {
-    fetchModels();
+    // Add error logging
+    console.error('[useModels] Hook initialized, starting fetch...');
+    fetchModels().catch((err) => {
+      console.error('[useModels] Failed to fetch models:', err);
+    });
   }, []);
 
   return {

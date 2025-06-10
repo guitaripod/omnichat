@@ -62,6 +62,11 @@ export function ModelSelector({ selectedModel, onModelChange, className }: Model
   const [ollamaBaseUrl, setOllamaBaseUrl] = useState<string>('http://localhost:11434');
   const [isOllamaAvailable, setIsOllamaAvailable] = useState(false);
 
+  // Debug - force visible error
+  useEffect(() => {
+    console.error('[ModelSelector] Component mounted - v2 with collapsible UI');
+  }, []);
+
   // Use the models hook
   const { models: fetchedModels, isLoading, error, refetch } = useModels();
   const [availableModels, setAvailableModels] = useState<AIModel[]>([]);
@@ -195,7 +200,9 @@ export function ModelSelector({ selectedModel, onModelChange, className }: Model
           >
             {/* Header */}
             <div className="sticky top-0 z-10 border-b border-gray-200 bg-white/80 px-4 py-3 backdrop-blur-xl dark:border-gray-700 dark:bg-gray-900/80">
-              <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Select Model</h3>
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
+                Select Model (v2)
+              </h3>
             </div>
 
             {/* Loading State */}
