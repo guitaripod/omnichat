@@ -21,7 +21,15 @@ export class OpenAIProvider implements ChatProvider {
   }
 
   async chatCompletion(options: ChatCompletionOptions): Promise<StreamResponse | string> {
-    const { model, messages, temperature = 0.7, maxTokens, topP, stream = true } = options;
+    const {
+      model,
+      messages,
+      temperature = 0.7,
+      maxTokens,
+      topP,
+      stream = true,
+      webSearch = false,
+    } = options;
 
     console.log(`[OpenAI] Starting chat completion with model: ${model}`);
     console.log(
@@ -30,7 +38,7 @@ export class OpenAIProvider implements ChatProvider {
     console.log(`[OpenAI] Messages count: ${messages.length}`);
 
     const controller = new AbortController();
-    const body = {
+    const body: any = {
       model,
       messages: this.mapMessages(messages),
       temperature,
@@ -38,6 +46,12 @@ export class OpenAIProvider implements ChatProvider {
       top_p: topP,
       stream,
     };
+
+    // Add web search tool if enabled
+    if (webSearch) {
+      body.tools = [{ type: 'web_search' }];
+      console.log('[OpenAI] Web search enabled');
+    }
 
     console.log('[OpenAI] Request body:', JSON.stringify(body, null, 2));
 

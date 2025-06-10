@@ -20,7 +20,15 @@ export class GoogleProvider implements ChatProvider {
   }
 
   async chatCompletion(options: ChatCompletionOptions): Promise<StreamResponse | string> {
-    const { model, messages, temperature = 0.7, maxTokens, topP, stream = true } = options;
+    const {
+      model,
+      messages,
+      temperature = 0.7,
+      maxTokens,
+      topP,
+      stream = true,
+      webSearch = false,
+    } = options;
 
     console.log(`[Google] Starting chat completion with model: ${model}`);
     console.log(
@@ -38,10 +46,20 @@ export class GoogleProvider implements ChatProvider {
     const contents = this.mapMessages(messages);
     console.log('[Google] Mapped contents:', JSON.stringify(contents, null, 2));
 
-    const body = {
+    const body: any = {
       contents,
       generationConfig,
     };
+
+    // Add grounding (web search) if enabled
+    if (webSearch) {
+      body.tools = [
+        {
+          googleSearchRetrieval: {},
+        },
+      ];
+      console.log('[Google] Web search (grounding) enabled');
+    }
 
     console.log('[Google] Request body:', JSON.stringify(body, null, 2));
 

@@ -32,13 +32,13 @@ export class OllamaClientProvider implements ChatProvider {
   }
 
   private createStream(options: ChatCompletionOptions): ReadableStream {
-    const { messages, model } = options;
+    const { messages, model, webSearch } = options;
     const encoder = new TextEncoder();
 
     return new ReadableStream({
       start: async (controller) => {
         try {
-          const generator = this.streamChat(messages, model);
+          const generator = this.streamChat(messages, model, webSearch);
 
           for await (const chunk of generator) {
             if (chunk.type === 'content' && chunk.content) {
@@ -71,7 +71,11 @@ export class OllamaClientProvider implements ChatProvider {
     });
   }
 
-  private async *streamChat(messages: ChatMessage[], model: string): AsyncGenerator<StreamChunk> {
+  private async *streamChat(
+    messages: ChatMessage[],
+    model: string,
+    webSearch = false
+  ): AsyncGenerator<StreamChunk> {
     this.abortController = new AbortController();
 
     try {
@@ -79,7 +83,14 @@ export class OllamaClientProvider implements ChatProvider {
         baseUrl: this.baseUrl,
         model,
         messages,
+        webSearch,
       });
+
+      if (webSearch) {
+        console.warn(
+          '[Ollama Client] Web search is only available through the server-side API route'
+        );
+      }
 
       // Remove 'ollama/' prefix if present
       const actualModel = model.startsWith('ollama/') ? model.replace('ollama/', '') : model;

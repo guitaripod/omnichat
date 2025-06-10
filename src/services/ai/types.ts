@@ -28,6 +28,7 @@ export interface ChatCompletionOptions {
   stream?: boolean;
   tools?: unknown[];
   userId?: string;
+  webSearch?: boolean;
 }
 
 export interface StreamResponse {
@@ -47,6 +48,7 @@ export interface AIServiceConfig {
   anthropicApiKey?: string;
   googleApiKey?: string;
   ollamaBaseUrl?: string;
+  braveApiKey?: string;
   defaultProvider?: AIProvider;
   defaultModel?: string;
 }

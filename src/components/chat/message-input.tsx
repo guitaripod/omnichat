@@ -11,6 +11,7 @@ import {
   Zap,
   Server,
   GitBranch,
+  Globe,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AIProvider, AIModel, AI_MODELS } from '@/services/ai';
@@ -18,7 +19,7 @@ import { FileUpload, FileAttachmentDisplay } from './file-upload';
 import { FileAttachment } from '@/types/attachments';
 
 interface MessageInputProps {
-  onSendMessage: (message: string, attachments?: FileAttachment[]) => void;
+  onSendMessage: (message: string, attachments?: FileAttachment[], webSearch?: boolean) => void;
   isLoading: boolean;
   onStop?: () => void;
   selectedModel: string;
@@ -59,12 +60,17 @@ export function MessageInput({
   const [attachments, setAttachments] = useState<FileAttachment[]>([]);
   const [showFileUpload, setShowFileUpload] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [webSearchEnabled, setWebSearchEnabled] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const modelSelectorRef = useRef<HTMLDivElement>(null);
 
   const handleSubmit = () => {
     if ((message.trim() || attachments.length > 0) && !isLoading) {
-      onSendMessage(message.trim(), attachments.length > 0 ? attachments : undefined);
+      onSendMessage(
+        message.trim(),
+        attachments.length > 0 ? attachments : undefined,
+        webSearchEnabled
+      );
       setMessage('');
       setAttachments([]);
       setShowFileUpload(false);
@@ -459,6 +465,20 @@ export function MessageInput({
                   }}
                 />
               </div>
+
+              <button
+                onClick={() => setWebSearchEnabled(!webSearchEnabled)}
+                className={cn(
+                  'rounded-lg p-2 transition-all duration-200',
+                  webSearchEnabled
+                    ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400'
+                    : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700'
+                )}
+                aria-label="Toggle web search"
+                title={webSearchEnabled ? 'Web search enabled' : 'Enable web search'}
+              >
+                <Globe size={20} />
+              </button>
 
               {onToggleBranches && (
                 <button

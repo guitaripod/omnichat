@@ -21,7 +21,15 @@ export class AnthropicProvider implements ChatProvider {
   }
 
   async chatCompletion(options: ChatCompletionOptions): Promise<StreamResponse | string> {
-    const { model, messages, temperature = 0.7, maxTokens = 4096, topP, stream = true } = options;
+    const {
+      model,
+      messages,
+      temperature = 0.7,
+      maxTokens = 4096,
+      topP,
+      stream = true,
+      webSearch = false,
+    } = options;
 
     console.log(`[Anthropic] Starting chat completion with model: ${model}`);
     console.log(
@@ -51,6 +59,12 @@ export class AnthropicProvider implements ChatProvider {
     // Add system message to body if present
     if (systemMessage) {
       body.system = systemMessage.content;
+    }
+
+    // Add web search tool if enabled
+    if (webSearch) {
+      body.tools = [{ type: 'web_search' }];
+      console.log('[Anthropic] Web search enabled');
     }
 
     console.log('[Anthropic] Request body:', JSON.stringify(body, null, 2));

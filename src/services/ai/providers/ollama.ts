@@ -5,19 +5,51 @@ import {
   ChatCompletionOptions,
   StreamResponse,
 } from '../types';
+import { BraveSearchService } from '../../search/brave-search';
 
 export class OllamaProvider implements ChatProvider {
   name = 'ollama' as const;
   models = []; // Models are dynamically loaded
   private baseUrl: string;
   private abortController: AbortController | null = null;
+  private braveSearchService?: BraveSearchService;
 
-  constructor(baseUrl: string = 'http://localhost:11434') {
+  constructor(baseUrl: string = 'http://localhost:11434', braveApiKey?: string) {
     this.baseUrl = baseUrl.replace(/\/$/, ''); // Remove trailing slash
+    if (braveApiKey) {
+      this.braveSearchService = new BraveSearchService(braveApiKey);
+    }
   }
 
   async chatCompletion(options: ChatCompletionOptions): Promise<StreamResponse> {
-    const stream = this.createStream(options);
+    let messages = options.messages;
+
+    // If web search is enabled and we have a search service, perform search
+    if (options.webSearch && this.braveSearchService) {
+      const lastMessage = messages[messages.length - 1];
+      if (lastMessage && lastMessage.role === 'user') {
+        try {
+          console.log('[Ollama] Performing web search for:', lastMessage.content);
+          const searchResults = await this.braveSearchService.search(lastMessage.content);
+          const formattedResults = this.braveSearchService.formatResultsForChat(searchResults);
+
+          // Inject search results as a system message
+          messages = [
+            ...messages.slice(0, -1),
+            {
+              role: 'system',
+              content: `${formattedResults}\n\nPlease use these search results to answer the user's question.`,
+            },
+            lastMessage,
+          ];
+        } catch (error) {
+          console.error('[Ollama] Web search failed:', error);
+          // Continue without search results
+        }
+      }
+    }
+
+    const stream = this.createStream({ ...options, messages });
     return { stream };
   }
 

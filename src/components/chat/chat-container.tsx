@@ -171,7 +171,11 @@ export function ChatContainer() {
     }
   }, [currentConversationId, createConversation, selectedModel]);
 
-  const handleSendMessage = async (content: string, attachments?: FileAttachment[]) => {
+  const handleSendMessage = async (
+    content: string,
+    attachments?: FileAttachment[],
+    webSearch = false
+  ) => {
     if (!currentConversationId) return;
 
     // Ensure we scroll to bottom when sending a new message
@@ -242,6 +246,7 @@ export function ChatContainer() {
           })),
           model: selectedModel,
           stream: true,
+          webSearch,
         });
 
         reader = streamResponse.stream.getReader();
@@ -261,6 +266,7 @@ export function ChatContainer() {
             stream: true,
             ollamaBaseUrl: isOllamaModel ? currentOllamaUrl : undefined,
             conversationId: currentConversationId,
+            webSearch,
           }),
           signal: abortControllerRef.current.signal,
         });
