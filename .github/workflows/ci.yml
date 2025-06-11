@@ -11,123 +11,11 @@ on:
   workflow_dispatch: # Allow manual trigger
 
 jobs:
-  # Update AI Models (runs first if on master/main push)
-  update-models:
-    name: Update AI Models
-    runs-on: ubuntu-latest
-    if: |
-      (github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main')) ||
-      github.event_name == 'schedule' ||
-      github.event_name == 'workflow_dispatch'
-
-    permissions:
-      contents: write # This gives permission to push
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          fetch-depth: 0 # Fetch full history for pushing
-
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.21'
-
-      - name: Fetch AI models
-        env:
-          XAI_API_KEY: ${{ secrets.XAI_API_KEY }}
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
-          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
-        run: |
-          cd scripts
-          go run fetch-models.go
-
-      - name: Check if models changed
-        id: check_changes
-        run: |
-          # Save the current version
-          cp scripts/available-models.json scripts/available-models-new.json
-
-          # Get the previous version from git
-          git checkout HEAD -- scripts/available-models.json
-
-          # Compare models ignoring timestamps
-          cd scripts
-          go run compare-models.go available-models.json available-models-new.json
-          if [ $? -eq 0 ]; then
-            echo "changed=false" >> $GITHUB_OUTPUT
-            # Restore the new version without committing
-            mv available-models-new.json available-models.json
-          else
-            echo "changed=true" >> $GITHUB_OUTPUT
-            # Use the new version with updated models
-            mv available-models-new.json available-models.json
-          fi
-
-      - name: Commit and push if changed
-        if: steps.check_changes.outputs.changed == 'true'
-        run: |
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git config --local user.name "github-actions[bot]"
-          git add scripts/available-models.json
-          git commit -m "chore: update AI models list [skip ci]"
-          git push
-
-  # Test job - runs tests and linting
-  test:
-    name: Test (Node ${{ matrix.node-version }})
-    runs-on: ubuntu-latest
-    needs: [update-models]
-    if: always() && !contains(github.event.head_commit.message, '[skip ci]')
-
-    strategy:
-      matrix:
-        node-version: [18.x, 20.x]
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          # Pull latest changes if models were updated
-          fetch-depth: 0
-
-      - name: Pull latest changes
-        if: needs.update-models.result == 'success'
-        run: git pull origin ${{ github.ref_name }}
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ matrix.node-version }}
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Type check
-        run: npm run typecheck
-
-      - name: Lint
-        run: npm run lint
-
-      - name: Run tests
-        run: npm test || echo "No tests found"
-
-      - name: Build
-        run: npm run build
-
-  # Check for migrations
+  # Quick migration check - runs in parallel with other jobs
   check-migrations:
     name: Check for Migrations
     runs-on: ubuntu-latest
-    needs: [test]
     if: |
-      always() &&
-      needs.test.result == 'success' &&
       github.event_name == 'push' &&
       (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
     outputs:
@@ -157,112 +45,128 @@ jobs:
             echo "✅ No migration changes detected"
           fi
 
-  # Deploy job - deploys to Cloudflare Pages with migrations
-  deploy:
-    name: Deploy to Cloudflare Pages
+  # Update AI Models - runs in parallel with test
+  update-models:
+    name: Update AI Models
     runs-on: ubuntu-latest
-    needs: [test, check-migrations]
     if: |
-      always() &&
-      needs.test.result == 'success' &&
-      github.event_name == 'push' &&
-      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+      (github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main')) ||
+      github.event_name == 'schedule' ||
+      github.event_name == 'workflow_dispatch'
 
     permissions:
-      contents: read
-      deployments: write # Required for Cloudflare Pages deployment
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+          cache: true
+          cache-dependency-path: scripts/go.mod
+
+      - name: Fetch AI models
+        env:
+          XAI_API_KEY: ${{ secrets.XAI_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+        run: |
+          cd scripts
+          go run fetch-models.go
+
+      - name: Check if models changed
+        id: check_changes
+        run: |
+          cp scripts/available-models.json scripts/available-models-new.json
+          git checkout HEAD -- scripts/available-models.json
+
+          cd scripts
+          go run compare-models.go available-models.json available-models-new.json
+          if [ $? -eq 0 ]; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+            mv available-models-new.json available-models.json
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+            mv available-models-new.json available-models.json
+          fi
+
+      - name: Commit and push if changed
+        if: steps.check_changes.outputs.changed == 'true'
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add scripts/available-models.json
+          git commit -m "chore: update AI models list [skip ci]"
+          git push
+
+  # Build and test - runs in parallel with update-models
+  build-and-test:
+    name: Build & Test (Node ${{ matrix.node-version }})
+    runs-on: ubuntu-latest
+    if: ${{ !contains(github.event.head_commit.message, '[skip ci]') }}
+
+    strategy:
+      matrix:
+        # Only run matrix on PRs, single version for push
+        node-version: ${{ github.event_name == 'pull_request' && fromJSON('["18.x", "20.x"]') || fromJSON('["20.x"]') }}
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          # Pull latest changes if models were updated
-          fetch-depth: 0
-
-      - name: Pull latest changes
-        run: git pull origin ${{ github.ref_name }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20.x
+          node-version: ${{ matrix.node-version }}
           cache: 'npm'
 
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        id: npm-cache
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-${{ matrix.node-version }}-
+            ${{ runner.os }}-node-
+
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --prefer-offline --no-audit
 
-      - name: Apply D1 Migrations
-        if: needs.check-migrations.outputs.has-migrations == 'true'
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          D1_DATABASE_ID: ${{ secrets.D1_DATABASE_ID }}
+      - name: Run checks in parallel
         run: |
-          echo "🔄 Checking D1 migration setup..."
+          # Run typecheck, lint, and test in parallel
+          npm run typecheck &
+          TYPECHECK_PID=$!
 
-          # Check if Cloudflare credentials are available
-          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
-            echo "⚠️  Cloudflare credentials not configured. Skipping D1 migrations."
-            echo ""
-            echo "To enable automatic migrations in CI, add these secrets to your GitHub repository:"
-            echo "1. CLOUDFLARE_API_TOKEN - Create at https://dash.cloudflare.com/profile/api-tokens"
-            echo "2. CLOUDFLARE_ACCOUNT_ID - Found in your Cloudflare dashboard"
-            echo ""
-            echo "Required API token permissions:"
-            echo "- Account: D1:Edit"
-            echo "- Account: Cloudflare Pages:Edit (for deployment)"
-            echo ""
-            echo "📋 Migrations that need to be applied manually:"
-            cat <<EOF
-          ${{ needs.check-migrations.outputs.migration-files }}
-          EOF
-            exit 0
-          fi
+          npm run lint &
+          LINT_PID=$!
 
-          echo "🔄 Applying D1 migrations..."
+          npm test || echo "No tests found" &
+          TEST_PID=$!
 
-          # Test API token permissions first
-          if ! npx wrangler d1 list --json > /dev/null 2>&1; then
-            echo "❌ API token authentication failed!"
-            echo ""
-            echo "Please ensure your CLOUDFLARE_API_TOKEN has these permissions:"
-            echo "- Account: D1:Edit"
-            echo ""
-            echo "Create a new token at: https://dash.cloudflare.com/profile/api-tokens"
-            echo ""
-            echo "📋 Migrations that need to be applied manually:"
-            cat <<EOF
-          ${{ needs.check-migrations.outputs.migration-files }}
-          EOF
-            exit 0
-          fi
+          # Wait for all processes and check their exit codes
+          wait $TYPECHECK_PID
+          TYPECHECK_EXIT=$?
 
-          # Apply migrations
-          MIGRATION_FAILED=false
-          for migration in migrations/*.sql; do
-            if [ -f "$migration" ]; then
-              echo "Applying $(basename $migration)..."
-              if ! npx wrangler d1 execute omnichat-db --remote --file "$migration" 2>&1; then
-                echo "⚠️  Failed to apply $(basename $migration)"
-                MIGRATION_FAILED=true
-              fi
-            fi
-          done
+          wait $LINT_PID
+          LINT_EXIT=$?
 
-          if [ "$MIGRATION_FAILED" = true ]; then
-            echo ""
-            echo "⚠️  Some migrations failed. This might be because:"
-            echo "1. They were already applied"
-            echo "2. API token lacks D1:Edit permission"
-            echo "3. Database doesn't exist in your account"
-            echo ""
-            echo "Continuing with deployment..."
-          fi
+          wait $TEST_PID
+          TEST_EXIT=$?
 
-          # Run data migrations if needed
-          if [ -f "./scripts/migrate-d1-data.sh" ]; then
-            echo "📊 Running data migration script..."
-            ./scripts/migrate-d1-data.sh || echo "⚠️  Data migration script failed (non-critical)"
+          # Exit with error if any check failed
+          if [ $TYPECHECK_EXIT -ne 0 ] || [ $LINT_EXIT -ne 0 ] || [ $TEST_EXIT -ne 0 ]; then
+            echo "One or more checks failed"
+            exit 1
           fi
 
       - name: Build
@@ -271,11 +175,105 @@ jobs:
           NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
 
       - name: Build for Cloudflare Pages
-        run: |
-          npm run pages:build
-          ls -la .vercel/output/static/
+        # Only build for CF on main/master push
+        if: |
+          github.event_name == 'push' &&
+          (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') &&
+          matrix.node-version == '20.x'
+        run: npm run pages:build
         env:
           NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
+
+      - name: Upload build artifacts
+        # Only upload from Node 20.x to avoid duplicates
+        if: |
+          github.event_name == 'push' &&
+          (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') &&
+          matrix.node-version == '20.x'
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: |
+            .next/
+            .vercel/output/static/
+          retention-days: 1
+
+  # Deploy job - uses artifacts from build
+  deploy:
+    name: Deploy to Cloudflare Pages
+    runs-on: ubuntu-latest
+    needs: [build-and-test, check-migrations]
+    if: |
+      always() &&
+      needs.build-and-test.result == 'success' &&
+      github.event_name == 'push' &&
+      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+
+    permissions:
+      contents: read
+      deployments: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            migrations
+            scripts
+          sparse-checkout-cone-mode: false
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+
+      - name: Setup Node.js (minimal)
+        if: needs.check-migrations.outputs.has-migrations == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+
+      - name: Install wrangler only
+        if: needs.check-migrations.outputs.has-migrations == 'true'
+        run: npm install -g wrangler@latest
+
+      - name: Apply D1 Migrations
+        if: needs.check-migrations.outputs.has-migrations == 'true'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          echo "🔄 Checking D1 migration setup..."
+
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "⚠️  Cloudflare credentials not configured. Skipping D1 migrations."
+            echo "To enable automatic migrations, add CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID secrets."
+            echo "📋 Migrations to apply manually:"
+            cat <<EOF
+          ${{ needs.check-migrations.outputs.migration-files }}
+          EOF
+            exit 0
+          fi
+
+          echo "🔄 Applying D1 migrations..."
+
+          # Quick permission check
+          if ! wrangler d1 list --json > /dev/null 2>&1; then
+            echo "❌ API token authentication failed. Please check permissions."
+            echo "📋 Migrations to apply manually:"
+            cat <<EOF
+          ${{ needs.check-migrations.outputs.migration-files }}
+          EOF
+            exit 0
+          fi
+
+          # Apply only the changed migrations
+          for migration in ${{ needs.check-migrations.outputs.migration-files }}; do
+            if [ -f "$migration" ]; then
+              echo "Applying $(basename $migration)..."
+              wrangler d1 execute omnichat-db --remote --file "$migration" 2>&1 || echo "⚠️  Failed (may already be applied)"
+            fi
+          done
 
       - name: Deploy to Cloudflare Pages
         if: |
@@ -303,15 +301,21 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
-      - name: Comment on Migration
-        if: needs.check-migrations.outputs.has-migrations == 'true' && github.event_name == 'pull_request'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const migrationFiles = `${{ needs.check-migrations.outputs.migration-files }}`;
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              body: `🚀 Deployment completed with migrations!\n\nApplied migrations:\n\`\`\`\n${migrationFiles}\n\`\`\`\n\nUsers may need to refresh their browser if they experience issues.`
-            });
+  # Status check job - provides single status for branch protection
+  ci-status:
+    name: CI Status
+    runs-on: ubuntu-latest
+    needs: [build-and-test, deploy]
+    if: always()
+    steps:
+      - name: Check status
+        run: |
+          if [ "${{ needs.build-and-test.result }}" != "success" ]; then
+            echo "Build and test failed"
+            exit 1
+          fi
+          if [ "${{ github.event_name }}" == "push" ] && [ "${{ needs.deploy.result }}" != "success" ] && [ "${{ needs.deploy.result }}" != "skipped" ]; then
+            echo "Deploy failed"
+            exit 1
+          fi
+          echo "CI passed successfully"
