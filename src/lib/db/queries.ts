@@ -196,7 +196,18 @@ export async function getUserSubscription(db: Db, userId: string) {
   return result[0] || null;
 }
 
-export async function deleteConversation(db: Db, id: string) {
+export async function deleteConversation(db: Db, id: string, userId: string) {
+  // First verify the conversation belongs to the user
+  const conversation = await db
+    .select()
+    .from(schema.conversations)
+    .where(and(eq(schema.conversations.id, id), eq(schema.conversations.userId, userId)))
+    .limit(1);
+
+  if (!conversation[0]) {
+    return null; // Not found or unauthorized
+  }
+
   // Delete associated messages first (cascade delete)
   await db.delete(schema.messages).where(eq(schema.messages.conversationId, id));
 
