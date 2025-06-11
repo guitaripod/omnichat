@@ -32,6 +32,8 @@ interface MigrationData {
 }
 
 // Migration functions that transform D1 data to client-side format
+// Currently not used but kept for future migration needs
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const migrations: Migration[] = [
   {
     version: 1,
@@ -56,7 +58,8 @@ const migrations: Migration[] = [
 
 // Transform a single message from D1 format to client format
 export function migrateMessage(d1Message: D1Message): ClientMessage {
-  const message: ClientMessage = {
+  // Start with the base message structure
+  const baseMessage: ClientMessage = {
     id: d1Message.id,
     conversationId: d1Message.conversationId,
     role: d1Message.role,
@@ -67,15 +70,9 @@ export function migrateMessage(d1Message: D1Message): ClientMessage {
     attachments: [],
   };
 
-  // Apply all migrations up to current version
-  let migratedData = { messages: [message] };
-  for (const migration of migrations) {
-    if (migration.version <= MIGRATION_VERSION) {
-      migratedData = migration.migrate(migratedData);
-    }
-  }
-
-  return migratedData.messages[0];
+  // For now, we simply return the base message without streaming fields
+  // The streaming fields are automatically stripped since they're not in ClientMessage type
+  return baseMessage;
 }
 
 // Transform multiple messages
