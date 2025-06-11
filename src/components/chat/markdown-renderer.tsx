@@ -221,12 +221,13 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
               );
             }
 
-            // Regular image
+            // Regular image (including generated images)
             return (
               <img
                 src={src}
                 alt={alt || 'Image'}
-                className="my-4 max-w-full rounded-lg shadow-lg"
+                className="my-4 rounded-lg shadow-lg"
+                style={{ maxWidth: '100%', height: 'auto' }}
                 loading="lazy"
               />
             );

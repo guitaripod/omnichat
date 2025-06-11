@@ -5,6 +5,15 @@ interface MessageListProps {
   messages: Message[];
   isLoading?: boolean;
   currentModel?: string;
+  imageGenerationOptions?: {
+    size?: string;
+    quality?: string;
+    style?: string;
+    n?: number;
+    background?: string;
+    outputFormat?: string;
+    outputCompression?: number;
+  };
   onRegenerateMessage?: (index: number) => void;
   onBranchSwitch?: (messageId: string) => void;
   onCreateBranch?: (fromMessageId: string) => void;
@@ -14,6 +23,7 @@ export function MessageList({
   messages,
   isLoading = false,
   currentModel,
+  imageGenerationOptions,
   onRegenerateMessage,
   onBranchSwitch,
   onCreateBranch,
@@ -32,6 +42,7 @@ export function MessageList({
             message.role === 'assistant' &&
             ['gpt-image-1', 'dall-e-3', 'dall-e-2'].includes(currentModel || '')
           }
+          imageGenerationOptions={imageGenerationOptions}
           canRegenerate={
             index === messages.length - 1 && message.role === 'assistant' && !isLoading
           }

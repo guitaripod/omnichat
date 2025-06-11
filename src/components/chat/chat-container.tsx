@@ -1119,6 +1119,7 @@ export function ChatContainer() {
                 messages={filteredMessages}
                 isLoading={isLoading}
                 currentModel={selectedModel}
+                imageGenerationOptions={imageGenerationOptions}
                 onRegenerateMessage={handleRegenerateMessage}
                 onBranchSwitch={handleBranchSwitch}
                 onCreateBranch={handleCreateBranch}

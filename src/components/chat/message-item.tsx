@@ -14,6 +14,15 @@ interface MessageItemProps {
   messages: Message[];
   isStreaming?: boolean;
   isImageGeneration?: boolean;
+  imageGenerationOptions?: {
+    size?: string;
+    quality?: string;
+    style?: string;
+    n?: number;
+    background?: string;
+    outputFormat?: string;
+    outputCompression?: number;
+  };
   onRegenerate?: () => void;
   canRegenerate?: boolean;
   onBranchSwitch?: (messageId: string) => void;
@@ -82,6 +91,7 @@ export function MessageItem({
   messages,
   isStreaming = false,
   isImageGeneration = false,
+  imageGenerationOptions,
   onRegenerate,
   canRegenerate = false,
   onBranchSwitch,
@@ -210,9 +220,7 @@ export function MessageItem({
               ) : (
                 <>
                   {isImageGeneration && !message.content ? (
-                    <ImageGenerationLoading
-                      prompt={messages[messages.length - 2]?.content.substring(0, 100)}
-                    />
+                    <ImageGenerationLoading size={imageGenerationOptions?.size} />
                   ) : (
                     <>
                       {message.content && <MarkdownRenderer content={message.content} />}
