@@ -217,10 +217,10 @@ export class OpenAIProvider implements ChatProvider {
       body.size = options?.size || '1024x1024';
       body.quality = options?.quality || 'standard';
       body.style = options?.style || 'vivid';
-      body.response_format = 'b64_json'; // Always use b64_json for consistency
+      body.response_format = 'url'; // Use URL instead of base64 to avoid size issues
     } else if (model === 'dall-e-2') {
       body.size = options?.size || '1024x1024';
-      body.response_format = 'b64_json';
+      body.response_format = 'url';
     }
 
     console.log('[OpenAI] Image generation request body:', JSON.stringify(body, null, 2));
@@ -246,26 +246,81 @@ export class OpenAIProvider implements ChatProvider {
 
       // Create a response in assistant format with the image
       const imageData = data.data[0];
-      const imageContent = imageData.b64_json
-        ? `![Generated Image](data:image/png;base64,${imageData.b64_json})`
-        : `![Generated Image](${imageData.url})`;
+      let imageContent = '';
 
-      // For streaming, we need to create a stream that sends the image
+      if (imageData.url) {
+        // Use the URL directly
+        imageContent = `![Generated Image](${imageData.url})`;
+      } else if (imageData.b64_json) {
+        // If we still get base64, use it but chunk it properly
+        imageContent = `![Generated Image](data:image/png;base64,${imageData.b64_json})`;
+      }
+
+      // For streaming, we need to create a stream that sends the image in chunks
       const encoder = new TextEncoder();
       const stream = new ReadableStream({
-        start(controller) {
-          // Send the image as a complete message
-          const chunk = encoder.encode(
+        async start(controller) {
+          // Send initial message for image generation
+          const initChunk = encoder.encode(
             `data: ${JSON.stringify({
               choices: [
                 {
-                  delta: { content: imageContent },
+                  delta: { content: '🎨 Generating image...' },
                   index: 0,
                 },
               ],
             })}\n\n`
           );
-          controller.enqueue(chunk);
+          controller.enqueue(initChunk);
+
+          // Small delay for effect
+          await new Promise((resolve) => setTimeout(resolve, 500));
+
+          // If the content is very large (base64), send it in chunks
+          const chunkSize = 1000; // Send 1000 chars at a time
+          if (imageContent.length > chunkSize) {
+            // Clear the generating message first
+            const clearChunk = encoder.encode(
+              `data: ${JSON.stringify({
+                choices: [
+                  {
+                    delta: { content: '\r' },
+                    index: 0,
+                  },
+                ],
+              })}\n\n`
+            );
+            controller.enqueue(clearChunk);
+
+            // Send image content in chunks
+            for (let i = 0; i < imageContent.length; i += chunkSize) {
+              const chunk = imageContent.slice(i, i + chunkSize);
+              const dataChunk = encoder.encode(
+                `data: ${JSON.stringify({
+                  choices: [
+                    {
+                      delta: { content: chunk },
+                      index: 0,
+                    },
+                  ],
+                })}\n\n`
+              );
+              controller.enqueue(dataChunk);
+            }
+          } else {
+            // Send the entire content if it's small enough
+            const clearChunk = encoder.encode(
+              `data: ${JSON.stringify({
+                choices: [
+                  {
+                    delta: { content: '\r' + imageContent },
+                    index: 0,
+                  },
+                ],
+              })}\n\n`
+            );
+            controller.enqueue(clearChunk);
+          }
 
           // Send the done signal
           controller.enqueue(encoder.encode('data: [DONE]\n\n'));
