@@ -8,6 +8,7 @@ import {
 } from '../types';
 import { createSSEStream } from '../utils/sse-parser';
 import { nanoid } from 'nanoid';
+import { compressImage, estimateCompressionSavings } from '@/utils/image-compression';
 
 // R2 bucket interface for Cloudflare Workers
 interface R2Bucket {
@@ -285,7 +286,6 @@ export class OpenAIProvider implements ChatProvider {
       if (R2_STORAGE) {
         try {
           let imageBuffer: ArrayBuffer;
-          let contentType = 'image/png';
 
           if (imageData.b64_json) {
             // Convert base64 to ArrayBuffer
@@ -304,28 +304,47 @@ export class OpenAIProvider implements ChatProvider {
               throw new Error(`Failed to download image: ${imageResponse.status}`);
             }
             imageBuffer = await imageResponse.arrayBuffer();
-            contentType = imageResponse.headers.get('content-type') || 'image/png';
           } else {
             throw new Error('No image data returned from API');
           }
 
+          // Compress the image before storing
+          const originalSize = imageBuffer.byteLength;
+          console.log('[OpenAI] Original image size:', (originalSize / 1024).toFixed(2), 'KB');
+
+          const compressedBuffer = await compressImage(imageBuffer, {
+            quality: 0.1, // Very low quality for maximum compression
+            maxWidth: 2048,
+            maxHeight: 2048,
+          });
+
+          const compressedSize = compressedBuffer.byteLength;
+          const savings = estimateCompressionSavings(originalSize, compressedSize);
+          console.log('[OpenAI] Compressed image size:', (compressedSize / 1024).toFixed(2), 'KB');
+          console.log(
+            `[OpenAI] Compression saved: ${savings.humanReadableSaved} (${savings.savedPercentage}%)`
+          );
+
           // Generate R2 key - include userId if available
           const imageId = nanoid();
           const r2Key = userId
-            ? `${userId}/generated-images/${model}/${imageId}.png`
-            : `generated-images/${model}/${imageId}.png`;
+            ? `${userId}/generated-images/${model}/${imageId}.webp`
+            : `generated-images/${model}/${imageId}.webp`;
 
           console.log('[OpenAI] Uploading to R2, key:', r2Key);
 
           // Upload to R2
-          await R2_STORAGE.put(r2Key, imageBuffer, {
+          await R2_STORAGE.put(r2Key, compressedBuffer, {
             httpMetadata: {
-              contentType,
+              contentType: 'image/webp',
             },
             customMetadata: {
               model,
               prompt: prompt.substring(0, 100), // First 100 chars of prompt
               generatedAt: new Date().toISOString(),
+              originalSize: originalSize.toString(),
+              compressedSize: compressedSize.toString(),
+              compressionRatio: savings.savedPercentage.toString(),
             },
           });
 

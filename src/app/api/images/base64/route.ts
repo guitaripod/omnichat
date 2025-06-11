@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { nanoid } from 'nanoid';
+import { compressImage, estimateCompressionSavings } from '@/utils/image-compression';
 
 export const runtime = 'edge';
 
@@ -67,19 +68,39 @@ export async function POST(request: NextRequest) {
       bytes[i] = binaryString.charCodeAt(i);
     }
 
+    // Compress the image
+    const originalSize = bytes.buffer.byteLength;
+    console.log('[Base64Upload] Original size:', (originalSize / 1024).toFixed(2), 'KB');
+
+    const compressedBuffer = await compressImage(bytes.buffer, {
+      quality: 0.1,
+      maxWidth: 2048,
+      maxHeight: 2048,
+    });
+
+    const compressedSize = compressedBuffer.byteLength;
+    const savings = estimateCompressionSavings(originalSize, compressedSize);
+    console.log(`[Base64Upload] Compressed size: ${(compressedSize / 1024).toFixed(2)} KB`);
+    console.log(
+      `[Base64Upload] Saved: ${savings.humanReadableSaved} (${savings.savedPercentage}%)`
+    );
+
     // Generate unique key for R2
     const imageId = nanoid();
-    const r2Key = `${userId}/generated-images/${conversationId}/${imageId}.png`;
+    const r2Key = `${userId}/generated-images/${conversationId}/${imageId}.webp`;
 
     // Upload to R2
-    await R2_STORAGE.put(r2Key, bytes.buffer, {
+    await R2_STORAGE.put(r2Key, compressedBuffer, {
       httpMetadata: {
-        contentType: 'image/png',
+        contentType: 'image/webp',
       },
       customMetadata: {
         userId,
         conversationId,
         generatedAt: new Date().toISOString(),
+        originalSize: originalSize.toString(),
+        compressedSize: compressedSize.toString(),
+        compressionRatio: savings.savedPercentage.toString(),
       },
     });
 

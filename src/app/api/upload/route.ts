@@ -7,6 +7,7 @@ import {
   ALLOWED_FILE_TYPES,
 } from '@/types/attachments';
 import { nanoid } from 'nanoid';
+import { compressImage, estimateCompressionSavings } from '@/utils/image-compression';
 
 export const runtime = 'edge';
 
@@ -89,20 +90,57 @@ export async function POST(request: NextRequest) {
 
     // Generate unique key for R2
     const fileId = nanoid();
-    const fileExtension = file.name.split('.').pop() || '';
+    let fileExtension = file.name.split('.').pop() || '';
+    let arrayBuffer = await file.arrayBuffer();
+    let finalMimeType = file.type;
+    let compressedSize = arrayBuffer.byteLength;
+
+    // Compress if it's an image (excluding SVG)
+    if (file.type.startsWith('image/') && !file.type.includes('svg')) {
+      try {
+        const originalSize = arrayBuffer.byteLength;
+        console.log(
+          '[Upload] Compressing image, original size:',
+          (originalSize / 1024).toFixed(2),
+          'KB'
+        );
+
+        const compressedBuffer = await compressImage(arrayBuffer, {
+          quality: 0.1,
+          maxWidth: 2048,
+          maxHeight: 2048,
+        });
+
+        compressedSize = compressedBuffer.byteLength;
+        const savings = estimateCompressionSavings(originalSize, compressedSize);
+        console.log(`[Upload] Compressed size: ${(compressedSize / 1024).toFixed(2)} KB`);
+        console.log(`[Upload] Saved: ${savings.humanReadableSaved} (${savings.savedPercentage}%)`);
+
+        // Use compressed version if it's smaller
+        if (compressedSize < originalSize) {
+          arrayBuffer = compressedBuffer;
+          finalMimeType = 'image/webp';
+          fileExtension = 'webp';
+        }
+      } catch (error) {
+        console.error('[Upload] Compression failed, using original:', error);
+      }
+    }
+
     const r2Key = `${userId}/${conversationId}/${messageId}/${fileId}.${fileExtension}`;
 
     // Upload to R2
-    const arrayBuffer = await file.arrayBuffer();
     await R2_STORAGE.put(r2Key, arrayBuffer, {
       httpMetadata: {
-        contentType: file.type,
+        contentType: finalMimeType,
       },
       customMetadata: {
         userId,
         conversationId,
         messageId,
         fileName: file.name,
+        originalSize: file.size.toString(),
+        finalSize: compressedSize.toString(),
       },
     });
 
