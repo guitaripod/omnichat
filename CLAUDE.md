@@ -18,6 +18,13 @@ wrangler dev            # Local development with Workers
 wrangler deploy         # Deploy to Cloudflare
 wrangler d1 execute     # Run D1 database commands
 wrangler r2 bucket list # Manage R2 storage
+
+# Monitor Latest Deployment
+# First get the latest deployment ID
+DEPLOYMENT_ID=$(wrangler pages deployment list --project-name omnichat | grep -E "Production.*master" | head -n 1 | grep -oE "https://[a-f0-9]{8}" | cut -d'/' -f3)
+
+# Then tail it
+wrangler pages deployment tail $DEPLOYMENT_ID --project-name omnichat --format pretty
 ```
 
 # Git Practices
