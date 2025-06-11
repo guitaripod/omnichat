@@ -217,6 +217,7 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
                   src={srcString}
                   alt={alt || 'Generated image'}
                   className="my-4 max-w-full shadow-lg"
+                  skipLoadingState={true}
                 />
               );
             }

@@ -7,9 +7,15 @@ interface ProgressiveImageProps {
   src: string;
   alt: string;
   className?: string;
+  skipLoadingState?: boolean;
 }
 
-export function ProgressiveImage({ src, alt, className }: ProgressiveImageProps) {
+export function ProgressiveImage({
+  src,
+  alt,
+  className,
+  skipLoadingState = false,
+}: ProgressiveImageProps) {
   const [loaded, setLoaded] = useState(false);
   const [revealing, setRevealing] = useState(false);
   const [revealProgress, setRevealProgress] = useState(0);
@@ -41,7 +47,7 @@ export function ProgressiveImage({ src, alt, className }: ProgressiveImageProps)
     };
   }, [src]);
 
-  if (!loaded) {
+  if (!loaded && !skipLoadingState) {
     // Show placeholder while loading
     return (
       <div

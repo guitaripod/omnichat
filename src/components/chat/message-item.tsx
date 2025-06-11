@@ -219,7 +219,9 @@ export function MessageItem({
                 <p className="whitespace-pre-wrap">{message.content}</p>
               ) : (
                 <>
-                  {isImageGeneration && !message.content ? (
+                  {isImageGeneration &&
+                  (!message.content ||
+                    (isStreaming && !message.content.includes('![Generated Image]'))) ? (
                     <ImageGenerationLoading size={imageGenerationOptions?.size} />
                   ) : (
                     <>
