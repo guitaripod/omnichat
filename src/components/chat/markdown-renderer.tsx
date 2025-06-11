@@ -200,6 +200,17 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
           pre({ children }) {
             return <>{children}</>;
           },
+          img({ src, alt }) {
+            // Handle base64 images and regular URLs
+            return (
+              <img
+                src={src}
+                alt={alt || 'Generated image'}
+                className="my-4 max-w-full rounded-lg shadow-lg"
+                loading="lazy"
+              />
+            );
+          },
           a({ href, children }) {
             return (
               <a
