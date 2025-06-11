@@ -184,7 +184,7 @@
 
 - [x] Integrate OpenAI Images
 - [x] Create image generation UI
-- [ ] Fix gpt-image-1 images not showing in UI
+- [x] Fix gpt-image-1 images not showing in UI
 - [ ] Implement image history gallery
 - [ ] Add image editing capabilities
 
