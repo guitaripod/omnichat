@@ -148,6 +148,7 @@
 - [ ] Build webhook handlers for subscription events
 - [ ] Create billing portal integration
 - [ ] Add usage-based billing for API calls
+- [ ] Create an AI-powered script to scrape the pricing for all external AI providers to determine what Ultimate users get for their subscription
 
 ### Epic 4.2: Security Implementation
 
