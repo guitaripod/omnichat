@@ -1031,6 +1031,7 @@ export function ChatContainer() {
               <MessageList
                 messages={filteredMessages}
                 isLoading={isLoading}
+                currentModel={selectedModel}
                 onRegenerateMessage={handleRegenerateMessage}
                 onBranchSwitch={handleBranchSwitch}
                 onCreateBranch={handleCreateBranch}

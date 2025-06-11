@@ -10,6 +10,7 @@ import { useState } from 'react';
 import html2canvas from 'html2canvas';
 import 'katex/dist/katex.min.css';
 import 'highlight.js/styles/github-dark.css';
+import { ProgressiveImage } from './progressive-image';
 
 interface MarkdownRendererProps {
   content: string;
@@ -201,11 +202,30 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
             return <>{children}</>;
           },
           img({ src, alt }) {
-            // Handle base64 images and regular URLs
+            // Handle Blob URLs or string URLs
+            const srcString = typeof src === 'string' ? src : '';
+
+            // Check if this is a generated image
+            const isGeneratedImage =
+              alt?.toLowerCase().includes('generated') ||
+              (typeof src === 'string' &&
+                (src.includes('dalle') || src.includes('openai') || src.startsWith('data:image')));
+
+            if (isGeneratedImage) {
+              return (
+                <ProgressiveImage
+                  src={srcString}
+                  alt={alt || 'Generated image'}
+                  className="my-4 max-w-full shadow-lg"
+                />
+              );
+            }
+
+            // Regular image
             return (
               <img
                 src={src}
-                alt={alt || 'Generated image'}
+                alt={alt || 'Image'}
                 className="my-4 max-w-full rounded-lg shadow-lg"
                 loading="lazy"
               />

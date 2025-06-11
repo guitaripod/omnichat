@@ -14,6 +14,8 @@ import {
   GitBranch,
   Globe,
   Fish,
+  Image,
+  Palette,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AIProvider, AIModel, AI_MODELS } from '@/services/ai';
@@ -508,7 +510,11 @@ export function MessageInput({
                   onKeyDown={handleKeyDown}
                   onFocus={() => setIsFocused(true)}
                   onBlur={() => setIsFocused(false)}
-                  placeholder="Type your message..."
+                  placeholder={
+                    currentModel?.supportsImageGeneration
+                      ? 'Describe the image you want to create...'
+                      : 'Type your message...'
+                  }
                   className="w-full resize-none bg-transparent px-2 py-1 text-gray-900 placeholder-gray-500 focus:outline-none dark:text-white dark:placeholder-gray-400"
                   rows={1}
                   style={{
@@ -556,17 +562,38 @@ export function MessageInput({
                   'rounded-lg p-2 transition-all duration-200',
                   isLoading
                     ? 'text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20'
-                    : 'text-blue-600 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50 dark:text-blue-400 dark:hover:bg-blue-900/20'
+                    : currentModel?.supportsImageGeneration
+                      ? 'text-pink-600 hover:bg-pink-50 disabled:cursor-not-allowed disabled:opacity-50 dark:text-pink-400 dark:hover:bg-pink-900/20'
+                      : 'text-blue-600 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50 dark:text-blue-400 dark:hover:bg-blue-900/20'
                 )}
-                aria-label={isLoading ? 'Stop generation' : 'Send message'}
+                aria-label={
+                  isLoading
+                    ? 'Stop generation'
+                    : currentModel?.supportsImageGeneration
+                      ? 'Generate image'
+                      : 'Send message'
+                }
               >
-                {isLoading ? <Square size={20} className="fill-current" /> : <Send size={20} />}
+                {isLoading ? (
+                  <Square size={20} className="fill-current" />
+                ) : currentModel?.supportsImageGeneration ? (
+                  <Palette size={20} />
+                ) : (
+                  <Send size={20} />
+                )}
               </button>
             </div>
           </div>
 
           <div className="mt-2 text-center text-xs text-gray-500 dark:text-gray-400">
-            Press Enter to send, Shift+Enter for new line
+            {currentModel?.supportsImageGeneration ? (
+              <span className="flex items-center justify-center gap-1">
+                <Image className="h-3 w-3 text-pink-500" />
+                Press Enter to generate image
+              </span>
+            ) : (
+              'Press Enter to send, Shift+Enter for new line'
+            )}
           </div>
         </div>
       </div>
