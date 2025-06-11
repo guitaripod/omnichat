@@ -20,6 +20,15 @@ interface ChatRequest {
   ollamaBaseUrl?: string;
   conversationId?: string;
   webSearch?: boolean;
+  imageGenerationOptions?: {
+    size?: string;
+    quality?: string;
+    style?: string;
+    n?: number;
+    background?: string;
+    outputFormat?: string;
+    outputCompression?: number;
+  };
 }
 
 export async function POST(req: NextRequest) {
@@ -97,6 +106,7 @@ export async function POST(req: NextRequest) {
       stream = true,
       ollamaBaseUrl,
       webSearch = false,
+      imageGenerationOptions,
     } = body;
 
     conversationId = body.conversationId;
@@ -154,6 +164,7 @@ export async function POST(req: NextRequest) {
     let provider;
     let actualModelName = model;
     let modelSupportsWebSearch = false;
+    let modelSupportsImageGeneration = false;
 
     if (model.startsWith('ollama/')) {
       // This is an Ollama model
@@ -168,6 +179,7 @@ export async function POST(req: NextRequest) {
       actualModelName = model.replace('ollama/', '');
       provider = AIProviderFactory.getProvider('ollama');
       modelSupportsWebSearch = false; // Ollama doesn't support web search
+      modelSupportsImageGeneration = false; // Ollama doesn't support image generation
     } else {
       // This is a static model from AI_MODELS
       const allModels = Object.values(AI_MODELS).flat();
@@ -178,6 +190,7 @@ export async function POST(req: NextRequest) {
       console.log('Model info found:', modelInfo.provider, modelInfo.id);
       provider = AIProviderFactory.getProvider(modelInfo.provider);
       modelSupportsWebSearch = modelInfo.supportsWebSearch || false;
+      modelSupportsImageGeneration = modelInfo.supportsImageGeneration || false;
     }
 
     // Get the provider instance
@@ -205,6 +218,8 @@ export async function POST(req: NextRequest) {
       stream,
       userId,
       webSearch: webSearch && modelSupportsWebSearch,
+      imageGeneration: modelSupportsImageGeneration,
+      imageGenerationOptions,
     });
 
     // Note: Messages are already saved client-side in chat-container.tsx
