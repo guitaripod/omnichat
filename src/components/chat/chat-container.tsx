@@ -346,6 +346,15 @@ export function ChatContainer() {
                   content = parsed.content;
                 } else if (parsed.choices?.[0]?.delta?.content) {
                   content = parsed.choices[0].delta.content;
+                } else if (parsed.choices?.[0]?.delta?.image_data) {
+                  // Special handling for base64 image data
+                  const imageData = parsed.choices[0].delta.image_data;
+                  if (imageData.type === 'base64' && imageData.data) {
+                    // Replace the placeholder with the actual base64 image
+                    content = `![Generated Image](data:image/png;base64,${imageData.data})`;
+                    // Clear the accumulated content to replace the placeholder
+                    accumulatedContent = '';
+                  }
                 }
 
                 if (content) {
@@ -784,6 +793,21 @@ export function ChatContainer() {
                   content = parsed.content;
                 } else if (parsed.choices?.[0]?.delta?.content) {
                   content = parsed.choices[0].delta.content;
+                } else if (parsed.choices?.[0]?.delta?.image_data) {
+                  // Special handling for base64 image data
+                  const imageData = parsed.choices[0].delta.image_data;
+                  if (imageData.type === 'base64' && imageData.data) {
+                    // Replace the placeholder with the actual base64 image
+                    content = `![Generated Image](data:image/png;base64,${imageData.data})`;
+                    // Clear the accumulated content to replace the placeholder
+                    accumulatedContent = '';
+                  }
+                } else if (parsed.message?.content) {
+                  // Ollama format
+                  content = parsed.message.content;
+                } else if (parsed.done === false && parsed.response) {
+                  // Another Ollama format
+                  content = parsed.response;
                 }
 
                 if (content) {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Settings } from 'lucide-react';
 import { cn } from '@/utils';
 
@@ -57,6 +57,15 @@ export function ImageGenerationParams({ model, onParamsChange }: ImageGeneration
   const [params, setParams] = useState<ImageGenerationOptions>(
     modelDefaults[model as ImageGenerationModel] || {}
   );
+
+  // Reset params when model changes
+  useEffect(() => {
+    if (['gpt-image-1', 'dall-e-3', 'dall-e-2'].includes(model)) {
+      const newDefaults = modelDefaults[model as ImageGenerationModel] || {};
+      setParams(newDefaults);
+      onParamsChange?.(newDefaults);
+    }
+  }, [model, onParamsChange]);
 
   const updateParam = (key: keyof ImageGenerationOptions, value: string | number) => {
     const newParams = { ...params, [key]: value };
