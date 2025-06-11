@@ -289,34 +289,46 @@ export const useConversationStore = create<ConversationState>()(
               messages: Array<Record<string, unknown>>;
             };
 
+            // Ensure we have valid data
+            if (!Array.isArray(messages)) {
+              console.error('Invalid messages response - not an array');
+              return;
+            }
+
             // Migrate messages from D1 format to client format
-            const serverMessages = messages.map((m) => {
+            const serverMessages = messages.map((m, index) => {
               try {
+                // Validate message object
+                if (!m || typeof m !== 'object') {
+                  throw new Error('Invalid message object');
+                }
+
                 return migrateMessage({
-                  id: m.id as string,
-                  conversationId: m.conversationId as string,
-                  role: m.role as 'user' | 'assistant' | 'system',
-                  content: m.content as string,
+                  id: (m.id as string) || `temp-${conversationId}-${index}`,
+                  conversationId: (m.conversationId as string) || conversationId,
+                  role: (m.role as 'user' | 'assistant' | 'system') || 'user',
+                  content: (m.content as string) || '',
                   model: m.model as string | undefined,
                   parentId: m.parentId as string | null | undefined,
-                  isComplete: m.isComplete as boolean,
+                  isComplete: m.isComplete !== undefined ? (m.isComplete as boolean) : true,
                   streamState: m.streamState as string | null | undefined,
-                  tokensGenerated: m.tokensGenerated as number,
+                  tokensGenerated:
+                    m.tokensGenerated !== undefined ? (m.tokensGenerated as number) : 0,
                   totalTokens: m.totalTokens as number | null | undefined,
                   streamId: m.streamId as string | null | undefined,
                   createdAt: m.createdAt as string | Date,
                 });
               } catch (error) {
-                console.error('Failed to migrate message:', m.id, error);
+                console.error('Failed to migrate message:', m, error);
                 // Fallback to basic migration if advanced migration fails
                 return {
-                  id: m.id as string,
-                  conversationId: m.conversationId as string,
-                  role: m.role as 'user' | 'assistant' | 'system',
-                  content: m.content as string,
+                  id: (m.id as string) || `fallback-${Date.now()}-${index}`,
+                  conversationId: (m.conversationId as string) || conversationId,
+                  role: (m.role as 'user' | 'assistant' | 'system') || 'user',
+                  content: (m.content as string) || '',
                   model: (m.model as string) || undefined,
                   parentId: (m.parentId as string) || undefined,
-                  createdAt: new Date(m.createdAt as string),
+                  createdAt: m.createdAt ? new Date(m.createdAt as string) : new Date(),
                   attachments: [],
                 } as Message;
               }

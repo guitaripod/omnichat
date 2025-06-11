@@ -86,11 +86,42 @@ export async function updateConversation(
 
 // Message queries
 export async function getConversationMessages(db: Db, conversationId: string) {
-  return db
+  const messages = await db
     .select()
     .from(schema.messages)
     .where(eq(schema.messages.conversationId, conversationId))
     .orderBy(schema.messages.createdAt);
+
+  // Get attachments for all messages
+  const messageIds = messages.map((m) => m.id);
+  const attachments =
+    messageIds.length > 0
+      ? await db
+          .select()
+          .from(schema.attachments)
+          .where(
+            sql`${schema.attachments.messageId} IN (${sql.join(
+              messageIds.map((id) => sql`${id}`),
+              sql`, `
+            )})`
+          )
+      : [];
+
+  // Group attachments by message
+  const attachmentsByMessage = attachments.reduce(
+    (acc, att) => {
+      if (!acc[att.messageId]) acc[att.messageId] = [];
+      acc[att.messageId].push(att);
+      return acc;
+    },
+    {} as Record<string, typeof attachments>
+  );
+
+  // Combine messages with their attachments
+  return messages.map((msg) => ({
+    ...msg,
+    attachments: attachmentsByMessage[msg.id] || [],
+  }));
 }
 
 export async function createMessage(

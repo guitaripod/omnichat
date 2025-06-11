@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, startTransition } from 'react';
-import { MessageList } from './message-list';
+import { SafeMessageList } from './safe-message-list';
 import { MessageInput } from './message-input';
 import type { Message } from '@/types';
 import { generateId } from '@/utils';
@@ -1243,7 +1243,7 @@ export function ChatContainer() {
             </div>
           ) : (
             <>
-              <MessageList
+              <SafeMessageList
                 messages={filteredMessages}
                 isLoading={isLoading}
                 currentModel={selectedModel}
