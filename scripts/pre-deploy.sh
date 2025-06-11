@@ -36,7 +36,7 @@ npm test -- --passWithNoTests
 # 6. Check migrations
 echo ""
 echo "6️⃣ Checking D1 migrations..."
-node scripts/check-migrations.mjs
+cd scripts && go run check-migrations.go && cd ..
 
 # 7. Build the project
 echo ""

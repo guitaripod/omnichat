@@ -23,7 +23,7 @@
     "db:migrate": "wrangler d1 migrations apply omnichat-db --local",
     "db:migrate:prod": "wrangler d1 migrations apply omnichat-db",
     "db:migrate:data": "./scripts/migrate-d1-data.sh",
-    "db:check": "node scripts/check-migrations.mjs",
+    "db:check": "cd scripts && go run check-migrations.go",
     "predeploy": "./scripts/pre-deploy.sh",
     "deploy": "npm run predeploy && wrangler deploy",
     "db:push": "drizzle-kit push:sqlite",
