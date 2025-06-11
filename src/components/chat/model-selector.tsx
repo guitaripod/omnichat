@@ -13,6 +13,7 @@ import {
   WifiOff,
   Loader2,
   Fish,
+  Image,
 } from 'lucide-react';
 import { cn } from '@/utils';
 import { AIProvider, AIModel } from '@/services/ai';
@@ -251,7 +252,11 @@ export function ModelSelector({ selectedModel, onModelChange, className }: Model
           {selectedModelInfo && (
             <>
               <span className={providerColors[selectedModelInfo.provider]}>
-                {providerIcons[selectedModelInfo.provider]}
+                {selectedModelInfo.supportsImageGeneration ? (
+                  <Image className="h-4 w-4" aria-label="Image generation model" />
+                ) : (
+                  providerIcons[selectedModelInfo.provider]
+                )}
               </span>
               <span className="font-medium text-gray-900 dark:text-white">
                 {selectedModelInfo.name}
@@ -399,6 +404,12 @@ export function ModelSelector({ selectedModel, onModelChange, className }: Model
 
                               {/* Right side - Features and selection */}
                               <div className="flex shrink-0 items-center gap-2">
+                                {model.supportsImageGeneration && (
+                                  <span className="flex items-center gap-1 text-[10px] text-pink-600 dark:text-pink-400">
+                                    <Image className="h-3 w-3" aria-label="Image generation" />
+                                    Image Gen
+                                  </span>
+                                )}
                                 {model.supportsVision && (
                                   <span className="text-[10px] text-purple-600 dark:text-purple-400">
                                     Vision

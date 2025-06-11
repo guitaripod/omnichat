@@ -235,9 +235,13 @@ export function MessageInput({
                     <span className="text-sm font-medium text-gray-900 dark:text-white">
                       {currentModel.name}
                     </span>
-                    <span className="text-xs text-gray-500 dark:text-gray-400">
-                      • {Math.round(currentModel.contextWindow / 1000)}k context
-                    </span>
+                    {currentModel.supportsImageGeneration ? (
+                      <span className="text-xs text-pink-600 dark:text-pink-400">• Image Gen</span>
+                    ) : (
+                      <span className="text-xs text-gray-500 dark:text-gray-400">
+                        • {Math.round(currentModel.contextWindow / 1000)}k context
+                      </span>
+                    )}
                   </>
                 )}
               </div>
@@ -338,27 +342,42 @@ export function MessageInput({
                                       </span>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                      <span
-                                        className={cn(
-                                          'text-xs',
-                                          selectedModel === model.id
-                                            ? 'text-blue-700 dark:text-blue-300'
-                                            : 'text-gray-500 dark:text-gray-400'
-                                        )}
-                                      >
-                                        {Math.round(model.contextWindow / 1000)}k
-                                      </span>
-                                      {model.supportsVision && (
+                                      {model.supportsImageGeneration ? (
                                         <span
                                           className={cn(
                                             'text-xs',
                                             selectedModel === model.id
                                               ? 'text-blue-700 dark:text-blue-300'
-                                              : 'text-purple-600 dark:text-purple-400'
+                                              : 'text-pink-600 dark:text-pink-400'
                                           )}
                                         >
-                                          Vision
+                                          Image Gen
                                         </span>
+                                      ) : (
+                                        <>
+                                          <span
+                                            className={cn(
+                                              'text-xs',
+                                              selectedModel === model.id
+                                                ? 'text-blue-700 dark:text-blue-300'
+                                                : 'text-gray-500 dark:text-gray-400'
+                                            )}
+                                          >
+                                            {Math.round(model.contextWindow / 1000)}k
+                                          </span>
+                                          {model.supportsVision && (
+                                            <span
+                                              className={cn(
+                                                'text-xs',
+                                                selectedModel === model.id
+                                                  ? 'text-blue-700 dark:text-blue-300'
+                                                  : 'text-purple-600 dark:text-purple-400'
+                                              )}
+                                            >
+                                              Vision
+                                            </span>
+                                          )}
+                                        </>
                                       )}
                                     </div>
                                   </button>
