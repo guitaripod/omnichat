@@ -7,31 +7,7 @@ import {
   ChatMessage,
 } from '../types';
 import { createSSEStream } from '../utils/sse-parser';
-import { nanoid } from 'nanoid';
-import {
-  compressImageServer as compressImage,
-  estimateCompressionSavings,
-} from '@/utils/image-compression-server';
-
-// R2 bucket interface for Cloudflare Workers
-interface R2Bucket {
-  put(
-    key: string,
-    value: ArrayBuffer | ArrayBufferView | string | ReadableStream,
-    options?: R2PutOptions
-  ): Promise<R2Object>;
-}
-
-interface R2PutOptions {
-  httpMetadata?: {
-    contentType?: string;
-  };
-  customMetadata?: Record<string, string>;
-}
-
-interface R2Object {
-  key: string;
-}
+// Removed unused imports and interfaces since compression now happens client-side
 
 export class OpenAIProvider implements ChatProvider {
   name: AIProvider = 'openai';
@@ -212,7 +188,7 @@ export class OpenAIProvider implements ChatProvider {
       outputFormat?: string;
       outputCompression?: number;
     },
-    userId?: string
+    _userId?: string
   ): Promise<StreamResponse | string> {
     console.log(`[OpenAI] Starting image generation with model: ${model}`);
 
@@ -282,92 +258,26 @@ export class OpenAIProvider implements ChatProvider {
       const imageData = data.data[0];
       let imageContent = '';
 
-      // Get R2 storage binding
-      const R2_STORAGE = (process.env as any).R2_STORAGE as R2Bucket | undefined;
-
-      // For ALL images, upload to R2 for consistency
-      if (R2_STORAGE) {
-        try {
-          let imageBuffer: ArrayBuffer;
-
-          if (imageData.b64_json) {
-            // Convert base64 to ArrayBuffer
-            console.log('[OpenAI] Converting base64 to buffer, size:', imageData.b64_json.length);
-            const binaryString = atob(imageData.b64_json);
-            const bytes = new Uint8Array(binaryString.length);
-            for (let i = 0; i < binaryString.length; i++) {
-              bytes[i] = binaryString.charCodeAt(i);
-            }
-            imageBuffer = bytes.buffer;
-          } else if (imageData.url) {
-            // Download the image from URL
-            console.log('[OpenAI] Downloading image from URL:', imageData.url);
-            const imageResponse = await fetch(imageData.url);
-            if (!imageResponse.ok) {
-              throw new Error(`Failed to download image: ${imageResponse.status}`);
-            }
-            imageBuffer = await imageResponse.arrayBuffer();
-          } else {
-            throw new Error('No image data returned from API');
-          }
-
-          // Compress the image before storing
-          const originalSize = imageBuffer.byteLength;
-          console.log('[OpenAI] Original image size:', (originalSize / 1024).toFixed(2), 'KB');
-
-          const compressedBuffer = await compressImage(imageBuffer, {
-            quality: 0.1, // Very low quality for maximum compression
-            maxWidth: 2048,
-            maxHeight: 2048,
-          });
-
-          const compressedSize = compressedBuffer.byteLength;
-          const savings = estimateCompressionSavings(originalSize, compressedSize);
-          console.log('[OpenAI] Compressed image size:', (compressedSize / 1024).toFixed(2), 'KB');
-          console.log(
-            `[OpenAI] Compression saved: ${savings.humanReadableSaved} (${savings.savedPercentage}%)`
-          );
-
-          // Generate R2 key - include userId if available
-          const imageId = nanoid();
-          const r2Key = userId
-            ? `${userId}/generated-images/${model}/${imageId}.webp`
-            : `generated-images/${model}/${imageId}.webp`;
-
-          console.log('[OpenAI] Uploading to R2, key:', r2Key);
-
-          // Upload to R2
-          await R2_STORAGE.put(r2Key, compressedBuffer, {
-            httpMetadata: {
-              contentType: 'image/webp',
-            },
-            customMetadata: {
-              model,
-              prompt: prompt.substring(0, 100), // First 100 chars of prompt
-              generatedAt: new Date().toISOString(),
-              originalSize: originalSize.toString(),
-              compressedSize: compressedSize.toString(),
-              compressionRatio: savings.savedPercentage.toString(),
-            },
-          });
-
-          // Generate the URL for accessing the image
-          const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://omnichat-7pu.pages.dev';
-          const imageUrl = `${baseUrl}/api/images/${encodeURIComponent(r2Key)}`;
-
-          console.log('[OpenAI] Image uploaded to R2, URL:', imageUrl);
-          imageContent = `![Generated Image](${imageUrl})`;
-        } catch (error) {
-          console.error('[OpenAI] Error uploading to R2:', error);
-          throw new Error(
-            `Failed to upload image to R2: ${error instanceof Error ? error.message : 'Unknown error'}`
-          );
-        }
+      // For client-side compression, we'll send the original image URL/data
+      // along with metadata for the client to process
+      if (imageData.url) {
+        // Send the original URL for client-side processing
+        imageContent = JSON.stringify({
+          type: 'image_generation',
+          url: imageData.url,
+          model,
+          prompt: prompt.substring(0, 100),
+        });
+      } else if (imageData.b64_json) {
+        // Send base64 data for client-side processing
+        imageContent = JSON.stringify({
+          type: 'image_generation',
+          base64: imageData.b64_json,
+          model,
+          prompt: prompt.substring(0, 100),
+        });
       } else {
-        // R2 is required for image generation
-        throw new Error(
-          'R2 storage is not configured. Image generation requires R2 storage to be enabled.'
-        );
+        throw new Error('No image data returned from API');
       }
 
       // For streaming, we need to create a stream that sends the image

@@ -15,6 +15,7 @@ import { StreamRecovery } from './stream-recovery';
 import { StreamProgress } from './stream-progress';
 import { BranchManager } from '@/services/branching/branch-manager';
 import { BranchVisualizer } from './branch-visualizer-v2';
+import { compressImage } from '@/utils/image-compression';
 
 export function ChatContainer() {
   const { currentConversationId, createConversation, addMessage, updateMessage } =
@@ -182,6 +183,97 @@ export function ChatContainer() {
     }
   }, [currentConversationId, createConversation, selectedModel]);
 
+  const handleImageGeneration = async (
+    imageData: {
+      type: string;
+      url?: string;
+      base64?: string;
+      model: string;
+      prompt: string;
+    },
+    messageId: string
+  ) => {
+    try {
+      console.log('[ChatContainer] Processing image generation:', imageData);
+
+      let imageBuffer: ArrayBuffer;
+      let originalSize: number;
+
+      if (imageData.url) {
+        // Download image from URL
+        const response = await fetch(imageData.url);
+        if (!response.ok) throw new Error('Failed to download image');
+        imageBuffer = await response.arrayBuffer();
+        originalSize = imageBuffer.byteLength;
+      } else if (imageData.base64) {
+        // Convert base64 to ArrayBuffer
+        const binaryString = atob(imageData.base64);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        imageBuffer = bytes.buffer;
+        originalSize = imageBuffer.byteLength;
+      } else {
+        throw new Error('No image data provided');
+      }
+
+      console.log('[ChatContainer] Original image size:', (originalSize / 1024).toFixed(2), 'KB');
+
+      // Compress the image on client side
+      const compressedBuffer = await compressImage(imageBuffer, {
+        quality: 0.1, // Very low quality for maximum compression
+        maxWidth: 2048,
+        maxHeight: 2048,
+      });
+
+      const compressedSize = compressedBuffer.byteLength;
+      console.log(
+        '[ChatContainer] Compressed image size:',
+        (compressedSize / 1024).toFixed(2),
+        'KB'
+      );
+      console.log(
+        '[ChatContainer] Compression ratio:',
+        Math.round((1 - compressedSize / originalSize) * 100),
+        '%'
+      );
+
+      // Upload compressed image to R2
+      const formData = new FormData();
+      formData.append('image', new Blob([compressedBuffer], { type: 'image/webp' }));
+      formData.append('model', imageData.model);
+      formData.append('prompt', imageData.prompt);
+      formData.append('originalSize', originalSize.toString());
+
+      const uploadResponse = await fetch('/api/images/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!uploadResponse.ok) {
+        throw new Error('Failed to upload image');
+      }
+
+      const result = (await uploadResponse.json()) as { url: string };
+      console.log('[ChatContainer] Image uploaded successfully:', result.url);
+
+      // Update the message with the final image URL
+      if (currentConversationId) {
+        updateMessage(currentConversationId, messageId, `![Generated Image](${result.url})`);
+      }
+    } catch (error) {
+      console.error('[ChatContainer] Error processing image:', error);
+      if (currentConversationId) {
+        updateMessage(
+          currentConversationId,
+          messageId,
+          `❌ Error processing image: ${error instanceof Error ? error.message : 'Unknown error'}`
+        );
+      }
+    }
+  };
+
   const handleSendMessage = async (
     content: string,
     attachments?: FileAttachment[],
@@ -345,8 +437,21 @@ export function ChatContainer() {
                   content = parsed.content;
                 } else if (parsed.choices?.[0]?.delta?.content) {
                   content = parsed.choices[0].delta.content;
+
+                  // Check if this is image generation metadata
+                  try {
+                    const possibleImageData = JSON.parse(content);
+                    if (possibleImageData.type === 'image_generation') {
+                      // Handle image generation on client side
+                      handleImageGeneration(possibleImageData, assistantMessage.id);
+                      content = '🎨 Generating and compressing image...';
+                      accumulatedContent = '';
+                    }
+                  } catch {
+                    // Not JSON, just regular content
+                  }
                 } else if (parsed.choices?.[0]?.delta?.image_data) {
-                  // Special handling for base64 image data
+                  // Legacy handling for base64 image data
                   const imageData = parsed.choices[0].delta.image_data;
                   if (imageData.type === 'base64' && imageData.data) {
                     // Replace the placeholder with the actual base64 image
