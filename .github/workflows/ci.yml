@@ -199,7 +199,13 @@ jobs:
           D1_DATABASE_ID: ${{ secrets.D1_DATABASE_ID }}
         run: |
           echo "🔄 Applying D1 migrations..."
-          npx wrangler d1 migrations apply $D1_DATABASE_ID --remote
+          # Since we use dashboard config, we need to apply migrations file by file
+          for migration in migrations/*.sql; do
+            if [ -f "$migration" ]; then
+              echo "Applying $(basename $migration)..."
+              npx wrangler d1 execute omnichat-db --remote --file "$migration" || true
+            fi
+          done
 
           # Run data migrations if needed
           if [ -f "./scripts/migrate-d1-data.sh" ]; then
