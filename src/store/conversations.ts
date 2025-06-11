@@ -31,6 +31,7 @@ interface ConversationState {
 
   // Utils
   getCurrentConversation: () => Conversation | null;
+  clearConversationMessages: (conversationId: string) => void;
 }
 
 export const useConversationStore = create<ConversationState>()(
@@ -215,6 +216,15 @@ export const useConversationStore = create<ConversationState>()(
       getCurrentConversation: () => {
         const state = get();
         return state.conversations.find((c) => c.id === state.currentConversationId) || null;
+      },
+
+      clearConversationMessages: (conversationId: string) => {
+        set((state) => ({
+          messages: {
+            ...state.messages,
+            [conversationId]: [],
+          },
+        }));
       },
 
       syncConversations: async () => {

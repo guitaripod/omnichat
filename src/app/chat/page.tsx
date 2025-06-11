@@ -1,7 +1,12 @@
 import { ChatContainer } from '@/components/chat/chat-container';
+import { SafeChatWrapper } from '@/components/chat/safe-chat-wrapper';
 
 export const runtime = 'edge';
 
 export default function ChatPage() {
-  return <ChatContainer />;
+  return (
+    <SafeChatWrapper>
+      <ChatContainer />
+    </SafeChatWrapper>
+  );
 }
