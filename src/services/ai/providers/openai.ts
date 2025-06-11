@@ -217,10 +217,17 @@ export class OpenAIProvider implements ChatProvider {
       body.size = options?.size || '1024x1024';
       body.quality = options?.quality || 'standard';
       body.style = options?.style || 'vivid';
-      body.response_format = 'url'; // Use URL instead of base64 to avoid size issues
+      body.response_format = 'url'; // Always use URL to avoid base64 size issues
     } else if (model === 'dall-e-2') {
       body.size = options?.size || '1024x1024';
       body.response_format = 'url';
+    }
+
+    // Force URL format for all models to avoid base64 streaming issues
+    if (model === 'gpt-image-1') {
+      // GPT Image doesn't support response_format, but returns URLs by default
+      delete body.output_format; // Remove base64 output format
+      delete body.output_compression;
     }
 
     console.log('[OpenAI] Image generation request body:', JSON.stringify(body, null, 2));
