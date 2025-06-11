@@ -285,6 +285,7 @@ jobs:
           projectName: omnichat
           directory: .vercel/output/static
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+          wranglerVersion: 3
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
