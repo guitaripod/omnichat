@@ -29,6 +29,8 @@ export class OpenAIProvider implements ChatProvider {
       topP,
       stream = true,
       webSearch = false,
+      imageGeneration = false,
+      imageGenerationOptions,
     } = options;
 
     console.log(`[OpenAI] Starting chat completion with model: ${model}`);
@@ -37,8 +39,15 @@ export class OpenAIProvider implements ChatProvider {
     );
     console.log(`[OpenAI] Messages count: ${messages.length}`);
 
+    // Check if this is an image generation model
+    const isImageGenerationModel = ['gpt-image-1', 'dall-e-3', 'dall-e-2'].includes(model);
+
+    if (isImageGenerationModel || imageGeneration) {
+      return this.imageGeneration(model, messages, imageGenerationOptions);
+    }
+
     const controller = new AbortController();
-    const body: any = {
+    const body: Record<string, unknown> = {
       model,
       messages: this.mapMessages(messages),
       temperature,
@@ -163,5 +172,116 @@ export class OpenAIProvider implements ChatProvider {
         content: msg.content,
       };
     });
+  }
+
+  private async imageGeneration(
+    model: string,
+    messages: ChatMessage[],
+    options?: {
+      size?: string;
+      quality?: string;
+      style?: string;
+      n?: number;
+      background?: string;
+      outputFormat?: string;
+      outputCompression?: number;
+    }
+  ): Promise<StreamResponse | string> {
+    console.log(`[OpenAI] Starting image generation with model: ${model}`);
+
+    // Extract the prompt from the last user message
+    const lastUserMessage = messages.findLast((msg) => msg.role === 'user');
+    if (!lastUserMessage) {
+      throw new Error('No user message found for image generation');
+    }
+
+    const prompt = lastUserMessage.content;
+    console.log(`[OpenAI] Image generation prompt: ${prompt}`);
+
+    // Build request body based on model
+    const body: Record<string, unknown> = {
+      model: model === 'gpt-image-1' ? 'gpt-image-1' : model,
+      prompt,
+      n: options?.n || 1,
+    };
+
+    // Model-specific configurations
+    if (model === 'gpt-image-1') {
+      body.size = options?.size || 'auto';
+      body.quality = options?.quality || 'auto';
+      if (options?.background) body.background = options.background;
+      if (options?.outputFormat) body.output_format = options.outputFormat;
+      if (options?.outputCompression !== undefined)
+        body.output_compression = options.outputCompression;
+    } else if (model === 'dall-e-3') {
+      body.size = options?.size || '1024x1024';
+      body.quality = options?.quality || 'standard';
+      body.style = options?.style || 'vivid';
+      body.response_format = 'b64_json'; // Always use b64_json for consistency
+    } else if (model === 'dall-e-2') {
+      body.size = options?.size || '1024x1024';
+      body.response_format = 'b64_json';
+    }
+
+    console.log('[OpenAI] Image generation request body:', JSON.stringify(body, null, 2));
+
+    try {
+      const response = await fetch('https://api.openai.com/v1/images/generations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${this.apiKey}`,
+        },
+        body: JSON.stringify(body),
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        console.error(`[OpenAI] Image generation error: ${error}`);
+        throw new Error(`OpenAI Image API error: ${response.status} - ${error}`);
+      }
+
+      const data = (await response.json()) as { data: Array<{ b64_json?: string; url?: string }> };
+      console.log('[OpenAI] Image generation response received');
+
+      // Create a response in assistant format with the image
+      const imageData = data.data[0];
+      const imageContent = imageData.b64_json
+        ? `![Generated Image](data:image/png;base64,${imageData.b64_json})`
+        : `![Generated Image](${imageData.url})`;
+
+      // For streaming, we need to create a stream that sends the image
+      const encoder = new TextEncoder();
+      const stream = new ReadableStream({
+        start(controller) {
+          // Send the image as a complete message
+          const chunk = encoder.encode(
+            `data: ${JSON.stringify({
+              choices: [
+                {
+                  delta: { content: imageContent },
+                  index: 0,
+                },
+              ],
+            })}\n\n`
+          );
+          controller.enqueue(chunk);
+
+          // Send the done signal
+          controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+          controller.close();
+        },
+      });
+
+      return {
+        stream,
+        controller: new AbortController(),
+      };
+    } catch (error) {
+      console.error('[OpenAI] Error in imageGeneration:', error);
+      throw new Error(
+        `OpenAI Image Generation Error: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+    }
   }
 }
