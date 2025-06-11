@@ -31,8 +31,8 @@ export async function GET(request: NextRequest, { params }: { params: { key: str
 
     const key = decodeURIComponent(params.key);
 
-    // Verify user owns this file
-    if (!key.startsWith(`${userId}/`)) {
+    // Verify access - either user owns the file or it's a generated image
+    if (!key.startsWith(`${userId}/`) && !key.startsWith('generated-images/')) {
       return Response.json({ success: false, error: 'Access denied' }, { status: 403 });
     }
 

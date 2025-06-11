@@ -205,6 +205,35 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
             // Handle Blob URLs or string URLs
             const srcString = typeof src === 'string' ? src : '';
 
+            // Handle temporary image references
+            if (srcString.startsWith('temp-image:')) {
+              const imageId = srcString.replace('temp-image:', '');
+              const actualSrc = `/api/temp-images/${imageId}`;
+              console.log('[MarkdownRenderer] Converting temp-image to URL:', actualSrc);
+
+              return (
+                <div className="my-4">
+                  <img
+                    src={actualSrc}
+                    alt={alt || 'Generated image'}
+                    className="max-w-full rounded-lg shadow-lg"
+                    style={{ display: 'block', width: '100%', height: 'auto' }}
+                    onLoad={(e) => {
+                      console.log(
+                        '[MarkdownRenderer] Temp image loaded successfully',
+                        e.currentTarget.naturalWidth,
+                        'x',
+                        e.currentTarget.naturalHeight
+                      );
+                    }}
+                    onError={(e) => {
+                      console.error('[MarkdownRenderer] Temp image failed to load', e);
+                    }}
+                  />
+                </div>
+              );
+            }
+
             // Debug logging for base64 images
             if (srcString.startsWith('data:image')) {
               console.log('[MarkdownRenderer] Rendering base64 image, length:', srcString.length);

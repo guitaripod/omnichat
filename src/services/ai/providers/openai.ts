@@ -7,6 +7,27 @@ import {
   ChatMessage,
 } from '../types';
 import { createSSEStream } from '../utils/sse-parser';
+import { nanoid } from 'nanoid';
+
+// R2 bucket interface for Cloudflare Workers
+interface R2Bucket {
+  put(
+    key: string,
+    value: ArrayBuffer | ArrayBufferView | string | ReadableStream,
+    options?: R2PutOptions
+  ): Promise<R2Object>;
+}
+
+interface R2PutOptions {
+  httpMetadata?: {
+    contentType?: string;
+  };
+  customMetadata?: Record<string, string>;
+}
+
+interface R2Object {
+  key: string;
+}
 
 export class OpenAIProvider implements ChatProvider {
   name: AIProvider = 'openai';
@@ -28,6 +49,7 @@ export class OpenAIProvider implements ChatProvider {
       maxTokens,
       topP,
       stream = true,
+      userId,
       webSearch = false,
       imageGeneration = false,
       imageGenerationOptions,
@@ -43,7 +65,7 @@ export class OpenAIProvider implements ChatProvider {
     const isImageGenerationModel = ['gpt-image-1', 'dall-e-3', 'dall-e-2'].includes(model);
 
     if (isImageGenerationModel || imageGeneration) {
-      return this.imageGeneration(model, messages, imageGenerationOptions);
+      return this.imageGeneration(model, messages, imageGenerationOptions, userId);
     }
 
     const controller = new AbortController();
@@ -185,7 +207,8 @@ export class OpenAIProvider implements ChatProvider {
       background?: string;
       outputFormat?: string;
       outputCompression?: number;
-    }
+    },
+    userId?: string
   ): Promise<StreamResponse | string> {
     console.log(`[OpenAI] Starting image generation with model: ${model}`);
 
@@ -255,16 +278,80 @@ export class OpenAIProvider implements ChatProvider {
       const imageData = data.data[0];
       let imageContent = '';
 
-      if (imageData.url) {
-        // Use the URL directly
-        imageContent = `![Generated Image](${imageData.url})`;
-      } else if (imageData.b64_json) {
-        // For gpt-image-1 with base64, we need to handle it differently
-        const base64Data = imageData.b64_json;
-        console.log('[OpenAI] Base64 image size:', base64Data.length, 'characters');
+      // Get R2 storage binding
+      const R2_STORAGE = (process.env as any).R2_STORAGE as R2Bucket | undefined;
 
-        // For now, use data URL directly - we'll handle upload on the client side
-        imageContent = `![Generated Image](data:image/png;base64,${base64Data})`;
+      // For ALL images, upload to R2 for consistency
+      if (R2_STORAGE) {
+        try {
+          let imageBuffer: ArrayBuffer;
+          let contentType = 'image/png';
+
+          if (imageData.b64_json) {
+            // Convert base64 to ArrayBuffer
+            console.log('[OpenAI] Converting base64 to buffer, size:', imageData.b64_json.length);
+            const binaryString = atob(imageData.b64_json);
+            const bytes = new Uint8Array(binaryString.length);
+            for (let i = 0; i < binaryString.length; i++) {
+              bytes[i] = binaryString.charCodeAt(i);
+            }
+            imageBuffer = bytes.buffer;
+          } else if (imageData.url) {
+            // Download the image from URL
+            console.log('[OpenAI] Downloading image from URL:', imageData.url);
+            const imageResponse = await fetch(imageData.url);
+            if (!imageResponse.ok) {
+              throw new Error(`Failed to download image: ${imageResponse.status}`);
+            }
+            imageBuffer = await imageResponse.arrayBuffer();
+            contentType = imageResponse.headers.get('content-type') || 'image/png';
+          } else {
+            throw new Error('No image data returned from API');
+          }
+
+          // Generate R2 key - include userId if available
+          const imageId = nanoid();
+          const r2Key = userId
+            ? `${userId}/generated-images/${model}/${imageId}.png`
+            : `generated-images/${model}/${imageId}.png`;
+
+          console.log('[OpenAI] Uploading to R2, key:', r2Key);
+
+          // Upload to R2
+          await R2_STORAGE.put(r2Key, imageBuffer, {
+            httpMetadata: {
+              contentType,
+            },
+            customMetadata: {
+              model,
+              prompt: prompt.substring(0, 100), // First 100 chars of prompt
+              generatedAt: new Date().toISOString(),
+            },
+          });
+
+          // Generate the URL for accessing the image
+          const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://omnichat-7pu.pages.dev';
+          const imageUrl = `${baseUrl}/api/images/${encodeURIComponent(r2Key)}`;
+
+          console.log('[OpenAI] Image uploaded to R2, URL:', imageUrl);
+          imageContent = `![Generated Image](${imageUrl})`;
+        } catch (error) {
+          console.error('[OpenAI] Error uploading to R2:', error);
+          // Fallback to original URL or base64
+          if (imageData.url) {
+            imageContent = `![Generated Image](${imageData.url})`;
+          } else if (imageData.b64_json) {
+            imageContent = `![Generated Image](data:image/png;base64,${imageData.b64_json})`;
+          }
+        }
+      } else {
+        // Fallback if R2 is not available
+        console.log('[OpenAI] R2 not available, using original image data');
+        if (imageData.url) {
+          imageContent = `![Generated Image](${imageData.url})`;
+        } else if (imageData.b64_json) {
+          imageContent = `![Generated Image](data:image/png;base64,${imageData.b64_json})`;
+        }
       }
 
       // For streaming, we need to create a stream that sends the image
@@ -285,7 +372,11 @@ export class OpenAIProvider implements ChatProvider {
                 },
               ],
             };
-            controller.enqueue(encoder.encode(`data: ${JSON.stringify(message)}\n\n`));
+
+            const messageStr = JSON.stringify(message);
+            console.log('[OpenAI] Message size:', messageStr.length, 'characters');
+
+            controller.enqueue(encoder.encode(`data: ${messageStr}\n\n`));
 
             // Send done signal
             controller.enqueue(encoder.encode('data: [DONE]\n\n'));
