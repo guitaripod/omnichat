@@ -351,6 +351,15 @@ export function ChatContainer() {
                     setTokensGenerated(tokenCount);
                   }
 
+                  // Debug logging for image content
+                  if (isImageContent) {
+                    console.log('[ChatContainer] Received image content, length:', content.length);
+                    console.log(
+                      '[ChatContainer] Accumulated content preview:',
+                      accumulatedContent.substring(0, 100)
+                    );
+                  }
+
                   setStreamingMessage(accumulatedContent);
 
                   // Update the assistant message with startTransition for better performance
@@ -407,6 +416,19 @@ export function ChatContainer() {
 
         // Mark stream as complete
         StreamStateManager.markStreamComplete(streamId);
+
+        // Ensure final content is saved
+        if (accumulatedContent) {
+          console.log(
+            '[ChatContainer] Final accumulated content length:',
+            accumulatedContent.length
+          );
+          console.log(
+            '[ChatContainer] Final content preview:',
+            accumulatedContent.substring(0, 200)
+          );
+          updateMessage(currentConversationId, assistantMessage.id, accumulatedContent);
+        }
 
         // Final scroll to ensure we're at the bottom
         scrollToBottom(true);

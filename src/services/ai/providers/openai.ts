@@ -261,28 +261,15 @@ export class OpenAIProvider implements ChatProvider {
       const stream = new ReadableStream({
         async start(controller) {
           try {
-            // Send initial message for image generation
-            const initChunk = encoder.encode(
-              `data: ${JSON.stringify({
-                choices: [
-                  {
-                    delta: { content: '🎨 Generating image...' },
-                    index: 0,
-                  },
-                ],
-              })}\n\n`
-            );
-            controller.enqueue(initChunk);
+            console.log('[OpenAI] Starting image stream, content length:', imageContent.length);
+            console.log('[OpenAI] Image URL preview:', imageContent.substring(0, 100));
 
-            // Small delay for effect
-            await new Promise((resolve) => setTimeout(resolve, 500));
-
-            // Clear the generating message and send the image
+            // Send the complete image content in one message
             const imageChunk = encoder.encode(
               `data: ${JSON.stringify({
                 choices: [
                   {
-                    delta: { content: `\r${imageContent}` },
+                    delta: { content: imageContent },
                     index: 0,
                   },
                 ],
