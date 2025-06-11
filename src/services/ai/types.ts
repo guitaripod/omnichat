@@ -9,6 +9,7 @@ export interface AIModel {
   supportsVision?: boolean;
   supportsTools?: boolean;
   supportsWebSearch?: boolean;
+  supportsImageGeneration?: boolean;
   description?: string;
 }
 
@@ -30,6 +31,16 @@ export interface ChatCompletionOptions {
   tools?: unknown[];
   userId?: string;
   webSearch?: boolean;
+  imageGeneration?: boolean;
+  imageGenerationOptions?: {
+    size?: string;
+    quality?: string;
+    style?: string;
+    n?: number;
+    background?: string;
+    outputFormat?: string;
+    outputCompression?: number;
+  };
 }
 
 export interface StreamResponse {
@@ -143,6 +154,42 @@ export const AI_MODELS: Record<AIProvider, AIModel[]> = {
       supportsTools: true,
       supportsWebSearch: false,
       description: 'Smaller GPT-4o - balanced performance',
+    },
+    {
+      id: 'gpt-image-1',
+      name: 'GPT Image 1',
+      provider: 'openai',
+      contextWindow: 32000,
+      maxOutput: 0,
+      supportsVision: false,
+      supportsTools: false,
+      supportsWebSearch: false,
+      supportsImageGeneration: true,
+      description: 'Advanced image generation with transparency and quality control',
+    },
+    {
+      id: 'dall-e-3',
+      name: 'DALL-E 3',
+      provider: 'openai',
+      contextWindow: 4000,
+      maxOutput: 0,
+      supportsVision: false,
+      supportsTools: false,
+      supportsWebSearch: false,
+      supportsImageGeneration: true,
+      description: 'High-quality images with natural and vivid styles',
+    },
+    {
+      id: 'dall-e-2',
+      name: 'DALL-E 2',
+      provider: 'openai',
+      contextWindow: 1000,
+      maxOutput: 0,
+      supportsVision: false,
+      supportsTools: false,
+      supportsWebSearch: false,
+      supportsImageGeneration: true,
+      description: 'Original DALL-E model for creative image generation',
     },
   ],
   anthropic: [

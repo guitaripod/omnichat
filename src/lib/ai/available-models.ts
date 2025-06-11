@@ -31,6 +31,37 @@ export const availableModels: AvailableModels = {
 const convertToAIModel = (model: APIModel, provider: string): ServiceAIModel => {
   // Map model IDs to known model configurations
   const modelConfigs: Record<string, Partial<ServiceAIModel>> = {
+    // OpenAI Image Generation models
+    'gpt-image-1': {
+      name: 'GPT Image 1',
+      contextWindow: 32000,
+      maxOutput: 0,
+      supportsVision: false,
+      supportsTools: false,
+      supportsWebSearch: false,
+      supportsImageGeneration: true,
+      description: 'Advanced image generation with transparency and quality control',
+    },
+    'dall-e-3': {
+      name: 'DALL-E 3',
+      contextWindow: 4000,
+      maxOutput: 0,
+      supportsVision: false,
+      supportsTools: false,
+      supportsWebSearch: false,
+      supportsImageGeneration: true,
+      description: 'High-quality images with natural and vivid styles',
+    },
+    'dall-e-2': {
+      name: 'DALL-E 2',
+      contextWindow: 1000,
+      maxOutput: 0,
+      supportsVision: false,
+      supportsTools: false,
+      supportsWebSearch: false,
+      supportsImageGeneration: true,
+      description: 'Original DALL-E model for creative image generation',
+    },
     // XAI models
     'grok-3-beta': {
       name: 'Grok 3 Beta',
