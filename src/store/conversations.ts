@@ -12,10 +12,11 @@ interface ConversationState {
   messages: Record<string, Message[]>; // conversationId -> messages
   isLoading: boolean;
   isSyncing: boolean;
+  recentlyDeletedIds: Set<string>; // Track deleted conversations to prevent re-sync
 
   // Actions
   createConversation: (title?: string, model?: string) => Promise<Conversation>;
-  deleteConversation: (id: string) => void;
+  deleteConversation: (id: string) => Promise<void>;
   renameConversation: (id: string, title: string) => void;
   setCurrentConversation: (id: string | null) => void;
 
@@ -42,6 +43,7 @@ export const useConversationStore = create<ConversationState>()(
       messages: {},
       isLoading: false,
       isSyncing: false,
+      recentlyDeletedIds: new Set(),
 
       createConversation: async (title, model = 'gpt-4o') => {
         const tempId = generateId();
@@ -117,19 +119,59 @@ export const useConversationStore = create<ConversationState>()(
         return conversation;
       },
 
-      deleteConversation: (id) => {
+      deleteConversation: async (id) => {
+        // Optimistically remove from store and track deletion
         set((state) => {
           const newConversations = state.conversations.filter((c) => c.id !== id);
           const newMessages = { ...state.messages };
           delete newMessages[id];
+
+          // Add to recently deleted to prevent re-sync
+          const newRecentlyDeletedIds = new Set(state.recentlyDeletedIds);
+          newRecentlyDeletedIds.add(id);
 
           return {
             conversations: newConversations,
             currentConversationId:
               state.currentConversationId === id ? null : state.currentConversationId,
             messages: newMessages,
+            recentlyDeletedIds: newRecentlyDeletedIds,
           };
         });
+
+        // Remove from offline storage
+        await offlineStorage.deleteConversation(id);
+
+        // Try to delete from server
+        try {
+          const response = await fetch(`/api/conversations/${id}`, {
+            method: 'DELETE',
+          });
+
+          if (!response.ok) {
+            // If server deletion fails, add back to store
+            console.error('Failed to delete conversation from server');
+
+            // Optionally restore the conversation
+            // But for now we'll keep it deleted locally and add to sync queue
+          } else {
+            // Clear from recently deleted after successful server deletion
+            setTimeout(() => {
+              set((state) => {
+                const newRecentlyDeletedIds = new Set(state.recentlyDeletedIds);
+                newRecentlyDeletedIds.delete(id);
+                return { recentlyDeletedIds: newRecentlyDeletedIds };
+              });
+            }, 5000); // Keep for 5 seconds to handle immediate re-syncs
+          }
+        } catch (error) {
+          console.error('Failed to delete conversation:', error);
+          // Add to sync queue for later
+          await offlineStorage.addToSyncQueue({
+            type: 'delete_conversation',
+            data: { id },
+          });
+        }
       },
 
       renameConversation: (id, title) => {
@@ -247,9 +289,14 @@ export const useConversationStore = create<ConversationState>()(
               const localConversations = state.conversations;
               const conversationMap = new Map<string, Conversation>();
 
+              // Note: We use recentlyDeletedIds to track deleted conversations
+
               // First, add all server conversations
               for (const conv of serverConversations) {
-                conversationMap.set(conv.id, conv);
+                // Skip if this conversation was recently deleted locally
+                if (!state.recentlyDeletedIds.has(conv.id)) {
+                  conversationMap.set(conv.id, conv);
+                }
               }
 
               // Then, preserve local conversations that aren't on the server yet
@@ -406,6 +453,23 @@ export const useConversationStore = create<ConversationState>()(
     }),
     {
       name: 'conversation-storage',
+      partialize: (state) => ({
+        ...state,
+        recentlyDeletedIds: Array.from(state.recentlyDeletedIds), // Convert Set to Array for persistence
+      }),
+      onRehydrateStorage: () => (state) => {
+        if (
+          state &&
+          Array.isArray(
+            (state as ConversationState & { recentlyDeletedIds: string[] }).recentlyDeletedIds
+          )
+        ) {
+          // Convert Array back to Set after rehydration
+          state.recentlyDeletedIds = new Set(
+            (state as ConversationState & { recentlyDeletedIds: string[] }).recentlyDeletedIds
+          );
+        }
+      },
     }
   )
 );

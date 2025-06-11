@@ -6,7 +6,6 @@ import {
   createUser,
   getUserConversations,
   createConversation,
-  updateConversation,
 } from '@/lib/db/queries';
 import { isDevMode, getDevUser } from '@/lib/auth/dev-auth';
 
@@ -121,47 +120,5 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error('Error creating conversation:', error);
     return NextResponse.json({ error: 'Failed to create conversation' }, { status: 500 });
-  }
-}
-
-// PATCH /api/conversations/[id] - Update conversation
-export async function PATCH(req: NextRequest) {
-  try {
-    const clerkUser = await currentUser();
-
-    if (!clerkUser && !isDevMode()) {
-      return new Response('Unauthorized', { status: 401 });
-    }
-
-    // In dev mode, allow access without authentication
-    if (!clerkUser && isDevMode()) {
-      const devUser = await getDevUser();
-      if (!devUser) {
-        return new Response('Unauthorized', { status: 401 });
-      }
-    }
-
-    const url = new URL(req.url);
-    const id = url.pathname.split('/').pop();
-
-    if (!id) {
-      return new Response('Missing conversation ID', { status: 400 });
-    }
-
-    const body = (await req.json()) as { title?: string; isArchived?: boolean };
-    const { title, isArchived } = body;
-
-    const db = getDb(process.env.DB as unknown as D1Database);
-
-    // Update conversation
-    const conversation = await updateConversation(db, id, {
-      ...(title !== undefined && { title }),
-      ...(isArchived !== undefined && { isArchived }),
-    });
-
-    return NextResponse.json({ conversation });
-  } catch (error) {
-    console.error('Error updating conversation:', error);
-    return NextResponse.json({ error: 'Failed to update conversation' }, { status: 500 });
   }
 }

@@ -196,6 +196,19 @@ export async function getUserSubscription(db: Db, userId: string) {
   return result[0] || null;
 }
 
+export async function deleteConversation(db: Db, id: string) {
+  // Delete associated messages first (cascade delete)
+  await db.delete(schema.messages).where(eq(schema.messages.conversationId, id));
+
+  // Then delete the conversation
+  const [deleted] = await db
+    .delete(schema.conversations)
+    .where(eq(schema.conversations.id, id))
+    .returning();
+
+  return deleted;
+}
+
 export async function createOrUpdateSubscription(
   db: Db,
   data: {

@@ -71,6 +71,33 @@ class OfflineStorage {
     });
   }
 
+  async deleteConversation(conversationId: string): Promise<void> {
+    if (!this.db) await this.init();
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction(['conversations', 'messages'], 'readwrite');
+
+      transaction.oncomplete = () => resolve();
+      transaction.onerror = () => reject(transaction.error);
+
+      // Delete conversation
+      const conversationStore = transaction.objectStore('conversations');
+      conversationStore.delete(conversationId);
+
+      // Delete associated messages
+      const messageStore = transaction.objectStore('messages');
+      const messageIndex = messageStore.index('conversationId');
+      const messagesRequest = messageIndex.getAllKeys(conversationId);
+
+      messagesRequest.onsuccess = () => {
+        const messageIds = messagesRequest.result || [];
+        for (const messageId of messageIds) {
+          messageStore.delete(messageId);
+        }
+      };
+    });
+  }
+
   // Messages
   async saveMessage(message: Message): Promise<void> {
     if (!this.db) await this.init();
