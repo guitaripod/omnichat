@@ -21,6 +21,7 @@ import { cn } from '@/lib/utils';
 import { AIProvider, AIModel, AI_MODELS } from '@/services/ai';
 import { FileUpload, FileAttachmentDisplay } from './file-upload';
 import { FileAttachment } from '@/types/attachments';
+import { ImageGenerationParams, ImageGenerationOptions } from './image-generation-params';
 
 interface MessageInputProps {
   onSendMessage: (message: string, attachments?: FileAttachment[], webSearch?: boolean) => void;
@@ -31,6 +32,8 @@ interface MessageInputProps {
   conversationId: string;
   onToggleBranches?: () => void;
   showBranches?: boolean;
+  imageGenerationOptions?: ImageGenerationOptions;
+  onImageParamsChange?: (params: ImageGenerationOptions) => void;
 }
 
 const providerIcons: Record<AIProvider, React.ReactNode> = {
@@ -60,6 +63,8 @@ export function MessageInput({
   conversationId,
   onToggleBranches,
   showBranches,
+  imageGenerationOptions: _imageGenerationOptions,
+  onImageParamsChange,
 }: MessageInputProps) {
   const [message, setMessage] = useState('');
   const [isModelSelectorOpen, setIsModelSelectorOpen] = useState(false);
@@ -207,7 +212,7 @@ export function MessageInput({
           <div
             ref={modelSelectorRef}
             className={cn(
-              'rounded-xl border bg-gray-50 transition-all duration-200 dark:bg-gray-700/50',
+              'overflow-hidden rounded-xl border bg-gray-50 transition-all duration-200 dark:bg-gray-700/50',
               isFocused
                 ? 'border-blue-500 ring-2 ring-blue-500/20 dark:border-blue-400 dark:ring-blue-400/20'
                 : 'border-gray-200 dark:border-gray-600'
@@ -217,7 +222,7 @@ export function MessageInput({
             <button
               onClick={() => setIsModelSelectorOpen(!isModelSelectorOpen)}
               className={cn(
-                'flex w-full items-center justify-between px-4 py-2.5 transition-all duration-200',
+                'flex w-full items-center justify-between rounded-t-xl px-4 py-2.5 transition-all duration-200',
                 'hover:bg-gray-100 dark:hover:bg-gray-700/70',
                 'border-b border-gray-200 dark:border-gray-600',
                 isModelSelectorOpen && 'bg-gray-100 dark:bg-gray-700/70'
@@ -486,6 +491,13 @@ export function MessageInput({
                     ))}
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* Image Generation Parameters */}
+            {currentModel?.supportsImageGeneration && onImageParamsChange && (
+              <div className="border-b border-gray-200 px-4 py-3 dark:border-gray-600">
+                <ImageGenerationParams model={selectedModel} onParamsChange={onImageParamsChange} />
               </div>
             )}
 
