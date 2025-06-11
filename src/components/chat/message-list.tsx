@@ -4,6 +4,7 @@ import { MessageItem } from './message-item';
 interface MessageListProps {
   messages: Message[];
   isLoading?: boolean;
+  currentModel?: string;
   onRegenerateMessage?: (index: number) => void;
   onBranchSwitch?: (messageId: string) => void;
   onCreateBranch?: (fromMessageId: string) => void;
@@ -12,6 +13,7 @@ interface MessageListProps {
 export function MessageList({
   messages,
   isLoading = false,
+  currentModel,
   onRegenerateMessage,
   onBranchSwitch,
   onCreateBranch,
@@ -24,6 +26,12 @@ export function MessageList({
           message={message}
           messages={messages}
           isStreaming={isLoading && index === messages.length - 1 && message.role === 'assistant'}
+          isImageGeneration={
+            isLoading &&
+            index === messages.length - 1 &&
+            message.role === 'assistant' &&
+            ['gpt-image-1', 'dall-e-3', 'dall-e-2'].includes(currentModel || '')
+          }
           canRegenerate={
             index === messages.length - 1 && message.role === 'assistant' && !isLoading
           }

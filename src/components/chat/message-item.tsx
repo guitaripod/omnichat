@@ -7,11 +7,13 @@ import { MarkdownRenderer } from './markdown-renderer';
 import { StreamingIndicator } from './streaming-indicator';
 import { AttachmentPreview } from './attachment-preview';
 import { BranchSelector } from './branch-selector';
+import { ImageGenerationLoading } from './image-generation-loading';
 
 interface MessageItemProps {
   message: Message;
   messages: Message[];
   isStreaming?: boolean;
+  isImageGeneration?: boolean;
   onRegenerate?: () => void;
   canRegenerate?: boolean;
   onBranchSwitch?: (messageId: string) => void;
@@ -79,6 +81,7 @@ export function MessageItem({
   message,
   messages,
   isStreaming = false,
+  isImageGeneration = false,
   onRegenerate,
   canRegenerate = false,
   onBranchSwitch,
@@ -206,8 +209,18 @@ export function MessageItem({
                 <p className="whitespace-pre-wrap">{message.content}</p>
               ) : (
                 <>
-                  {message.content && <MarkdownRenderer content={message.content} />}
-                  {isStreaming && !message.content && <StreamingIndicator className="mt-2" />}
+                  {isImageGeneration && !message.content ? (
+                    <ImageGenerationLoading
+                      prompt={messages[messages.length - 2]?.content.substring(0, 100)}
+                    />
+                  ) : (
+                    <>
+                      {message.content && <MarkdownRenderer content={message.content} />}
+                      {isStreaming && !message.content && !isImageGeneration && (
+                        <StreamingIndicator className="mt-2" />
+                      )}
+                    </>
+                  )}
                 </>
               )}
             </div>
