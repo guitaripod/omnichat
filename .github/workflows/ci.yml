@@ -194,7 +194,6 @@ jobs:
         with:
           name: build-artifacts
           path: |
-            .next/
             .vercel/output/static/
           retention-days: 1
 
