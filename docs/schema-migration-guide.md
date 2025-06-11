@@ -39,12 +39,26 @@ For existing data in D1 that needs default values:
 wrangler d1 execute omnichat-db --command "UPDATE messages SET is_complete = COALESCE(is_complete, 1), tokens_generated = COALESCE(tokens_generated, 0) WHERE is_complete IS NULL OR tokens_generated IS NULL;"
 ```
 
+## Schema Version Tracking
+
+Check current version:
+
+```bash
+npm run db:version
+```
+
+List all migrations:
+
+```bash
+npm run db:version:list
+```
+
 ## Adding New Schema Changes
 
 ### 1. Create D1 Migration
 
 ```sql
--- migrations/0004_your_feature.sql
+-- migrations/0005_your_feature.sql
 ALTER TABLE messages ADD COLUMN new_field TEXT;
 ```
 

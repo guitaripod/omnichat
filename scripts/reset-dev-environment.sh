@@ -59,6 +59,7 @@ execute_d1_command "DELETE FROM api_usage;" "Clearing API usage"
 execute_d1_command "DELETE FROM conversations;" "Clearing conversations"
 execute_d1_command "DELETE FROM subscriptions;" "Clearing subscriptions"
 execute_d1_command "DELETE FROM users;" "Clearing users"
+# Note: We keep schema_version table to track migrations
 
 echo ""
 echo "3️⃣ Verifying cleanup..."

@@ -24,6 +24,8 @@
     "db:migrate:prod": "wrangler d1 migrations apply omnichat-db",
     "db:migrate:data": "./scripts/migrate-d1-data.sh",
     "db:check": "cd scripts && go run check-migrations.go",
+    "db:version": "cd scripts && go run schema-version.go check",
+    "db:version:list": "cd scripts && go run schema-version.go list",
     "db:reset": "./scripts/reset-dev-environment.sh",
     "predeploy": "./scripts/pre-deploy.sh",
     "deploy": "npm run predeploy && wrangler deploy",
