@@ -182,8 +182,9 @@
 
 ### Epic 5.3: AI Image Generation
 
-- [ ] Integrate OpenAI Images
-- [ ] Create image generation UI
+- [x] Integrate OpenAI Images
+- [x] Create image generation UI
+- [ ] Fix gpt-image-1 images not showing in UI
 - [ ] Implement image history gallery
 - [ ] Add image editing capabilities
 
