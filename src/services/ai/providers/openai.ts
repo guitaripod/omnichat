@@ -8,7 +8,10 @@ import {
 } from '../types';
 import { createSSEStream } from '../utils/sse-parser';
 import { nanoid } from 'nanoid';
-import { compressImage, estimateCompressionSavings } from '@/utils/image-compression';
+import {
+  compressImageServer as compressImage,
+  estimateCompressionSavings,
+} from '@/utils/image-compression-server';
 
 // R2 bucket interface for Cloudflare Workers
 interface R2Bucket {
