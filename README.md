@@ -64,6 +64,10 @@ npm run typecheck
 npm run lint
 ```
 
+### CI/CD & Deployment
+
+The project includes GitHub Actions for automatic deployment to Cloudflare Pages. See [Cloudflare CI Setup Guide](docs/cloudflare-ci-setup.md) for configuration instructions.
+
 ### Local Ollama Integration
 
 OmniChat supports running AI models locally through Ollama, providing fast, private, and offline-capable AI conversations.

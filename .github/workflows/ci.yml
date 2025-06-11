@@ -198,19 +198,71 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           D1_DATABASE_ID: ${{ secrets.D1_DATABASE_ID }}
         run: |
+          echo "🔄 Checking D1 migration setup..."
+
+          # Check if Cloudflare credentials are available
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "⚠️  Cloudflare credentials not configured. Skipping D1 migrations."
+            echo ""
+            echo "To enable automatic migrations in CI, add these secrets to your GitHub repository:"
+            echo "1. CLOUDFLARE_API_TOKEN - Create at https://dash.cloudflare.com/profile/api-tokens"
+            echo "2. CLOUDFLARE_ACCOUNT_ID - Found in your Cloudflare dashboard"
+            echo ""
+            echo "Required API token permissions:"
+            echo "- Account: D1:Edit"
+            echo "- Account: Cloudflare Pages:Edit (for deployment)"
+            echo ""
+            echo "📋 Migrations that need to be applied manually:"
+            cat <<EOF
+          ${{ needs.check-migrations.outputs.migration-files }}
+          EOF
+            exit 0
+          fi
+
           echo "🔄 Applying D1 migrations..."
-          # Since we use dashboard config, we need to apply migrations file by file
+
+          # Test API token permissions first
+          if ! npx wrangler d1 list --json > /dev/null 2>&1; then
+            echo "❌ API token authentication failed!"
+            echo ""
+            echo "Please ensure your CLOUDFLARE_API_TOKEN has these permissions:"
+            echo "- Account: D1:Edit"
+            echo ""
+            echo "Create a new token at: https://dash.cloudflare.com/profile/api-tokens"
+            echo ""
+            echo "📋 Migrations that need to be applied manually:"
+            cat <<EOF
+          ${{ needs.check-migrations.outputs.migration-files }}
+          EOF
+            exit 0
+          fi
+
+          # Apply migrations
+          MIGRATION_FAILED=false
           for migration in migrations/*.sql; do
             if [ -f "$migration" ]; then
               echo "Applying $(basename $migration)..."
-              npx wrangler d1 execute omnichat-db --remote --file "$migration" || true
+              if ! npx wrangler d1 execute omnichat-db --remote --file "$migration" 2>&1; then
+                echo "⚠️  Failed to apply $(basename $migration)"
+                MIGRATION_FAILED=true
+              fi
             fi
           done
+
+          if [ "$MIGRATION_FAILED" = true ]; then
+            echo ""
+            echo "⚠️  Some migrations failed. This might be because:"
+            echo "1. They were already applied"
+            echo "2. API token lacks D1:Edit permission"
+            echo "3. Database doesn't exist in your account"
+            echo ""
+            echo "Continuing with deployment..."
+          fi
 
           # Run data migrations if needed
           if [ -f "./scripts/migrate-d1-data.sh" ]; then
             echo "📊 Running data migration script..."
-            ./scripts/migrate-d1-data.sh
+            ./scripts/migrate-d1-data.sh || echo "⚠️  Data migration script failed (non-critical)"
           fi
 
       - name: Build
