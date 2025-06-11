@@ -15,6 +15,7 @@ import { StreamRecovery } from './stream-recovery';
 import { StreamProgress } from './stream-progress';
 import { BranchManager } from '@/services/branching/branch-manager';
 import { BranchVisualizer } from './branch-visualizer-v2';
+import { ImageGenerationParams } from './image-generation-params';
 
 export function ChatContainer() {
   const { currentConversationId, createConversation, addMessage, updateMessage } =
@@ -33,6 +34,15 @@ export function ChatContainer() {
   const [showBranchVisualizer, setShowBranchVisualizer] = useState(false);
   const [, setActiveBranchId] = useState<string>('main');
   const [creatingBranch, setCreatingBranch] = useState(false);
+  const [imageGenerationOptions, setImageGenerationOptions] = useState<{
+    size?: string;
+    quality?: string;
+    style?: string;
+    n?: number;
+    background?: string;
+    outputFormat?: string;
+    outputCompression?: number;
+  }>({});
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const ollamaProviderRef = useRef<OllamaClientProvider | null>(null);
@@ -269,6 +279,9 @@ export function ChatContainer() {
             ollamaBaseUrl: isOllamaModel ? currentOllamaUrl : undefined,
             conversationId: currentConversationId,
             webSearch,
+            imageGenerationOptions: ['gpt-image-1', 'dall-e-3', 'dall-e-2'].includes(selectedModel)
+              ? imageGenerationOptions
+              : undefined,
           }),
           signal: abortControllerRef.current.signal,
         });
@@ -1034,6 +1047,18 @@ export function ChatContainer() {
             isStreaming={isLoading}
             tokensGenerated={tokensGenerated}
           />
+        )}
+
+        {/* Image Generation Parameters */}
+        {['gpt-image-1', 'dall-e-3', 'dall-e-2'].includes(selectedModel) && (
+          <div className="border-t border-gray-200 bg-gray-50 px-4 py-2 dark:border-gray-700 dark:bg-gray-800/50">
+            <div className="mx-auto flex max-w-5xl justify-end">
+              <ImageGenerationParams
+                model={selectedModel}
+                onParamsChange={setImageGenerationOptions}
+              />
+            </div>
+          </div>
         )}
 
         {/* Input */}
