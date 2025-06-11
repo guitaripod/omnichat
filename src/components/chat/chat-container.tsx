@@ -316,18 +316,25 @@ export function ChatContainer() {
         let accumulatedContent = '';
         let tokenCount = 0;
         let lastScrollTime = 0;
+        let buffer = ''; // Buffer for incomplete SSE messages
 
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
 
-          const chunk = decoder.decode(value);
-          const lines = chunk.split('\n');
+          const chunk = decoder.decode(value, { stream: true });
+          buffer += chunk;
+
+          // Process complete lines only
+          const lines = buffer.split('\n');
+          // Keep the last line in buffer if it's incomplete
+          buffer = lines.pop() || '';
 
           for (const line of lines) {
             if (line.startsWith('data: ')) {
-              const data = line.slice(6);
+              const data = line.slice(6).trim();
               if (data === '[DONE]') continue;
+              if (!data) continue; // Skip empty data lines
 
               try {
                 const parsed = JSON.parse(data);
@@ -410,6 +417,22 @@ export function ChatContainer() {
               } catch (e) {
                 console.error('Error parsing streaming data:', e, 'Line:', line);
               }
+            }
+          }
+        }
+
+        // Process any remaining buffer
+        if (buffer.trim() && buffer.startsWith('data: ')) {
+          const data = buffer.slice(6).trim();
+          if (data && data !== '[DONE]') {
+            try {
+              const parsed = JSON.parse(data);
+              const content = parsed.content || parsed.choices?.[0]?.delta?.content;
+              if (content) {
+                accumulatedContent += content;
+              }
+            } catch (e) {
+              console.error('Error parsing final buffer:', e, 'Buffer:', buffer);
             }
           }
         }

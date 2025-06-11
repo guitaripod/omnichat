@@ -271,18 +271,42 @@ export class OpenAIProvider implements ChatProvider {
             console.log('[OpenAI] Starting image stream, content length:', imageContent.length);
             console.log('[OpenAI] Image URL preview:', imageContent.substring(0, 100));
 
-            // Send the complete image content in one message
-            const imageChunk = encoder.encode(
-              `data: ${JSON.stringify({
-                choices: [
-                  {
-                    delta: { content: imageContent },
-                    index: 0,
-                  },
-                ],
-              })}\n\n`
-            );
-            controller.enqueue(imageChunk);
+            // For large content (base64 images), chunk it to avoid JSON parsing issues
+            const CHUNK_SIZE = 1000; // Send in 1KB chunks to avoid SSE parsing issues
+
+            if (imageContent.length > CHUNK_SIZE) {
+              // Send image content in chunks
+              for (let i = 0; i < imageContent.length; i += CHUNK_SIZE) {
+                const chunk = imageContent.slice(i, i + CHUNK_SIZE);
+                const chunkData = encoder.encode(
+                  `data: ${JSON.stringify({
+                    choices: [
+                      {
+                        delta: { content: chunk },
+                        index: 0,
+                      },
+                    ],
+                  })}\n\n`
+                );
+                controller.enqueue(chunkData);
+
+                // Small delay to avoid overwhelming the stream
+                await new Promise((resolve) => setTimeout(resolve, 10));
+              }
+            } else {
+              // For small content (URLs), send in one chunk
+              const imageChunk = encoder.encode(
+                `data: ${JSON.stringify({
+                  choices: [
+                    {
+                      delta: { content: imageContent },
+                      index: 0,
+                    },
+                  ],
+                })}\n\n`
+              );
+              controller.enqueue(imageChunk);
+            }
 
             // Send the done signal
             controller.enqueue(encoder.encode('data: [DONE]\n\n'));
