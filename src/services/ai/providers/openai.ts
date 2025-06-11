@@ -356,21 +356,15 @@ export class OpenAIProvider implements ChatProvider {
           imageContent = `![Generated Image](${imageUrl})`;
         } catch (error) {
           console.error('[OpenAI] Error uploading to R2:', error);
-          // Fallback to original URL or base64
-          if (imageData.url) {
-            imageContent = `![Generated Image](${imageData.url})`;
-          } else if (imageData.b64_json) {
-            imageContent = `![Generated Image](data:image/png;base64,${imageData.b64_json})`;
-          }
+          throw new Error(
+            `Failed to upload image to R2: ${error instanceof Error ? error.message : 'Unknown error'}`
+          );
         }
       } else {
-        // Fallback if R2 is not available
-        console.log('[OpenAI] R2 not available, using original image data');
-        if (imageData.url) {
-          imageContent = `![Generated Image](${imageData.url})`;
-        } else if (imageData.b64_json) {
-          imageContent = `![Generated Image](data:image/png;base64,${imageData.b64_json})`;
-        }
+        // R2 is required for image generation
+        throw new Error(
+          'R2 storage is not configured. Image generation requires R2 storage to be enabled.'
+        );
       }
 
       // For streaming, we need to create a stream that sends the image
