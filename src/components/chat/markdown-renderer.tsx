@@ -205,6 +205,18 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
             // Handle Blob URLs or string URLs
             const srcString = typeof src === 'string' ? src : '';
 
+            // Debug logging for base64 images
+            if (srcString.startsWith('data:image')) {
+              console.log('[MarkdownRenderer] Rendering base64 image, length:', srcString.length);
+              console.log('[MarkdownRenderer] Base64 preview:', srcString.substring(0, 100));
+              // Check if the base64 string appears complete
+              const base64Part = srcString.split(',')[1];
+              if (base64Part) {
+                console.log('[MarkdownRenderer] Base64 data length:', base64Part.length);
+                console.log('[MarkdownRenderer] Last 50 chars:', base64Part.slice(-50));
+              }
+            }
+
             // Check if this is a generated image
             const isGeneratedImage =
               alt?.toLowerCase().includes('generated') ||
@@ -212,6 +224,31 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
                 (src.includes('dalle') || src.includes('openai') || src.startsWith('data:image')));
 
             if (isGeneratedImage) {
+              // For base64 images, use a simple img tag for now to debug
+              if (srcString.startsWith('data:image')) {
+                return (
+                  <div className="my-4">
+                    <img
+                      src={srcString}
+                      alt={alt || 'Generated image'}
+                      className="max-w-full rounded-lg shadow-lg"
+                      style={{ display: 'block', width: '100%', height: 'auto' }}
+                      onLoad={(e) => {
+                        console.log(
+                          '[MarkdownRenderer] Base64 image loaded successfully',
+                          e.currentTarget.naturalWidth,
+                          'x',
+                          e.currentTarget.naturalHeight
+                        );
+                      }}
+                      onError={(e) => {
+                        console.error('[MarkdownRenderer] Base64 image failed to load', e);
+                      }}
+                    />
+                  </div>
+                );
+              }
+
               return (
                 <ProgressiveImage
                   src={srcString}

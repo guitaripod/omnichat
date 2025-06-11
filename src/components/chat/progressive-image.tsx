@@ -21,12 +21,11 @@ export function ProgressiveImage({
   const [revealProgress, setRevealProgress] = useState(0);
 
   useEffect(() => {
-    // Preload the image
-    const img = new Image();
-    img.src = src;
-    img.onload = () => {
+    // For data URLs (base64), skip the Image preloading as it might fail with very large strings
+    if (src.startsWith('data:')) {
+      console.log('[ProgressiveImage] Handling data URL, length:', src.length);
       setLoaded(true);
-      // Start the reveal animation
+      // Start the reveal animation immediately
       setTimeout(() => {
         setRevealing(true);
         // Animate the reveal progress
@@ -44,7 +43,36 @@ export function ProgressiveImage({
           }
         }, stepDuration);
       }, 100);
-    };
+    } else {
+      // Preload the image for regular URLs
+      const img = new Image();
+      img.src = src;
+      img.onload = () => {
+        setLoaded(true);
+        // Start the reveal animation
+        setTimeout(() => {
+          setRevealing(true);
+          // Animate the reveal progress
+          const duration = 2000; // 2 seconds
+          const steps = 20;
+          const stepDuration = duration / steps;
+
+          let currentStep = 0;
+          const interval = setInterval(() => {
+            currentStep++;
+            setRevealProgress((currentStep / steps) * 100);
+
+            if (currentStep >= steps) {
+              clearInterval(interval);
+            }
+          }, stepDuration);
+        }, 100);
+      };
+      img.onerror = (error) => {
+        console.error('[ProgressiveImage] Failed to load image:', error);
+        setLoaded(true); // Set loaded anyway to show the image element
+      };
+    }
   }, [src]);
 
   if (!loaded && !skipLoadingState) {
@@ -63,6 +91,27 @@ export function ProgressiveImage({
           </div>
         </div>
         <div className="aspect-square" />
+      </div>
+    );
+  }
+
+  // For very large base64 images, skip the progressive reveal effect
+  const isDataUrl = src.startsWith('data:');
+  const skipRevealEffect = isDataUrl && src.length > 100000; // Skip for images > 100KB base64
+
+  if (skipRevealEffect) {
+    // Simple image display for large base64 images
+    return (
+      <div className={cn('relative rounded-lg', className)}>
+        <img
+          src={src}
+          alt={alt}
+          className="w-full rounded-lg"
+          style={{ maxWidth: '100%', height: 'auto', display: 'block' }}
+          onError={(e) => {
+            console.error('[ProgressiveImage] Image failed to load', e);
+          }}
+        />
       </div>
     );
   }
