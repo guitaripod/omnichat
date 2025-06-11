@@ -256,75 +256,47 @@ export class OpenAIProvider implements ChatProvider {
         imageContent = `![Generated Image](data:image/png;base64,${imageData.b64_json})`;
       }
 
-      // For streaming, we need to create a stream that sends the image in chunks
+      // For streaming, we need to create a stream that sends the image
       const encoder = new TextEncoder();
       const stream = new ReadableStream({
         async start(controller) {
-          // Send initial message for image generation
-          const initChunk = encoder.encode(
-            `data: ${JSON.stringify({
-              choices: [
-                {
-                  delta: { content: '🎨 Generating image...' },
-                  index: 0,
-                },
-              ],
-            })}\n\n`
-          );
-          controller.enqueue(initChunk);
-
-          // Small delay for effect
-          await new Promise((resolve) => setTimeout(resolve, 500));
-
-          // If the content is very large (base64), send it in chunks
-          const chunkSize = 1000; // Send 1000 chars at a time
-          if (imageContent.length > chunkSize) {
-            // Clear the generating message first
-            const clearChunk = encoder.encode(
+          try {
+            // Send initial message for image generation
+            const initChunk = encoder.encode(
               `data: ${JSON.stringify({
                 choices: [
                   {
-                    delta: { content: '\r' },
+                    delta: { content: '🎨 Generating image...' },
                     index: 0,
                   },
                 ],
               })}\n\n`
             );
-            controller.enqueue(clearChunk);
+            controller.enqueue(initChunk);
 
-            // Send image content in chunks
-            for (let i = 0; i < imageContent.length; i += chunkSize) {
-              const chunk = imageContent.slice(i, i + chunkSize);
-              const dataChunk = encoder.encode(
-                `data: ${JSON.stringify({
-                  choices: [
-                    {
-                      delta: { content: chunk },
-                      index: 0,
-                    },
-                  ],
-                })}\n\n`
-              );
-              controller.enqueue(dataChunk);
-            }
-          } else {
-            // Send the entire content if it's small enough
-            const clearChunk = encoder.encode(
+            // Small delay for effect
+            await new Promise((resolve) => setTimeout(resolve, 500));
+
+            // Clear the generating message and send the image
+            const imageChunk = encoder.encode(
               `data: ${JSON.stringify({
                 choices: [
                   {
-                    delta: { content: '\r' + imageContent },
+                    delta: { content: `\r${imageContent}` },
                     index: 0,
                   },
                 ],
               })}\n\n`
             );
-            controller.enqueue(clearChunk);
+            controller.enqueue(imageChunk);
+
+            // Send the done signal
+            controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+            controller.close();
+          } catch (error) {
+            console.error('[OpenAI] Error in image stream:', error);
+            controller.error(error);
           }
-
-          // Send the done signal
-          controller.enqueue(encoder.encode('data: [DONE]\n\n'));
-          controller.close();
         },
       });
 
@@ -334,9 +306,33 @@ export class OpenAIProvider implements ChatProvider {
       };
     } catch (error) {
       console.error('[OpenAI] Error in imageGeneration:', error);
-      throw new Error(
-        `OpenAI Image Generation Error: ${error instanceof Error ? error.message : 'Unknown error'}`
-      );
+
+      // Create an error stream response
+      const encoder = new TextEncoder();
+      const errorStream = new ReadableStream({
+        start(controller) {
+          const errorChunk = encoder.encode(
+            `data: ${JSON.stringify({
+              choices: [
+                {
+                  delta: {
+                    content: `⚠️ Error generating image: ${error instanceof Error ? error.message : 'Unknown error'}`,
+                  },
+                  index: 0,
+                },
+              ],
+            })}\n\n`
+          );
+          controller.enqueue(errorChunk);
+          controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+          controller.close();
+        },
+      });
+
+      return {
+        stream: errorStream,
+        controller: new AbortController(),
+      };
     }
   }
 }

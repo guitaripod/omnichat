@@ -343,14 +343,45 @@ export function ChatContainer() {
 
                 if (content) {
                   accumulatedContent += content;
-                  tokenCount += content.split(/\s+/).length; // Rough token estimate
+
+                  // For image generation, don't calculate tokens based on base64 data
+                  const isImageContent = content.includes('![Generated Image]');
+                  if (!isImageContent) {
+                    tokenCount += content.split(/\s+/).length; // Rough token estimate
+                    setTokensGenerated(tokenCount);
+                  }
+
                   setStreamingMessage(accumulatedContent);
-                  setTokensGenerated(tokenCount);
 
                   // Update the assistant message with startTransition for better performance
-                  startTransition(() => {
-                    updateMessage(currentConversationId, assistantMessage.id, accumulatedContent);
-                  });
+                  // For large image data, use requestIdleCallback to avoid blocking
+                  if (isImageContent && accumulatedContent.length > 10000) {
+                    if ('requestIdleCallback' in window) {
+                      requestIdleCallback(
+                        () => {
+                          updateMessage(
+                            currentConversationId,
+                            assistantMessage.id,
+                            accumulatedContent
+                          );
+                        },
+                        { timeout: 1000 }
+                      );
+                    } else {
+                      // Fallback with setTimeout for browsers that don't support requestIdleCallback
+                      setTimeout(() => {
+                        updateMessage(
+                          currentConversationId,
+                          assistantMessage.id,
+                          accumulatedContent
+                        );
+                      }, 0);
+                    }
+                  } else {
+                    startTransition(() => {
+                      updateMessage(currentConversationId, assistantMessage.id, accumulatedContent);
+                    });
+                  }
 
                   // Throttle scrolling to prevent UI lockup
                   const now = Date.now();
@@ -360,8 +391,8 @@ export function ChatContainer() {
                     scrollToBottom(false, true);
                   }
 
-                  // Periodically save stream state
-                  if (tokenCount % 10 === 0) {
+                  // Periodically save stream state (skip for large image data)
+                  if (!isImageContent && tokenCount % 10 === 0) {
                     streamState.tokensGenerated = tokenCount;
                     streamState.lastChunkAt = new Date();
                     StreamStateManager.saveStreamState(streamState);
@@ -387,9 +418,20 @@ export function ChatContainer() {
       } else {
         console.error('Error sending message:', error);
         // Update the existing assistant message with error
-        const errorContent = `Error: ${error instanceof Error ? error.message : 'Unknown error'}`;
-        updateMessage(currentConversationId, assistantMessage.id, errorContent);
-        StreamStateManager.markStreamError(streamId, errorContent);
+        const errorContent = `⚠️ Error: ${error instanceof Error ? error.message : 'Unknown error'}`;
+
+        // For image generation errors, provide more helpful message
+        if (['gpt-image-1', 'dall-e-3', 'dall-e-2'].includes(selectedModel)) {
+          const detailedError =
+            error instanceof Error && error.message.includes('API')
+              ? '⚠️ Failed to generate image. Please check your API key and try again.'
+              : errorContent;
+          updateMessage(currentConversationId, assistantMessage.id, detailedError);
+          StreamStateManager.markStreamError(streamId, detailedError);
+        } else {
+          updateMessage(currentConversationId, assistantMessage.id, errorContent);
+          StreamStateManager.markStreamError(streamId, errorContent);
+        }
       }
     } finally {
       setIsLoading(false);
