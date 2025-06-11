@@ -30,6 +30,12 @@ export interface Message {
   createdAt: Date;
   parentId?: string | null;
   attachments?: FileAttachment[];
+  // Streaming fields (optional for backward compatibility)
+  isComplete?: boolean;
+  streamState?: string | null;
+  tokensGenerated?: number;
+  totalTokens?: number | null;
+  streamId?: string | null;
 }
 
 export interface Attachment {

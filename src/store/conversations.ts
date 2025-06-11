@@ -4,6 +4,7 @@ import type { Conversation, Message } from '@/types';
 import { generateId } from '@/utils';
 import { offlineStorage } from '@/services/storage/offline';
 import { syncService } from '@/services/storage/sync';
+import { migrateMessage, migrateConversation } from '@/lib/migrations/client-migrations';
 
 interface ConversationState {
   conversations: Conversation[];
@@ -226,12 +227,10 @@ export const useConversationStore = create<ConversationState>()(
 
           const response = await fetch('/api/conversations');
           if (response.ok) {
-            const { conversations } = (await response.json()) as { conversations: any[] };
-            const serverConversations = conversations.map((c: any) => ({
-              ...c,
-              createdAt: new Date(c.createdAt),
-              updatedAt: new Date(c.updatedAt),
-            }));
+            const { conversations } = (await response.json()) as {
+              conversations: Array<Record<string, unknown>>;
+            };
+            const serverConversations = conversations.map((c) => migrateConversation(c));
 
             // Merge strategy: Keep local conversations with temp IDs and merge with server data
             set((state) => {
@@ -286,12 +285,42 @@ export const useConversationStore = create<ConversationState>()(
         try {
           const response = await fetch(`/api/conversations/${conversationId}/messages`);
           if (response.ok) {
-            const { messages } = (await response.json()) as { messages: any[] };
-            const serverMessages = messages.map((m: any) => ({
-              ...m,
-              createdAt: new Date(m.createdAt),
-              updatedAt: m.updatedAt ? new Date(m.updatedAt) : undefined,
-            }));
+            const { messages } = (await response.json()) as {
+              messages: Array<Record<string, unknown>>;
+            };
+
+            // Migrate messages from D1 format to client format
+            const serverMessages = messages.map((m) => {
+              try {
+                return migrateMessage({
+                  id: m.id as string,
+                  conversationId: m.conversationId as string,
+                  role: m.role as 'user' | 'assistant' | 'system',
+                  content: m.content as string,
+                  model: m.model as string | undefined,
+                  parentId: m.parentId as string | null | undefined,
+                  isComplete: m.isComplete as boolean,
+                  streamState: m.streamState as string | null | undefined,
+                  tokensGenerated: m.tokensGenerated as number,
+                  totalTokens: m.totalTokens as number | null | undefined,
+                  streamId: m.streamId as string | null | undefined,
+                  createdAt: m.createdAt as string | Date,
+                });
+              } catch (error) {
+                console.error('Failed to migrate message:', m.id, error);
+                // Fallback to basic migration if advanced migration fails
+                return {
+                  id: m.id as string,
+                  conversationId: m.conversationId as string,
+                  role: m.role as 'user' | 'assistant' | 'system',
+                  content: m.content as string,
+                  model: (m.model as string) || undefined,
+                  parentId: (m.parentId as string) || undefined,
+                  createdAt: new Date(m.createdAt as string),
+                  attachments: [],
+                } as Message;
+              }
+            });
 
             // Merge strategy for messages with deduplication
             set((state) => {

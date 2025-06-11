@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import { ClerkProvider } from '@/components/providers/clerk-provider';
+import { MigrationErrorBoundary } from '@/components/migration-error-boundary';
 import './globals.css';
 
 export const runtime = 'edge';
@@ -29,7 +30,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <ClerkProvider>{children}</ClerkProvider>
+        <ClerkProvider>
+          <MigrationErrorBoundary>{children}</MigrationErrorBoundary>
+        </ClerkProvider>
       </body>
     </html>
   );

@@ -19,6 +19,12 @@ wrangler deploy         # Deploy to Cloudflare
 wrangler d1 execute     # Run D1 database commands
 wrangler r2 bucket list # Manage R2 storage
 
+# Database Migrations (use with D1_DATABASE_ID env var)
+export D1_DATABASE_ID=your-database-id-here  # Get from Cloudflare dashboard
+npm run db:migrate:prod # Apply schema migrations
+npm run db:migrate:data # Apply data migrations
+npm run db:check        # Check migration status
+
 # Monitor Latest Deployment
 # First get the latest deployment ID
 DEPLOYMENT_ID=$(wrangler pages deployment list --project-name omnichat | grep -E "Production.*master" | head -n 1 | grep -oE "https://[a-f0-9]{8}" | cut -d'/' -f3)
