@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Search, Loader2, ImageOff, X, Download, ExternalLink } from 'lucide-react';
-import Image from 'next/image';
 import ImageHistoryItem from './image-history-item';
 import { useAuth } from '@clerk/nextjs';
 
@@ -277,11 +276,10 @@ export default function ImageHistoryGallery() {
             className="relative max-h-[90vh] max-w-[90vw]"
             onClick={() => setSelectedImage(null)}
           >
-            <Image
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
               src={selectedImage.url}
               alt={selectedImage.prompt}
-              width={1024}
-              height={1024}
               className="object-contain"
               style={{ maxHeight: '90vh', maxWidth: '90vw', width: 'auto', height: 'auto' }}
             />
