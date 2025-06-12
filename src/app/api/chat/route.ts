@@ -9,6 +9,7 @@ import type { CloudflareEnv } from '../../../../env';
 import { isDevMode, getDevUser } from '@/lib/auth/dev-auth';
 import { AuditLogger } from '@/services/security';
 import { checkBatteryBalance } from '@/lib/usage-tracking';
+import { canUseModel } from '@/lib/tier';
 
 export const runtime = 'edge';
 
@@ -30,11 +31,13 @@ interface ChatRequest {
     outputFormat?: string;
     outputCompression?: number;
   };
+  userApiKeys?: Record<string, string>;
 }
 
 export async function POST(req: NextRequest) {
   let user: any = null;
   let conversationId: string | undefined;
+  let dbUser = null;
 
   try {
     // Authenticate user
@@ -108,29 +111,70 @@ export async function POST(req: NextRequest) {
       ollamaBaseUrl,
       webSearch = false,
       imageGenerationOptions,
+      userApiKeys = {},
     } = body;
 
     conversationId = body.conversationId;
 
-    // Only require API keys for non-Ollama models
+    // Check if user can access the model
     const isOllamaModel = model?.startsWith('ollama/');
+    const modelProvider = isOllamaModel
+      ? 'ollama'
+      : AI_MODELS.openai.some((m) => m.id === model)
+        ? 'openai'
+        : AI_MODELS.anthropic.some((m) => m.id === model)
+          ? 'anthropic'
+          : AI_MODELS.google.some((m) => m.id === model)
+            ? 'google'
+            : AI_MODELS.xai?.some((m) => m.id === model)
+              ? 'xai'
+              : AI_MODELS.deepseek?.some((m) => m.id === model)
+                ? 'deepseek'
+                : null;
 
-    if (!isOllamaModel && (!openaiApiKey || !anthropicApiKey || !googleApiKey)) {
-      console.error('Missing API keys:', {
-        openai: !!openaiApiKey,
-        anthropic: !!anthropicApiKey,
-        google: !!googleApiKey,
-      });
-      return new Response('API keys not configured', { status: 503 });
+    if (!modelProvider) {
+      return new Response(`Invalid model: ${model}`, { status: 400 });
+    }
+
+    // Check model access
+    const canAccess = canUseModel({ provider: modelProvider }, dbUser, userApiKeys);
+
+    if (!canAccess) {
+      return new Response(
+        JSON.stringify({
+          error: 'Model access denied',
+          message: 'Upgrade to Pro or add your API key to use this model',
+          model,
+          provider: modelProvider,
+        }),
+        {
+          status: 403,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    // For cloud models, check if we have the necessary API keys
+    // (either from user or from OmniChat for paid users)
+    if (!isOllamaModel) {
+      const hasOmniChatKeys =
+        openaiApiKey || anthropicApiKey || googleApiKey || xaiApiKey || deepseekApiKey;
+      const hasUserKey = userApiKeys[modelProvider];
+
+      if (!hasOmniChatKeys && !hasUserKey) {
+        console.error('Missing API keys for provider:', modelProvider);
+        return new Response('API keys not configured', { status: 503 });
+      }
     }
 
     console.log('Initializing AI Provider Factory...');
+    // Use user's API key if available, otherwise use OmniChat's keys
     await AIProviderFactory.initialize({
-      openaiApiKey,
-      anthropicApiKey,
-      googleApiKey,
-      xaiApiKey,
-      deepseekApiKey,
+      openaiApiKey: userApiKeys.openai || openaiApiKey,
+      anthropicApiKey: userApiKeys.anthropic || anthropicApiKey,
+      googleApiKey: userApiKeys.google || googleApiKey,
+      xaiApiKey: userApiKeys.xai || xaiApiKey,
+      deepseekApiKey: userApiKeys.deepseek || deepseekApiKey,
       ollamaBaseUrl,
     });
     console.log('Request details:', {
@@ -151,7 +195,7 @@ export async function POST(req: NextRequest) {
 
     try {
       db = getD1Database();
-      await getUserByClerkId(db, userId);
+      dbUser = await getUserByClerkId(db, userId);
     } catch (error) {
       console.error('Database connection error:', error);
       // Continue without database for now
