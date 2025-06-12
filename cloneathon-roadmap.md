@@ -186,7 +186,7 @@
 - [x] Integrate OpenAI Images
 - [x] Create image generation UI
 - [x] Fix gpt-image-1 images not showing in UI
-- [ ] Implement image history gallery
+- [x] Implement image history gallery
 - [ ] Add image editing capabilities
 
 ### Epic 5.4: Performance Optimization
