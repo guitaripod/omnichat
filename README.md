@@ -14,6 +14,8 @@
 [![OpenAI](https://img.shields.io/badge/OpenAI-API-412991?logo=openai&logoColor=white)](https://openai.com)
 [![Anthropic](https://img.shields.io/badge/Anthropic-Claude-AA6F39?logo=anthropic&logoColor=white)](https://anthropic.com)
 [![Google AI](https://img.shields.io/badge/Google-Gemini-4285F4?logo=google&logoColor=white)](https://ai.google.dev)
+[![xAI](https://img.shields.io/badge/xAI-Grok-000000?logo=x&logoColor=white)](https://x.ai)
+[![DeepSeek](https://img.shields.io/badge/DeepSeek-AI-0066CC?logo=deepseek&logoColor=white)](https://deepseek.com)
 [![Ollama](https://img.shields.io/badge/Ollama-Local_AI-000000?logo=ollama&logoColor=white)](https://ollama.ai)
 
 </div>
@@ -30,7 +32,7 @@ OmniChat is built on Cloudflare's edge infrastructure for global low-latency per
 
 ### Core Features
 
-- **Multi-LLM Support**: Chat with OpenAI, Anthropic, Google Gemini, and local Ollama models
+- **Multi-LLM Support**: Chat with OpenAI, Anthropic, Google Gemini, xAI Grok, DeepSeek, and local Ollama models
 - **Local AI with Ollama**: Run models locally for privacy and offline use
 - **Real-time Streaming**: Fast, responsive AI conversations with streaming responses
 - **Persistent Chat History**: Save and search through your conversation history
@@ -64,7 +66,7 @@ OmniChat is built on Cloudflare's edge infrastructure for global low-latency per
 
 - Node.js 18+
 - Cloudflare account (for deployment)
-- API keys for AI providers (OpenAI, Anthropic, etc.)
+- API keys for AI providers (OpenAI, Anthropic, Google, xAI, DeepSeek)
 
 ### Development
 
