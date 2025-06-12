@@ -374,12 +374,12 @@ export default function PricingPage() {
                         : 'border-gray-200 dark:border-gray-700'
                     )}
                   >
+                    {isPopular && (
+                      <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                        <Badge className="bg-purple-600 px-3 py-1 text-white">MOST POPULAR</Badge>
+                      </div>
+                    )}
                     <CardHeader className="pt-6 pb-6">
-                      {isPopular && (
-                        <div className="mb-4 text-center">
-                          <Badge className="bg-purple-600 px-3 py-1 text-white">MOST POPULAR</Badge>
-                        </div>
-                      )}
                       <div className="bg-muted mx-auto mb-4 w-fit rounded-xl p-3">
                         <PlanIcon
                           className={cn(
@@ -517,7 +517,7 @@ export default function PricingPage() {
             </div>
           </TabsContent>
 
-          <TabsContent value="paygo">
+          <TabsContent value="paygo" className="mt-12">
             {/* Pay As You Go */}
             <div className="mx-auto max-w-4xl">
               <div className="mb-12 text-center">
@@ -542,25 +542,24 @@ export default function PricingPage() {
                         BEST VALUE
                       </Badge>
                     )}
-                    <CardContent className="p-8 pt-10">
+                    <CardContent className="p-6">
                       <div className="text-center">
-                        <h4 className="text-2xl font-bold">{topup.label}</h4>
-                        <p className="text-muted-foreground mt-2 text-lg">
+                        <h4 className="text-xl font-bold">{topup.label}</h4>
+                        <p className="text-muted-foreground mt-1">
                           {topup.units.toLocaleString()} battery units
                         </p>
-                        <div className="mt-4">
-                          <span className="text-4xl font-bold">${topup.price}</span>
-                          <p className="text-muted-foreground mt-1 text-sm">
+                        <div className="mt-3">
+                          <span className="text-3xl font-bold">${topup.price}</span>
+                          <p className="text-muted-foreground text-sm">
                             ${((topup.price / topup.units) * 1000).toFixed(2)}/1K units
                           </p>
                         </div>
-                        <p className="text-muted-foreground mt-6 text-base">{topup.description}</p>
+                        <p className="text-muted-foreground mt-4 text-sm">{topup.description}</p>
                       </div>
                       <Button
-                        className="mt-6 w-full"
+                        className="mt-4 w-full"
                         variant={topup.popular ? 'default' : 'outline'}
                         disabled={isLoading}
-                        size="lg"
                       >
                         {isLoading ? 'Processing...' : 'Buy Now'}
                         <ArrowRight className="ml-2 h-4 w-4" />
@@ -583,16 +582,12 @@ export default function PricingPage() {
 
         {/* Model Battery Usage */}
         <Card className="mt-20 overflow-hidden border-2">
-          <div className="bg-gradient-to-r from-purple-100 to-blue-100 p-1 dark:from-purple-900/20 dark:to-blue-900/20">
-            <div className="bg-white dark:bg-gray-900">
-              <CardHeader className="pb-8">
-                <CardTitle className="text-3xl">Battery Usage by Model</CardTitle>
-                <CardDescription className="text-lg">
-                  See how much each AI model costs in battery units
-                </CardDescription>
-              </CardHeader>
-            </div>
-          </div>
+          <CardHeader className="pb-8 text-center">
+            <CardTitle className="text-3xl">Battery Usage by Model</CardTitle>
+            <CardDescription className="text-lg">
+              See how much each AI model costs in battery units
+            </CardDescription>
+          </CardHeader>
           <CardContent className="pt-6 pb-8">
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {getModelDisplayData().map((model) => (
