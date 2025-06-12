@@ -245,14 +245,17 @@ export default function ImageHistoryGallery() {
       {/* Image Viewer Modal */}
       {selectedImage && (
         <AttachmentViewerModal
-          isOpen={!!selectedImage}
+          attachments={[
+            {
+              id: selectedImage.id,
+              fileName: `generated-${selectedImage.model}.webp`,
+              mimeType: 'image/webp',
+              url: selectedImage.url,
+              size: 0, // Size is not tracked for generated images
+            },
+          ]}
+          initialIndex={0}
           onClose={() => setSelectedImage(null)}
-          attachment={{
-            id: selectedImage.id,
-            fileName: `generated-${selectedImage.model}.webp`,
-            fileType: 'image/webp',
-            url: selectedImage.url,
-          }}
         />
       )}
     </div>
