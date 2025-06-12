@@ -1,12 +1,19 @@
 import { SignUp } from '@clerk/nextjs';
 import { redirect } from 'next/navigation';
+import { currentUser } from '@clerk/nextjs/server';
 import { isDevMode } from '@/lib/auth/dev-auth';
 
 export const runtime = 'edge';
 
-export default function SignUpPage() {
+export default async function SignUpPage() {
   // In dev mode, redirect directly to chat
   if (isDevMode()) {
+    redirect('/chat');
+  }
+
+  // Check if user is already signed in
+  const user = await currentUser();
+  if (user) {
     redirect('/chat');
   }
 
