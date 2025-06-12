@@ -518,16 +518,8 @@ export default function PricingPage() {
           </TabsContent>
 
           <TabsContent value="paygo" className="mt-12">
-            {/* Pay As You Go */}
             <div className="mx-auto max-w-4xl">
-              <div className="mb-12 text-center">
-                <h2 className="mb-4 text-3xl font-bold">Pay As You Go</h2>
-                <p className="text-muted-foreground text-lg">
-                  Perfect for occasional users or trying out premium models
-                </p>
-              </div>
-
-              <div className="grid gap-8 md:grid-cols-2">
+              <div className="grid gap-6 md:grid-cols-2">
                 {SIMPLE_BATTERY_TOPUPS.map((topup) => (
                   <Card
                     key={topup.units}
@@ -538,11 +530,11 @@ export default function PricingPage() {
                     onClick={() => handleBuyBattery(topup.units, topup.price)}
                   >
                     {topup.popular && (
-                      <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-purple-600 px-4 py-1 text-white">
+                      <Badge className="absolute -top-3 left-1/2 z-10 -translate-x-1/2 bg-purple-600 px-4 py-1 text-white">
                         BEST VALUE
                       </Badge>
                     )}
-                    <CardContent className="p-6">
+                    <CardContent className="p-6 pt-8">
                       <div className="text-center">
                         <h4 className="text-xl font-bold">{topup.label}</h4>
                         <p className="text-muted-foreground mt-1">
