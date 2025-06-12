@@ -8,6 +8,7 @@ import { getRequestContext } from '@cloudflare/next-on-pages';
 import type { CloudflareEnv } from '../../../../env';
 import { isDevMode, getDevUser } from '@/lib/auth/dev-auth';
 import { AuditLogger } from '@/services/security';
+import { checkBatteryBalance } from '@/lib/usage-tracking';
 
 export const runtime = 'edge';
 
@@ -154,6 +155,26 @@ export async function POST(req: NextRequest) {
     } catch (error) {
       console.error('Database connection error:', error);
       // Continue without database for now
+    }
+
+    // Check battery balance before processing (skip for Ollama models)
+    if (!isOllamaModel && db) {
+      console.log('Checking battery balance...');
+      const batteryCheck = await checkBatteryBalance(userId, model);
+
+      if (!batteryCheck.hasBalance) {
+        return new Response(
+          JSON.stringify({
+            error: 'Insufficient battery balance',
+            currentBalance: batteryCheck.currentBalance,
+            estimatedCost: batteryCheck.estimatedCost,
+          }),
+          {
+            status: 402, // Payment Required
+            headers: { 'Content-Type': 'application/json' },
+          }
+        );
+      }
     }
 
     // Get model info to determine provider

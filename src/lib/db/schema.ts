@@ -125,33 +125,164 @@ export const apiUsage = sqliteTable(
   })
 );
 
-// Subscriptions table
-export const subscriptions = sqliteTable(
-  'subscriptions',
+// Subscription plans table
+export const subscriptionPlans = sqliteTable('subscription_plans', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  priceMonthly: integer('price_monthly').notNull(), // in cents
+  priceAnnual: integer('price_annual').notNull(), // in cents
+  batteryUnits: integer('battery_units').notNull(),
+  dailyBattery: integer('daily_battery').notNull(),
+  features: text('features').notNull(), // JSON array
+  stripePriceIdMonthly: text('stripe_price_id_monthly'),
+  stripePriceIdAnnual: text('stripe_price_id_annual'),
+  createdAt: text('created_at')
+    .notNull()
+    .default(sql`(datetime('now'))`),
+  updatedAt: text('updated_at')
+    .notNull()
+    .default(sql`(datetime('now'))`),
+});
+
+// User subscriptions table
+export const userSubscriptions = sqliteTable(
+  'user_subscriptions',
   {
-    id: text('id').primaryKey(),
+    id: text('id')
+      .primaryKey()
+      .default(sql`(lower(hex(randomblob(16))))`),
     userId: text('user_id')
       .notNull()
-      .references(() => users.id, { onDelete: 'cascade' })
-      .unique(),
-    stripeSubscriptionId: text('stripe_subscription_id').notNull().unique(),
-    stripePriceId: text('stripe_price_id').notNull(),
-    status: text('status').notNull(),
-    currentPeriodStart: integer('current_period_start', { mode: 'timestamp' }).notNull(),
-    currentPeriodEnd: integer('current_period_end', { mode: 'timestamp' }).notNull(),
-    cancelAtPeriodEnd: integer('cancel_at_period_end', { mode: 'boolean' })
+      .references(() => users.id, { onDelete: 'cascade' }),
+    planId: text('plan_id')
       .notNull()
-      .default(false),
-    tier: text('tier', { enum: ['free', 'pro', 'enterprise'] }).notNull(),
-    createdAt: integer('created_at', { mode: 'timestamp' })
+      .references(() => subscriptionPlans.id),
+    stripeCustomerId: text('stripe_customer_id'),
+    stripeSubscriptionId: text('stripe_subscription_id'),
+    status: text('status', {
+      enum: ['active', 'canceled', 'past_due', 'trialing', 'incomplete'],
+    }).notNull(),
+    currentPeriodStart: text('current_period_start').notNull(),
+    currentPeriodEnd: text('current_period_end').notNull(),
+    cancelAt: text('cancel_at'),
+    canceledAt: text('canceled_at'),
+    trialEnd: text('trial_end'),
+    createdAt: text('created_at')
       .notNull()
-      .default(sql`(unixepoch())`),
-    updatedAt: integer('updated_at', { mode: 'timestamp' })
+      .default(sql`(datetime('now'))`),
+    updatedAt: text('updated_at')
       .notNull()
-      .default(sql`(unixepoch())`),
+      .default(sql`(datetime('now'))`),
   },
   (table) => ({
-    stripeSubIdx: index('stripe_sub_idx').on(table.stripeSubscriptionId),
+    userIdIdx: index('idx_user_subscriptions_user_id').on(table.userId),
+    statusIdx: index('idx_user_subscriptions_status').on(table.status),
+  })
+);
+
+// User battery balance table
+export const userBattery = sqliteTable('user_battery', {
+  userId: text('user_id')
+    .primaryKey()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  totalBalance: integer('total_balance').notNull().default(0),
+  dailyAllowance: integer('daily_allowance').notNull().default(0),
+  lastDailyReset: text('last_daily_reset')
+    .notNull()
+    .default(sql`(date('now'))`),
+  createdAt: text('created_at')
+    .notNull()
+    .default(sql`(datetime('now'))`),
+  updatedAt: text('updated_at')
+    .notNull()
+    .default(sql`(datetime('now'))`),
+});
+
+// Battery transactions table
+export const batteryTransactions = sqliteTable(
+  'battery_transactions',
+  {
+    id: text('id')
+      .primaryKey()
+      .default(sql`(lower(hex(randomblob(16))))`),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    type: text('type', {
+      enum: ['purchase', 'subscription', 'bonus', 'refund', 'usage'],
+    }).notNull(),
+    amount: integer('amount').notNull(), // positive for credits, negative for usage
+    balanceAfter: integer('balance_after').notNull(),
+    description: text('description'),
+    stripePaymentIntentId: text('stripe_payment_intent_id'),
+    metadata: text('metadata'), // JSON
+    createdAt: text('created_at')
+      .notNull()
+      .default(sql`(datetime('now'))`),
+  },
+  (table) => ({
+    userIdIdx: index('idx_battery_transactions_user_id').on(table.userId),
+    createdAtIdx: index('idx_battery_transactions_created_at').on(table.createdAt),
+  })
+);
+
+// Enhanced API usage tracking table
+export const apiUsageTracking = sqliteTable(
+  'api_usage',
+  {
+    id: text('id')
+      .primaryKey()
+      .default(sql`(lower(hex(randomblob(16))))`),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    conversationId: text('conversation_id')
+      .notNull()
+      .references(() => conversations.id, { onDelete: 'cascade' }),
+    messageId: text('message_id')
+      .notNull()
+      .references(() => messages.id, { onDelete: 'cascade' }),
+    model: text('model').notNull(),
+    inputTokens: integer('input_tokens').notNull(),
+    outputTokens: integer('output_tokens').notNull(),
+    batteryUsed: integer('battery_used').notNull(),
+    cached: integer('cached', { mode: 'boolean' }).default(false),
+    createdAt: text('created_at')
+      .notNull()
+      .default(sql`(datetime('now'))`),
+    date: text('date')
+      .notNull()
+      .default(sql`(date('now'))`), // for daily aggregation
+  },
+  (table) => ({
+    userIdDateIdx: index('idx_api_usage_user_id_date').on(table.userId, table.date),
+    conversationIdIdx: index('idx_api_usage_conversation_id').on(table.conversationId),
+  })
+);
+
+// Daily usage summary table
+export const dailyUsageSummary = sqliteTable(
+  'daily_usage_summary',
+  {
+    id: text('id')
+      .primaryKey()
+      .default(sql`(lower(hex(randomblob(16))))`),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    date: text('date').notNull(),
+    totalBatteryUsed: integer('total_battery_used').notNull().default(0),
+    totalMessages: integer('total_messages').notNull().default(0),
+    modelsUsed: text('models_used').notNull().default('{}'), // JSON object
+    createdAt: text('created_at')
+      .notNull()
+      .default(sql`(datetime('now'))`),
+    updatedAt: text('updated_at')
+      .notNull()
+      .default(sql`(datetime('now'))`),
+  },
+  (table) => ({
+    userDateIdx: index('idx_daily_usage_summary_user_date').on(table.userId, table.date),
   })
 );
 
@@ -194,7 +325,17 @@ export type Attachment = typeof attachments.$inferSelect;
 export type NewAttachment = typeof attachments.$inferInsert;
 export type ApiUsage = typeof apiUsage.$inferSelect;
 export type NewApiUsage = typeof apiUsage.$inferInsert;
-export type Subscription = typeof subscriptions.$inferSelect;
-export type NewSubscription = typeof subscriptions.$inferInsert;
+export type SubscriptionPlan = typeof subscriptionPlans.$inferSelect;
+export type NewSubscriptionPlan = typeof subscriptionPlans.$inferInsert;
+export type UserSubscription = typeof userSubscriptions.$inferSelect;
+export type NewUserSubscription = typeof userSubscriptions.$inferInsert;
+export type UserBattery = typeof userBattery.$inferSelect;
+export type NewUserBattery = typeof userBattery.$inferInsert;
+export type BatteryTransaction = typeof batteryTransactions.$inferSelect;
+export type NewBatteryTransaction = typeof batteryTransactions.$inferInsert;
+export type ApiUsageTracking = typeof apiUsageTracking.$inferSelect;
+export type NewApiUsageTracking = typeof apiUsageTracking.$inferInsert;
+export type DailyUsageSummary = typeof dailyUsageSummary.$inferSelect;
+export type NewDailyUsageSummary = typeof dailyUsageSummary.$inferInsert;
 export type AuditLog = typeof auditLogs.$inferSelect;
 export type NewAuditLog = typeof auditLogs.$inferInsert;

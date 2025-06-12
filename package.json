@@ -35,6 +35,9 @@
   },
   "dependencies": {
     "@clerk/nextjs": "^6.21.0",
+    "@stripe/stripe-js": "^7.3.1",
+    "@types/canvas-confetti": "^1.9.0",
+    "canvas-confetti": "^1.9.3",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "drizzle-orm": "^0.44.2",
@@ -52,6 +55,8 @@
     "rehype-katex": "^7.0.1",
     "remark-gfm": "^4.0.1",
     "remark-math": "^6.0.0",
+    "sonner": "^2.0.5",
+    "stripe": "^18.2.1",
     "tailwind-merge": "^3.3.0",
     "use-debounce": "^10.0.5",
     "zod": "^3.25.56",

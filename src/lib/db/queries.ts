@@ -189,8 +189,8 @@ export async function getUserUsageToday(db: Db, userId: string) {
 export async function getUserSubscription(db: Db, userId: string) {
   const result = await db
     .select()
-    .from(schema.subscriptions)
-    .where(eq(schema.subscriptions.userId, userId))
+    .from(schema.userSubscriptions)
+    .where(eq(schema.userSubscriptions.userId, userId))
     .limit(1);
 
   return result[0] || null;
@@ -224,37 +224,40 @@ export async function createOrUpdateSubscription(
   db: Db,
   data: {
     userId: string;
+    planId: string;
+    stripeCustomerId?: string;
     stripeSubscriptionId: string;
-    stripePriceId: string;
-    status: string;
-    currentPeriodStart: Date;
-    currentPeriodEnd: Date;
-    cancelAtPeriodEnd: boolean;
-    tier: 'free' | 'pro' | 'enterprise';
+    status: 'active' | 'canceled' | 'past_due' | 'trialing' | 'incomplete';
+    currentPeriodStart: string;
+    currentPeriodEnd: string;
+    cancelAt?: string | null;
+    canceledAt?: string | null;
+    trialEnd?: string | null;
   }
 ) {
   const existing = await getUserSubscription(db, data.userId);
 
   if (existing) {
     const [updated] = await db
-      .update(schema.subscriptions)
+      .update(schema.userSubscriptions)
       .set({
-        ...data,
-        updatedAt: new Date(),
+        planId: data.planId,
+        stripeCustomerId: data.stripeCustomerId,
+        stripeSubscriptionId: data.stripeSubscriptionId,
+        status: data.status,
+        currentPeriodStart: data.currentPeriodStart,
+        currentPeriodEnd: data.currentPeriodEnd,
+        cancelAt: data.cancelAt,
+        canceledAt: data.canceledAt,
+        trialEnd: data.trialEnd,
+        updatedAt: new Date().toISOString(),
       })
-      .where(eq(schema.subscriptions.userId, data.userId))
+      .where(eq(schema.userSubscriptions.userId, data.userId))
       .returning();
 
     return updated;
   } else {
-    const id = generateId();
-    const [created] = await db
-      .insert(schema.subscriptions)
-      .values({
-        id,
-        ...data,
-      })
-      .returning();
+    const [created] = await db.insert(schema.userSubscriptions).values(data).returning();
 
     return created;
   }
