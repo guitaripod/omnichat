@@ -142,13 +142,12 @@
 
 ### Epic 4.1: Stripe Integration
 
-- [ ] Set up Stripe account and products
-- [ ] Create subscription tiers (Free, Ultimate)
+- [x] Set up Stripe account and products
+- [x] Create subscription tiers (Free, Ultimate)
 - [ ] Implement Stripe Checkout flow
 - [ ] Build webhook handlers for subscription events
 - [ ] Create billing portal integration
-- [ ] Add usage-based billing for API calls
-- [ ] Create an AI-powered script to scrape the pricing for all external AI providers to determine what Ultimate users get for their subscription
+- [x] Plan out profitable and transparent pricing framework
 
 ### Epic 4.2: Security Implementation
 
@@ -207,7 +206,7 @@
 - [ ] Refine all animations and transitions
 - [ ] Ensure full responsive design
 - [ ] Add keyboard shortcuts
-- [ ] Create onboarding flow
+- [x] Create onboarding flow
 - [ ] Implement toast notifications
 - [ ] Add loading skeletons
 
