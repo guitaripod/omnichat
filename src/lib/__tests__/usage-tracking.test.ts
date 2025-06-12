@@ -134,8 +134,8 @@ describe('Battery Balance Calculations and Deductions', () => {
 
       // Mock different pricing for cached vs uncached
       vi.mocked(calculateBatteryUsage).mockImplementation(
-        (model: string, input: number, output: number, cached: boolean) => {
-          if (cached) return 3; // Cheaper when cached
+        (model: string, input: number, output: number, useCache?: boolean) => {
+          if (useCache) return 3; // Cheaper when cached
           return 10; // Normal price
         }
       );
@@ -302,12 +302,12 @@ describe('Battery Balance Calculations and Deductions', () => {
       });
 
       expect(batteryTransaction).toBeDefined();
-      expect(batteryTransaction.userId).toBe('user123');
-      expect(batteryTransaction.type).toBe('usage');
-      expect(batteryTransaction.amount).toBe(-10); // Negative for deduction
-      expect(batteryTransaction.balanceAfter).toBe(990);
-      expect(batteryTransaction.description).toContain('gpt-4o');
-      expect(batteryTransaction.description).toContain('200 tokens');
+      expect(batteryTransaction!.userId).toBe('user123');
+      expect(batteryTransaction!.type).toBe('usage');
+      expect(batteryTransaction!.amount).toBe(-10); // Negative for deduction
+      expect(batteryTransaction!.balanceAfter).toBe(990);
+      expect(batteryTransaction!.description).toContain('gpt-4o');
+      expect(batteryTransaction!.description).toContain('200 tokens');
     });
   });
 
