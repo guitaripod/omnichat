@@ -83,7 +83,7 @@ describe('Stripe Webhook Route - Signature Validation', () => {
     });
 
     const response = await POST(req);
-    const data = await response.json();
+    const data = (await response.json()) as { error: string };
 
     expect(response.status).toBe(400);
     expect(data.error).toBe('No signature');
@@ -108,7 +108,7 @@ describe('Stripe Webhook Route - Signature Validation', () => {
     });
 
     const response = await POST(req);
-    const data = await response.json();
+    const data = (await response.json()) as { error: string };
 
     expect(response.status).toBe(400);
     expect(data.error).toBe('Invalid signature');
@@ -187,7 +187,7 @@ describe('Stripe Webhook Route - Signature Validation', () => {
     });
 
     const response = await POST(req);
-    const data = await response.json();
+    const data = (await response.json()) as { received: boolean };
 
     expect(response.status).toBe(200);
     expect(data.received).toBe(true);
@@ -233,7 +233,7 @@ describe('Stripe Webhook Route - Signature Validation', () => {
     });
 
     const response = await POST(req);
-    const data = await response.json();
+    const data = (await response.json()) as { error: string };
 
     expect(response.status).toBe(500);
     expect(data.error).toBe('Webhook handler failed');
@@ -260,7 +260,7 @@ describe('Stripe Webhook Route - Signature Validation', () => {
     });
 
     const response = await POST(req);
-    const data = await response.json();
+    const data = (await response.json()) as { error: string };
 
     expect(response.status).toBe(400);
     expect(data.error).toBe('Invalid signature');
@@ -310,7 +310,7 @@ describe('Stripe Webhook Route - Signature Validation', () => {
     });
 
     const response = await POST(req);
-    const data = await response.json();
+    const data = (await response.json()) as { received: boolean };
 
     expect(response.status).toBe(200);
     expect(data.received).toBe(true);
