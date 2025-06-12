@@ -357,6 +357,9 @@ export function ChatContainer() {
         // Server-side API route for cloud providers
         console.log('Using server API route for model:', selectedModel);
 
+        // Get user API keys from localStorage
+        const userApiKeys = savedKeys ? JSON.parse(savedKeys) : {};
+
         response = await fetch('/api/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -373,6 +376,7 @@ export function ChatContainer() {
             imageGenerationOptions: ['gpt-image-1', 'dall-e-3', 'dall-e-2'].includes(selectedModel)
               ? imageGenerationOptions
               : undefined,
+            userApiKeys, // Pass user's API keys
           }),
           signal: abortControllerRef.current.signal,
         });
