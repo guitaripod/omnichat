@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Search, Loader2, ImageOff } from 'lucide-react';
+import { Search, Loader2, ImageOff, X, Download, ExternalLink } from 'lucide-react';
+import Image from 'next/image';
 import ImageHistoryItem from './image-history-item';
-import { AttachmentViewerModal } from './attachment-viewer-modal';
 import { useAuth } from '@clerk/nextjs';
 
 interface GeneratedImage {
@@ -152,6 +152,20 @@ export default function ImageHistoryGallery() {
   // Get unique models for filter
   const uniqueModels = Array.from(new Set(images.map((img) => img.model)));
 
+  // Handle keyboard navigation for modal
+  useEffect(() => {
+    if (!selectedImage) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setSelectedImage(null);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedImage]);
+
   if (loading) {
     return (
       <div className="flex h-64 items-center justify-center">
@@ -244,19 +258,73 @@ export default function ImageHistoryGallery() {
 
       {/* Image Viewer Modal */}
       {selectedImage && (
-        <AttachmentViewerModal
-          attachments={[
-            {
-              id: selectedImage.id,
-              fileName: `generated-${selectedImage.model}.webp`,
-              mimeType: 'image/webp',
-              url: selectedImage.url,
-              size: 0, // Size is not tracked for generated images
-            },
-          ]}
-          initialIndex={0}
-          onClose={() => setSelectedImage(null)}
-        />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90">
+          {/* Header */}
+          <div className="absolute top-0 right-0 left-0 flex items-center justify-between p-4 text-white">
+            <div className="flex items-center gap-4">
+              <h3 className="max-w-md truncate text-lg font-medium">
+                {selectedImage.model} - {new Date(selectedImage.createdAt).toLocaleDateString()}
+              </h3>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={async () => {
+                  try {
+                    const response = await fetch(selectedImage.url);
+                    const blob = await response.blob();
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `generated-${selectedImage.model}-${Date.now()}.webp`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                  } catch (err) {
+                    console.error('Download failed:', err);
+                  }
+                }}
+                className="rounded-lg p-2 transition-colors hover:bg-white/10"
+                title="Download image"
+              >
+                <Download className="h-5 w-5" />
+              </button>
+              <button
+                onClick={() => window.open(selectedImage.url, '_blank')}
+                className="rounded-lg p-2 transition-colors hover:bg-white/10"
+                title="Open in new tab"
+              >
+                <ExternalLink className="h-5 w-5" />
+              </button>
+              <button
+                onClick={() => setSelectedImage(null)}
+                className="rounded-lg p-2 transition-colors hover:bg-white/10"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+          </div>
+
+          {/* Image Content */}
+          <div
+            className="relative max-h-[90vh] max-w-[90vw]"
+            onClick={() => setSelectedImage(null)}
+          >
+            <Image
+              src={selectedImage.url}
+              alt={selectedImage.prompt}
+              width={1024}
+              height={1024}
+              className="object-contain"
+              style={{ maxHeight: '90vh', maxWidth: '90vw', width: 'auto', height: 'auto' }}
+            />
+          </div>
+
+          {/* Prompt at bottom */}
+          <div className="absolute right-0 bottom-0 left-0 bg-black/80 p-4 text-white">
+            <p className="text-sm">{selectedImage.prompt}</p>
+          </div>
+        </div>
       )}
     </div>
   );
