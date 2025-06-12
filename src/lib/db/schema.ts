@@ -13,6 +13,9 @@ export const users = sqliteTable(
     stripeCustomerId: text('stripe_customer_id').unique(),
     subscriptionId: text('subscription_id'),
     subscriptionStatus: text('subscription_status'),
+    tier: text('tier', { enum: ['free', 'paid'] })
+      .notNull()
+      .default('free'),
     createdAt: integer('created_at', { mode: 'timestamp' })
       .notNull()
       .default(sql`(unixepoch())`),
