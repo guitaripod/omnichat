@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { cn } from '@/utils';
-import { Menu, X, Settings, User } from 'lucide-react';
+import { Menu, X, Settings, User, Image } from 'lucide-react';
 import { UserButton } from '@clerk/nextjs';
 import { MockUserButton } from '@/components/ui/mock-user-button';
 import { ConversationList } from './conversation-list';
@@ -42,6 +42,13 @@ export function Sidebar() {
 
           {/* Bottom section */}
           <div className="space-y-2 border-t border-gray-200 p-4 dark:border-gray-700">
+            <Link
+              href="/images"
+              className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-gray-600 transition-colors hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700"
+            >
+              <Image size={16} />
+              Image History
+            </Link>
             <Link
               href="/profile"
               className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-gray-600 transition-colors hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700"
