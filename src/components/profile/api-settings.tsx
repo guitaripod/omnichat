@@ -3,6 +3,10 @@
 import { useState, useEffect } from 'react';
 import { AIProviderFactory } from '@/services/ai/provider-factory';
 import { OllamaProvider } from '@/services/ai/providers/ollama';
+import { useUserTier } from '@/hooks/use-user-tier';
+import { UserTier } from '@/lib/tier';
+import { useRouter } from 'next/navigation';
+import { Key, CreditCard, Sparkles } from 'lucide-react';
 
 export default function ApiSettings() {
   const [apiKeys, setApiKeys] = useState({
@@ -26,6 +30,8 @@ export default function ApiSettings() {
     'checking'
   );
   const [ollamaModels, setOllamaModels] = useState<string[]>([]);
+  const { tier } = useUserTier();
+  const router = useRouter();
 
   useEffect(() => {
     // Load saved settings from localStorage
@@ -94,15 +100,70 @@ export default function ApiSettings() {
 
   return (
     <div className="rounded-lg bg-white p-6 shadow-md dark:bg-gray-800">
-      <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
-        API Configuration
-      </h3>
+      <div className="mb-6 flex items-center justify-between">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">API Configuration</h3>
+        {tier === UserTier.FREE && (
+          <button
+            onClick={() => router.push('/pricing')}
+            className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-orange-500 to-pink-500 px-4 py-2 text-sm font-medium text-white hover:from-orange-600 hover:to-pink-600"
+          >
+            <Sparkles className="h-4 w-4" />
+            Upgrade to Pro
+          </button>
+        )}
+      </div>
+
+      {/* Pro Benefits Banner */}
+      {tier === UserTier.FREE && (
+        <div className="mb-6 rounded-lg bg-gradient-to-r from-purple-50 to-pink-50 p-4 dark:from-purple-900/20 dark:to-pink-900/20">
+          <div className="flex items-start gap-3">
+            <CreditCard className="mt-0.5 h-5 w-5 text-purple-600 dark:text-purple-400" />
+            <div>
+              <h4 className="font-medium text-gray-900 dark:text-white">
+                Skip the API key hassle with Pro!
+              </h4>
+              <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
+                Get instant access to all premium AI models without managing API keys. OmniChat
+                handles everything for you.
+              </p>
+              <button
+                onClick={() => router.push('/pricing')}
+                className="mt-2 text-sm font-medium text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300"
+              >
+                View Pro benefits →
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {tier === UserTier.PAID && (
+        <div className="mb-6 rounded-lg bg-green-50 p-4 dark:bg-green-900/20">
+          <div className="flex items-center gap-2">
+            <CreditCard className="h-5 w-5 text-green-600 dark:text-green-400" />
+            <p className="text-sm font-medium text-green-800 dark:text-green-300">
+              Pro subscriber - You can use all models without API keys!
+            </p>
+          </div>
+          <p className="mt-1 text-xs text-green-700 dark:text-green-400">
+            Add your own API keys below to use your own quotas instead of OmniChat credits.
+          </p>
+        </div>
+      )}
 
       {/* OpenAI */}
       <div className="mb-6 border-b border-gray-200 pb-6 dark:border-gray-700">
-        <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-          OpenAI API Key
-        </label>
+        <div className="mb-2 flex items-center justify-between">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            OpenAI API Key
+          </label>
+          {tier === UserTier.FREE && (
+            <span className="flex items-center gap-1 text-xs text-gray-500">
+              <Key className="h-3 w-3" />
+              Required for GPT models
+            </span>
+          )}
+        </div>
         <div className="flex gap-2">
           <input
             type={showKeys.openai ? 'text' : 'password'}
@@ -124,13 +185,32 @@ export default function ApiSettings() {
             Save
           </button>
         </div>
+        <p className="mt-2 text-xs text-gray-500">
+          Get your key from{' '}
+          <a
+            href="https://platform.openai.com/api-keys"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-600 hover:underline"
+          >
+            platform.openai.com
+          </a>
+        </p>
       </div>
 
       {/* Anthropic */}
       <div className="mb-6 border-b border-gray-200 pb-6 dark:border-gray-700">
-        <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-          Anthropic API Key
-        </label>
+        <div className="mb-2 flex items-center justify-between">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            Anthropic API Key
+          </label>
+          {tier === UserTier.FREE && (
+            <span className="flex items-center gap-1 text-xs text-gray-500">
+              <Key className="h-3 w-3" />
+              Required for Claude models
+            </span>
+          )}
+        </div>
         <div className="flex gap-2">
           <input
             type={showKeys.anthropic ? 'text' : 'password'}
@@ -152,6 +232,17 @@ export default function ApiSettings() {
             Save
           </button>
         </div>
+        <p className="mt-2 text-xs text-gray-500">
+          Get your key from{' '}
+          <a
+            href="https://console.anthropic.com/api-keys"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-600 hover:underline"
+          >
+            console.anthropic.com
+          </a>
+        </p>
       </div>
 
       {/* Google */}
@@ -241,27 +332,37 @@ export default function ApiSettings() {
       {/* Ollama */}
       <div className="mb-4">
         <div className="mb-3">
-          <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-            Ollama (Local AI Models)
-          </label>
-          <div className="mb-4 rounded-lg bg-blue-50 p-4 text-sm text-blue-800 dark:bg-blue-900/20 dark:text-blue-200">
+          <div className="mb-2 flex items-center justify-between">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Ollama (Local AI Models)
+            </label>
+            <span className="flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900/20 dark:text-green-400">
+              <Sparkles className="h-3 w-3" />
+              Always Free!
+            </span>
+          </div>
+          <div className="mb-4 rounded-lg bg-green-50 p-4 text-sm text-green-800 dark:bg-green-900/20 dark:text-green-200">
+            <p className="mb-2 font-medium">🎉 Free unlimited AI with Ollama!</p>
+            <p className="mb-3 text-xs">
+              Run powerful AI models locally on your computer - no API keys or credits needed.
+            </p>
             <p className="mb-2 font-medium">Quick Setup:</p>
             <ol className="ml-4 list-decimal space-y-1 text-xs">
               <li>
                 Install Ollama:{' '}
-                <code className="rounded bg-blue-100 px-1 dark:bg-blue-800">
+                <code className="rounded bg-green-100 px-1 dark:bg-green-800">
                   curl -fsSL https://ollama.com/install.sh | sh
                 </code>
               </li>
               <li>
                 Enable CORS:{' '}
-                <code className="rounded bg-blue-100 px-1 dark:bg-blue-800">
+                <code className="rounded bg-green-100 px-1 dark:bg-green-800">
                   OLLAMA_ORIGINS="*" ollama serve
                 </code>
               </li>
               <li>
                 Pull a model:{' '}
-                <code className="rounded bg-blue-100 px-1 dark:bg-blue-800">
+                <code className="rounded bg-green-100 px-1 dark:bg-green-800">
                   ollama pull llama3.2
                 </code>
               </li>
