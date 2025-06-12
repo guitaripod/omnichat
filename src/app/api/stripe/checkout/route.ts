@@ -85,10 +85,13 @@ export async function POST(req: NextRequest) {
       await db().update(users).set({ stripeCustomerId }).where(eq(users.id, user.id));
     }
 
+    // Get the app URL from the request or use environment variable
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || `https://${req.headers.get('host')}`;
+
     let sessionConfig: Stripe.Checkout.SessionCreateParams = {
       customer: stripeCustomerId,
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/billing/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: returnUrl || `${process.env.NEXT_PUBLIC_APP_URL}/pricing`,
+      success_url: `${appUrl}/billing/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: returnUrl || `${appUrl}/pricing`,
       metadata: {
         userId: user.id,
         type,
