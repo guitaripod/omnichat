@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import Image from 'next/image';
 import { Download, Calendar, Sparkles, Copy, ExternalLink } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -80,11 +79,10 @@ export default function ImageHistoryItem({
             </div>
           </div>
         ) : (
-          <Image
+          <img
             src={imageUrl}
             alt={prompt}
-            fill
-            className="object-cover transition-transform duration-300 group-hover:scale-105"
+            className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
             onLoad={() => setIsLoading(false)}
             onError={() => {
               setIsLoading(false);

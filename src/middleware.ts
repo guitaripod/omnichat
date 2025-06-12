@@ -7,8 +7,10 @@ const isProtectedRoute = createRouteMatcher([
   '/api/chat(.*)',
   '/api/conversations(.*)',
   '/api/user(.*)',
+  '/api/images(.*)',
   '/profile(.*)',
   '/settings(.*)',
+  '/images(.*)',
 ]);
 
 const isApiRoute = createRouteMatcher(['/api(.*)']);
