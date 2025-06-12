@@ -23,8 +23,12 @@ export interface AvailableModels {
 
 // Export the models data with proper typing
 export const availableModels: AvailableModels = {
-  ...modelsData,
+  xai: modelsData.xai || [],
+  openai: modelsData.openai || [],
+  anthropic: modelsData.anthropic || [],
+  google: modelsData.google || [],
   deepseek: modelsData.deepseek || [],
+  updatedAt: modelsData.updatedAt || new Date().toISOString(),
 };
 
 // Convert from API format to AIModel format
