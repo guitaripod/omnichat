@@ -302,35 +302,29 @@ export default function PricingPage() {
         </Card>
 
         <Tabs defaultValue="subscription" className="mb-20">
-          <div className="mx-auto mb-12 max-w-2xl">
-            <div className="relative rounded-2xl bg-gradient-to-r from-purple-100 to-blue-100 p-1 dark:from-purple-900/20 dark:to-blue-900/20">
-              <TabsList className="grid h-16 w-full grid-cols-2 bg-white/90 backdrop-blur dark:bg-gray-900/90">
-                <TabsTrigger
-                  value="subscription"
-                  className="data-[state=active]:bg-purple-600 data-[state=active]:text-white"
-                >
-                  <Sparkles className="mr-2 h-5 w-5" />
-                  <span className="font-semibold">Subscription Plans</span>
-                </TabsTrigger>
-                <TabsTrigger
-                  value="paygo"
-                  className="data-[state=active]:bg-blue-600 data-[state=active]:text-white"
-                >
-                  <BatteryIcon className="mr-2 h-5 w-5" />
-                  <span className="font-semibold">Pay As You Go</span>
-                </TabsTrigger>
-              </TabsList>
-            </div>
-          </div>
+          <TabsList className="bg-muted/50 mx-auto mb-12 grid h-14 w-full max-w-md grid-cols-2">
+            <TabsTrigger
+              value="subscription"
+              className="data-[state=active]:bg-background font-semibold data-[state=active]:shadow-sm"
+            >
+              Subscription Plans
+            </TabsTrigger>
+            <TabsTrigger
+              value="paygo"
+              className="data-[state=active]:bg-background font-semibold data-[state=active]:shadow-sm"
+            >
+              Pay As You Go
+            </TabsTrigger>
+          </TabsList>
 
           <TabsContent value="subscription" className="space-y-12">
             {/* Free Tier + Subscription Plans Grid */}
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 xl:gap-8">
               {/* Free Tier */}
               <Card className="relative border-2 border-green-200 transition-all hover:shadow-lg dark:border-green-800">
-                <CardHeader className="pb-6">
-                  <div className="mx-auto mb-4 w-fit rounded-xl bg-green-600 p-3 text-white">
-                    <Shield className="h-6 w-6" />
+                <CardHeader className="pt-6 pb-6">
+                  <div className="bg-muted mx-auto mb-4 w-fit rounded-xl p-3">
+                    <Shield className="h-6 w-6 text-green-600 dark:text-green-400" />
                   </div>
                   <CardTitle className="text-center text-2xl">Free</CardTitle>
                   <CardDescription className="text-center">
@@ -380,20 +374,21 @@ export default function PricingPage() {
                         : 'border-gray-200 dark:border-gray-700'
                     )}
                   >
-                    {isPopular && (
-                      <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-purple-600 text-white">
-                        MOST POPULAR
-                      </Badge>
-                    )}
-
-                    <CardHeader className={isPopular ? 'pt-8 pb-6' : 'pb-6'}>
-                      <div
-                        className={cn(
-                          'mx-auto mb-4 w-fit rounded-xl p-3 text-white',
-                          isPopular ? 'bg-purple-600' : 'bg-gray-600'
-                        )}
-                      >
-                        <PlanIcon className="h-6 w-6" />
+                    <CardHeader className="pt-6 pb-6">
+                      {isPopular && (
+                        <div className="mb-4 text-center">
+                          <Badge className="bg-purple-600 px-3 py-1 text-white">MOST POPULAR</Badge>
+                        </div>
+                      )}
+                      <div className="bg-muted mx-auto mb-4 w-fit rounded-xl p-3">
+                        <PlanIcon
+                          className={cn(
+                            'h-6 w-6',
+                            isPopular
+                              ? 'text-purple-600 dark:text-purple-400'
+                              : 'text-muted-foreground'
+                          )}
+                        />
                       </div>
                       <CardTitle className="text-center text-2xl">{plan.name}</CardTitle>
                       <CardDescription className="text-center">{plan.description}</CardDescription>
@@ -412,7 +407,7 @@ export default function PricingPage() {
 
                     <CardContent className="space-y-4">
                       {/* Daily Battery Display */}
-                      <div className="dark:to-gray-850 rounded-lg bg-gradient-to-br from-gray-100 to-gray-50 p-4 text-center dark:from-gray-800">
+                      <div className="bg-muted/50 rounded-lg p-4 text-center">
                         <p className="text-3xl font-bold">{plan.dailyBattery.toLocaleString()}</p>
                         <p className="text-muted-foreground text-xs">battery units per day</p>
                       </div>
@@ -459,67 +454,65 @@ export default function PricingPage() {
             {/* Simple Comparison Table */}
             <div className="mt-20">
               <h3 className="mb-10 text-center text-3xl font-bold">Compare Plans</h3>
-              <div className="overflow-hidden rounded-2xl bg-gradient-to-br from-purple-50 to-blue-50 p-1 dark:from-purple-900/10 dark:to-blue-900/10">
-                <div className="overflow-x-auto rounded-xl bg-white dark:bg-gray-900">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b-2 bg-gray-50 dark:bg-gray-800">
-                        <th className="p-4 text-left font-semibold">Feature</th>
-                        <th className="p-4 text-center font-semibold">Free</th>
-                        {SIMPLE_BATTERY_PLANS.map((plan) => (
-                          <th key={plan.name} className="p-4 text-center font-semibold">
-                            {plan.name}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr className="border-b transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                        <td className="p-4 font-medium">Own API Keys</td>
-                        <td className="p-4 text-center">
+              <div className="overflow-x-auto rounded-xl border">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b-2 bg-gray-50 dark:bg-gray-800">
+                      <th className="p-4 text-left font-semibold">Feature</th>
+                      <th className="p-4 text-center font-semibold">Free</th>
+                      {SIMPLE_BATTERY_PLANS.map((plan) => (
+                        <th key={plan.name} className="p-4 text-center font-semibold">
+                          {plan.name}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr className="border-b transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                      <td className="p-4 font-medium">Own API Keys</td>
+                      <td className="p-4 text-center">
+                        <Check className="mx-auto h-5 w-5 text-green-600" />
+                      </td>
+                      {SIMPLE_BATTERY_PLANS.map((plan) => (
+                        <td key={plan.name} className="p-4 text-center">
                           <Check className="mx-auto h-5 w-5 text-green-600" />
                         </td>
-                        {SIMPLE_BATTERY_PLANS.map((plan) => (
-                          <td key={plan.name} className="p-4 text-center">
-                            <Check className="mx-auto h-5 w-5 text-green-600" />
-                          </td>
-                        ))}
-                      </tr>
-                      <tr className="border-b transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                        <td className="p-4 font-medium">Premium AI Models</td>
-                        <td className="p-4 text-center">
-                          <X className="mx-auto h-5 w-5 text-gray-400" />
+                      ))}
+                    </tr>
+                    <tr className="border-b transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                      <td className="p-4 font-medium">Premium AI Models</td>
+                      <td className="p-4 text-center">
+                        <X className="mx-auto h-5 w-5 text-gray-400" />
+                      </td>
+                      {SIMPLE_BATTERY_PLANS.map((plan) => (
+                        <td key={plan.name} className="p-4 text-center">
+                          <Check className="mx-auto h-5 w-5 text-green-600" />
                         </td>
-                        {SIMPLE_BATTERY_PLANS.map((plan) => (
-                          <td key={plan.name} className="p-4 text-center">
-                            <Check className="mx-auto h-5 w-5 text-green-600" />
-                          </td>
-                        ))}
-                      </tr>
-                      <tr className="border-b transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                        <td className="p-4 font-medium">Daily Battery Units</td>
-                        <td className="p-4 text-center text-gray-500">0</td>
-                        {SIMPLE_BATTERY_PLANS.map((plan) => (
-                          <td
-                            key={plan.name}
-                            className="p-4 text-center text-lg font-bold text-purple-600 dark:text-purple-400"
-                          >
-                            {plan.dailyBattery.toLocaleString()}
-                          </td>
-                        ))}
-                      </tr>
-                      <tr className="transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                        <td className="p-4 font-medium">Monthly Battery Total</td>
-                        <td className="p-4 text-center text-gray-500">0</td>
-                        {SIMPLE_BATTERY_PLANS.map((plan) => (
-                          <td key={plan.name} className="p-4 text-center font-medium">
-                            {plan.totalBattery.toLocaleString()}
-                          </td>
-                        ))}
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
+                      ))}
+                    </tr>
+                    <tr className="border-b transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                      <td className="p-4 font-medium">Daily Battery Units</td>
+                      <td className="p-4 text-center text-gray-500">0</td>
+                      {SIMPLE_BATTERY_PLANS.map((plan) => (
+                        <td
+                          key={plan.name}
+                          className="p-4 text-center text-lg font-bold text-purple-600 dark:text-purple-400"
+                        >
+                          {plan.dailyBattery.toLocaleString()}
+                        </td>
+                      ))}
+                    </tr>
+                    <tr className="transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                      <td className="p-4 font-medium">Monthly Battery Total</td>
+                      <td className="p-4 text-center text-gray-500">0</td>
+                      {SIMPLE_BATTERY_PLANS.map((plan) => (
+                        <td key={plan.name} className="p-4 text-center font-medium">
+                          {plan.totalBattery.toLocaleString()}
+                        </td>
+                      ))}
+                    </tr>
+                  </tbody>
+                </table>
               </div>
             </div>
           </TabsContent>
