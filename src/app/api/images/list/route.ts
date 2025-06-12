@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
+import { getDevUser, isDevMode } from '@/lib/auth/dev-auth';
 
 export const runtime = 'edge';
 
@@ -36,8 +37,20 @@ interface R2Object {
 
 export async function GET(_request: NextRequest) {
   try {
-    const { userId } = await auth();
+    let userId: string | null = null;
+
+    // Try Clerk auth first
+    const authResult = await auth();
+    if (authResult?.userId) {
+      userId = authResult.userId;
+    } else if (isDevMode()) {
+      // Fallback to dev mode auth
+      const devUser = await getDevUser();
+      userId = devUser?.id || null;
+    }
+
     if (!userId) {
+      console.log('[Image List] No userId found in auth');
       return Response.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 

@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
+import { getDevUser, isDevMode } from '@/lib/auth/dev-auth';
 
 export const runtime = 'edge';
 
@@ -24,8 +25,20 @@ interface R2Object {
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ key: string }> }) {
   try {
-    const { userId } = await auth();
+    let userId: string | null = null;
+
+    // Try Clerk auth first
+    const authResult = await auth();
+    if (authResult?.userId) {
+      userId = authResult.userId;
+    } else if (isDevMode()) {
+      // Fallback to dev mode auth
+      const devUser = await getDevUser();
+      userId = devUser?.id || null;
+    }
+
     if (!userId) {
+      console.log('[Image API] No userId found in auth');
       return Response.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -70,8 +83,10 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         return Response.json({ success: false, error: 'Image not found' }, { status: 404 });
       }
     } else {
-      // Verify access - either user owns the file or it's a generated image
-      if (!key.startsWith(`${userId}/`) && !key.startsWith('generated-images/')) {
+      // Verify access - check if the key contains the userId anywhere in the path
+      // This handles both direct userId paths and full clerk user IDs
+      if (!key.includes(userId) && !key.startsWith('generated-images/')) {
+        console.log('[Image API] Access denied. Key:', key, 'does not contain userId:', userId);
         return Response.json({ success: false, error: 'Access denied' }, { status: 403 });
       }
 
