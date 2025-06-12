@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Check, ArrowRight, HelpCircle } from 'lucide-react';
+import { Check, ArrowRight, HelpCircle, Server, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { loadStripe } from '@stripe/stripe-js';
 import { useAuth } from '@clerk/nextjs';
@@ -27,6 +27,7 @@ import { Label } from '@/components/ui/label';
 import { BATTERY_PLANS, BATTERY_TOPUPS } from '@/lib/battery-pricing-v2';
 import { MODEL_BATTERY_USAGE } from '@/lib/battery-pricing';
 import { cn } from '@/lib/utils';
+import { Battery as BatteryIcon } from 'lucide-react';
 
 export default function PricingPage() {
   const [isAnnual, setIsAnnual] = useState(false);
@@ -121,7 +122,7 @@ export default function PricingPage() {
       <div className="mb-12 text-center">
         <h1 className="mb-4 text-4xl font-bold">Simple, Transparent Pricing</h1>
         <p className="text-muted-foreground mb-8 text-xl">
-          Pay only for what you use with our battery system
+          Start free with local AI models, upgrade for premium cloud access
         </p>
 
         {/* Annual Toggle */}
@@ -143,7 +144,7 @@ export default function PricingPage() {
       <Card className="mb-12 border-blue-200 bg-gradient-to-r from-blue-50 to-purple-50 dark:border-blue-800 dark:from-blue-950 dark:to-purple-950">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Battery className="h-5 w-5" />
+            <BatteryIcon className="h-5 w-5" />
             How the Battery System Works
           </CardTitle>
         </CardHeader>
@@ -188,7 +189,55 @@ export default function PricingPage() {
 
         <TabsContent value="subscription">
           {/* Subscription Plans */}
-          <div className="grid gap-6 md:grid-cols-4">
+          <div className="grid gap-6 md:grid-cols-5">
+            {/* Free Tier */}
+            <Card className="relative border-green-200 dark:border-green-800">
+              <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-green-600">
+                100% Free
+              </Badge>
+              <CardHeader>
+                <CardTitle>Free</CardTitle>
+                <CardDescription>Perfect for getting started</CardDescription>
+                <div className="mt-4">
+                  <span className="text-3xl font-bold">$0</span>
+                  <span className="text-muted-foreground">/forever</span>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Local Models Display */}
+                <div className="rounded-lg bg-green-50 p-3 text-center dark:bg-green-900/20">
+                  <Server className="mx-auto mb-2 h-8 w-8 text-green-600 dark:text-green-400" />
+                  <p className="text-sm font-medium">Unlimited Local AI</p>
+                  <p className="text-muted-foreground text-xs">Ollama models</p>
+                </div>
+
+                {/* Features */}
+                <div className="space-y-2">
+                  <div className="flex items-start gap-2">
+                    <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-green-600 dark:text-green-400" />
+                    <span className="text-sm">Unlimited Ollama models</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-green-600 dark:text-green-400" />
+                    <span className="text-sm">Add your own API keys</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-green-600 dark:text-green-400" />
+                    <span className="text-sm">7-day chat history</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-green-600 dark:text-green-400" />
+                    <span className="text-sm">Basic export</span>
+                  </div>
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Button className="w-full" variant="outline" onClick={() => router.push('/chat')}>
+                  Start Free
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </CardFooter>
+            </Card>
             {BATTERY_PLANS.map((plan) => {
               const monthlyPrice = isAnnual ? plan.price * (1 - discount) : plan.price;
               const isPopular = plan.name === 'Daily';
@@ -242,6 +291,10 @@ export default function PricingPage() {
 
                     {/* Features */}
                     <div className="space-y-2">
+                      <div className="mb-2 flex items-start gap-2">
+                        <Sparkles className="mt-0.5 h-4 w-4 flex-shrink-0 text-orange-600 dark:text-orange-400" />
+                        <span className="text-sm font-medium">All Premium AI Models</span>
+                      </div>
                       {plan.features.map((feature, i) => (
                         <div key={i} className="flex items-start gap-2">
                           <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-green-600 dark:text-green-400" />
@@ -375,22 +428,3 @@ export default function PricingPage() {
     </div>
   );
 }
-
-// Add missing Battery icon since we haven't imported it
-const Battery = ({ className }: { className?: string }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className={className}
-  >
-    <rect width="18" height="12" x="1" y="6" rx="2" />
-    <line x1="23" x2="23" y1="10" y2="14" />
-  </svg>
-);
