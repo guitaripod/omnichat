@@ -89,12 +89,16 @@ jobs:
           git checkout HEAD -- scripts/available-models.json
 
           cd scripts
-          go run compare-models.go available-models.json available-models-new.json
-          if [ $? -eq 0 ]; then
+          # Run comparison and capture exit code
+          go run compare-models.go available-models.json available-models-new.json || COMPARE_EXIT=$?
+
+          if [ "${COMPARE_EXIT:-0}" -eq 0 ]; then
             echo "changed=false" >> $GITHUB_OUTPUT
+            echo "✅ No model changes detected"
             mv available-models-new.json available-models.json
           else
             echo "changed=true" >> $GITHUB_OUTPUT
+            echo "📋 Models have changed, will update"
             mv available-models-new.json available-models.json
           fi
 
