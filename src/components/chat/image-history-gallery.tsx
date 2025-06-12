@@ -38,7 +38,22 @@ export default function ImageHistoryGallery() {
       setLoading(true);
 
       const response = await fetch('/api/images/list');
-      const data = await response.json();
+      const data = (await response.json()) as {
+        success: boolean;
+        images?: Array<{
+          id: string;
+          url: string;
+          model: string;
+          fileName: string;
+          size: number;
+          uploaded: string;
+          prompt: string;
+          originalSize: string;
+          compressedSize: string;
+          compressionRatio: string;
+        }>;
+        error?: string;
+      };
 
       if (!data.success || !data.images) {
         console.error('Failed to fetch images:', data.error);
@@ -46,7 +61,7 @@ export default function ImageHistoryGallery() {
       }
 
       // Transform the API response to our GeneratedImage format
-      const allImages: GeneratedImage[] = data.images.map((img: any) => ({
+      const allImages: GeneratedImage[] = data.images.map((img) => ({
         id: img.id,
         url: img.url,
         prompt: img.prompt,
