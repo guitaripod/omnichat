@@ -23,7 +23,6 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { SIMPLE_BATTERY_PLANS, SIMPLE_BATTERY_TOPUPS } from '@/lib/battery-pricing-simple';
-import { MODEL_BATTERY_USAGE } from '@/lib/battery-pricing';
 import { cn } from '@/lib/utils';
 import { Battery as BatteryIcon, Sparkles } from 'lucide-react';
 
@@ -34,6 +33,110 @@ const planIcons = {
   Power: Rocket,
   Ultimate: Crown,
 };
+
+// Model display configuration
+const getModelDisplayData = () =>
+  [
+    // Budget Tier
+    {
+      name: 'DeepSeek Chat',
+      provider: 'DeepSeek',
+      tier: 'budget' as const,
+      batteryPerKToken: 1.4,
+      estimatedPerMessage: 0.35,
+      emoji: '⚡',
+    },
+    {
+      name: 'GPT-4 Nano',
+      provider: 'OpenAI',
+      tier: 'budget' as const,
+      batteryPerKToken: 0.5,
+      estimatedPerMessage: 0.125,
+      emoji: '🔵',
+    },
+    {
+      name: 'Gemini Flash',
+      provider: 'Google',
+      tier: 'budget' as const,
+      batteryPerKToken: 0.5,
+      estimatedPerMessage: 0.125,
+      emoji: '✨',
+    },
+    // Mid Tier
+    {
+      name: 'GPT-4 Mini',
+      provider: 'OpenAI',
+      tier: 'mid' as const,
+      batteryPerKToken: 2.0,
+      estimatedPerMessage: 0.5,
+      emoji: '🟢',
+    },
+    {
+      name: 'Claude Haiku',
+      provider: 'Anthropic',
+      tier: 'mid' as const,
+      batteryPerKToken: 4.8,
+      estimatedPerMessage: 1.2,
+      emoji: '🎋',
+    },
+    {
+      name: 'Grok Mini',
+      provider: 'xAI',
+      tier: 'mid' as const,
+      batteryPerKToken: 1.6,
+      estimatedPerMessage: 0.4,
+      emoji: '🤖',
+    },
+    // Premium Tier
+    {
+      name: 'GPT-4',
+      provider: 'OpenAI',
+      tier: 'premium' as const,
+      batteryPerKToken: 10.0,
+      estimatedPerMessage: 2.5,
+      emoji: '🟣',
+    },
+    {
+      name: 'Claude Sonnet',
+      provider: 'Anthropic',
+      tier: 'premium' as const,
+      batteryPerKToken: 18.0,
+      estimatedPerMessage: 4.5,
+      emoji: '🎭',
+    },
+    {
+      name: 'Gemini Pro',
+      provider: 'Google',
+      tier: 'premium' as const,
+      batteryPerKToken: 7.5,
+      estimatedPerMessage: 1.875,
+      emoji: '💎',
+    },
+    {
+      name: 'Grok',
+      provider: 'xAI',
+      tier: 'premium' as const,
+      batteryPerKToken: 18.0,
+      estimatedPerMessage: 4.5,
+      emoji: '🚀',
+    },
+    {
+      name: 'Claude Opus',
+      provider: 'Anthropic',
+      tier: 'premium' as const,
+      batteryPerKToken: 120.0,
+      estimatedPerMessage: 30.0,
+      emoji: '👑',
+    },
+    {
+      name: 'GPT-4 Turbo',
+      provider: 'OpenAI',
+      tier: 'premium' as const,
+      batteryPerKToken: 20.0,
+      estimatedPerMessage: 5.0,
+      emoji: '⚡',
+    },
+  ].sort((a, b) => a.batteryPerKToken - b.batteryPerKToken);
 
 export default function PricingPage() {
   const [isAnnual, setIsAnnual] = useState(false);
@@ -199,20 +302,30 @@ export default function PricingPage() {
         </Card>
 
         <Tabs defaultValue="subscription" className="mb-20">
-          <TabsList className="mx-auto mb-12 grid h-14 w-full max-w-lg grid-cols-2">
-            <TabsTrigger value="subscription">
-              <Sparkles className="mr-2 h-4 w-4" />
-              Subscription Plans
-            </TabsTrigger>
-            <TabsTrigger value="paygo">
-              <BatteryIcon className="mr-2 h-4 w-4" />
-              Pay As You Go
-            </TabsTrigger>
-          </TabsList>
+          <div className="mx-auto mb-12 max-w-2xl">
+            <div className="relative rounded-2xl bg-gradient-to-r from-purple-100 to-blue-100 p-1 dark:from-purple-900/20 dark:to-blue-900/20">
+              <TabsList className="grid h-16 w-full grid-cols-2 bg-white/90 backdrop-blur dark:bg-gray-900/90">
+                <TabsTrigger
+                  value="subscription"
+                  className="data-[state=active]:bg-purple-600 data-[state=active]:text-white"
+                >
+                  <Sparkles className="mr-2 h-5 w-5" />
+                  <span className="font-semibold">Subscription Plans</span>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="paygo"
+                  className="data-[state=active]:bg-blue-600 data-[state=active]:text-white"
+                >
+                  <BatteryIcon className="mr-2 h-5 w-5" />
+                  <span className="font-semibold">Pay As You Go</span>
+                </TabsTrigger>
+              </TabsList>
+            </div>
+          </div>
 
           <TabsContent value="subscription" className="space-y-12">
             {/* Free Tier + Subscription Plans Grid */}
-            <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-5 xl:gap-10">
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 xl:gap-8">
               {/* Free Tier */}
               <Card className="relative border-2 border-green-200 transition-all hover:shadow-lg dark:border-green-800">
                 <CardHeader className="pb-6">
@@ -285,10 +398,12 @@ export default function PricingPage() {
                       <CardTitle className="text-center text-2xl">{plan.name}</CardTitle>
                       <CardDescription className="text-center">{plan.description}</CardDescription>
                       <div className="mt-6 text-center">
-                        <span className="text-4xl font-bold">${monthlyPrice.toFixed(2)}</span>
-                        <span className="text-muted-foreground">/month</span>
+                        <div className="flex items-baseline justify-center">
+                          <span className="text-4xl font-bold">${monthlyPrice.toFixed(2)}</span>
+                          <span className="text-muted-foreground ml-1">/month</span>
+                        </div>
                         {isAnnual && (
-                          <p className="mt-1 text-sm text-green-600">
+                          <p className="mt-2 text-sm font-medium text-green-600 dark:text-green-400">
                             Save ${(plan.price * 12 * discount).toFixed(2)}/year
                           </p>
                         )}
@@ -297,7 +412,7 @@ export default function PricingPage() {
 
                     <CardContent className="space-y-4">
                       {/* Daily Battery Display */}
-                      <div className="rounded-lg bg-gray-100 p-4 text-center dark:bg-gray-800">
+                      <div className="dark:to-gray-850 rounded-lg bg-gradient-to-br from-gray-100 to-gray-50 p-4 text-center dark:from-gray-800">
                         <p className="text-3xl font-bold">{plan.dailyBattery.toLocaleString()}</p>
                         <p className="text-muted-foreground text-xs">battery units per day</p>
                       </div>
@@ -344,65 +459,67 @@ export default function PricingPage() {
             {/* Simple Comparison Table */}
             <div className="mt-20">
               <h3 className="mb-10 text-center text-3xl font-bold">Compare Plans</h3>
-              <div className="overflow-x-auto rounded-xl border-2 border-gray-200 dark:border-gray-700">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b-2 bg-gray-50 dark:bg-gray-800">
-                      <th className="p-4 text-left font-semibold">Feature</th>
-                      <th className="p-4 text-center font-semibold">Free</th>
-                      {SIMPLE_BATTERY_PLANS.map((plan) => (
-                        <th key={plan.name} className="p-4 text-center font-semibold">
-                          {plan.name}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr className="border-b transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                      <td className="p-4 font-medium">Own API Keys</td>
-                      <td className="p-4 text-center">
-                        <Check className="mx-auto h-5 w-5 text-green-600" />
-                      </td>
-                      {SIMPLE_BATTERY_PLANS.map((plan) => (
-                        <td key={plan.name} className="p-4 text-center">
+              <div className="overflow-hidden rounded-2xl bg-gradient-to-br from-purple-50 to-blue-50 p-1 dark:from-purple-900/10 dark:to-blue-900/10">
+                <div className="overflow-x-auto rounded-xl bg-white dark:bg-gray-900">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b-2 bg-gray-50 dark:bg-gray-800">
+                        <th className="p-4 text-left font-semibold">Feature</th>
+                        <th className="p-4 text-center font-semibold">Free</th>
+                        {SIMPLE_BATTERY_PLANS.map((plan) => (
+                          <th key={plan.name} className="p-4 text-center font-semibold">
+                            {plan.name}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr className="border-b transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                        <td className="p-4 font-medium">Own API Keys</td>
+                        <td className="p-4 text-center">
                           <Check className="mx-auto h-5 w-5 text-green-600" />
                         </td>
-                      ))}
-                    </tr>
-                    <tr className="border-b transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                      <td className="p-4 font-medium">Premium AI Models</td>
-                      <td className="p-4 text-center">
-                        <X className="mx-auto h-5 w-5 text-gray-400" />
-                      </td>
-                      {SIMPLE_BATTERY_PLANS.map((plan) => (
-                        <td key={plan.name} className="p-4 text-center">
-                          <Check className="mx-auto h-5 w-5 text-green-600" />
+                        {SIMPLE_BATTERY_PLANS.map((plan) => (
+                          <td key={plan.name} className="p-4 text-center">
+                            <Check className="mx-auto h-5 w-5 text-green-600" />
+                          </td>
+                        ))}
+                      </tr>
+                      <tr className="border-b transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                        <td className="p-4 font-medium">Premium AI Models</td>
+                        <td className="p-4 text-center">
+                          <X className="mx-auto h-5 w-5 text-gray-400" />
                         </td>
-                      ))}
-                    </tr>
-                    <tr className="border-b transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                      <td className="p-4 font-medium">Daily Battery Units</td>
-                      <td className="p-4 text-center text-gray-500">0</td>
-                      {SIMPLE_BATTERY_PLANS.map((plan) => (
-                        <td
-                          key={plan.name}
-                          className="p-4 text-center text-lg font-bold text-purple-600 dark:text-purple-400"
-                        >
-                          {plan.dailyBattery.toLocaleString()}
-                        </td>
-                      ))}
-                    </tr>
-                    <tr className="transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                      <td className="p-4 font-medium">Monthly Battery Total</td>
-                      <td className="p-4 text-center text-gray-500">0</td>
-                      {SIMPLE_BATTERY_PLANS.map((plan) => (
-                        <td key={plan.name} className="p-4 text-center font-medium">
-                          {plan.totalBattery.toLocaleString()}
-                        </td>
-                      ))}
-                    </tr>
-                  </tbody>
-                </table>
+                        {SIMPLE_BATTERY_PLANS.map((plan) => (
+                          <td key={plan.name} className="p-4 text-center">
+                            <Check className="mx-auto h-5 w-5 text-green-600" />
+                          </td>
+                        ))}
+                      </tr>
+                      <tr className="border-b transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                        <td className="p-4 font-medium">Daily Battery Units</td>
+                        <td className="p-4 text-center text-gray-500">0</td>
+                        {SIMPLE_BATTERY_PLANS.map((plan) => (
+                          <td
+                            key={plan.name}
+                            className="p-4 text-center text-lg font-bold text-purple-600 dark:text-purple-400"
+                          >
+                            {plan.dailyBattery.toLocaleString()}
+                          </td>
+                        ))}
+                      </tr>
+                      <tr className="transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                        <td className="p-4 font-medium">Monthly Battery Total</td>
+                        <td className="p-4 text-center text-gray-500">0</td>
+                        {SIMPLE_BATTERY_PLANS.map((plan) => (
+                          <td key={plan.name} className="p-4 text-center font-medium">
+                            {plan.totalBattery.toLocaleString()}
+                          </td>
+                        ))}
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           </TabsContent>
@@ -428,30 +545,29 @@ export default function PricingPage() {
                     onClick={() => handleBuyBattery(topup.units, topup.price)}
                   >
                     {topup.popular && (
-                      <Badge className="absolute -top-3 right-4 bg-purple-600 px-4 py-1 text-white">
+                      <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-purple-600 px-4 py-1 text-white">
                         BEST VALUE
                       </Badge>
                     )}
-                    <CardContent className="p-8">
-                      <div className="mb-6 flex items-start justify-between">
-                        <div>
-                          <h4 className="text-xl font-bold">{topup.label}</h4>
-                          <p className="text-muted-foreground mt-1">
-                            {topup.units.toLocaleString()} battery units
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <span className="text-3xl font-bold">${topup.price}</span>
+                    <CardContent className="p-8 pt-10">
+                      <div className="text-center">
+                        <h4 className="text-2xl font-bold">{topup.label}</h4>
+                        <p className="text-muted-foreground mt-2 text-lg">
+                          {topup.units.toLocaleString()} battery units
+                        </p>
+                        <div className="mt-4">
+                          <span className="text-4xl font-bold">${topup.price}</span>
                           <p className="text-muted-foreground mt-1 text-sm">
                             ${((topup.price / topup.units) * 1000).toFixed(2)}/1K units
                           </p>
                         </div>
+                        <p className="text-muted-foreground mt-6 text-base">{topup.description}</p>
                       </div>
-                      <p className="text-muted-foreground mb-6">{topup.description}</p>
                       <Button
-                        className="w-full"
+                        className="mt-6 w-full"
                         variant={topup.popular ? 'default' : 'outline'}
                         disabled={isLoading}
+                        size="lg"
                       >
                         {isLoading ? 'Processing...' : 'Buy Now'}
                         <ArrowRight className="ml-2 h-4 w-4" />
@@ -473,43 +589,84 @@ export default function PricingPage() {
         </Tabs>
 
         {/* Model Battery Usage */}
-        <Card className="mt-20 border-2">
-          <CardHeader className="pb-8">
-            <CardTitle className="text-2xl">Battery Usage by Model</CardTitle>
-            <CardDescription className="text-base">
-              See how much each AI model costs in battery units
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="pb-8">
+        <Card className="mt-20 overflow-hidden border-2">
+          <div className="bg-gradient-to-r from-purple-100 to-blue-100 p-1 dark:from-purple-900/20 dark:to-blue-900/20">
+            <div className="bg-white dark:bg-gray-900">
+              <CardHeader className="pb-8">
+                <CardTitle className="text-3xl">Battery Usage by Model</CardTitle>
+                <CardDescription className="text-lg">
+                  See how much each AI model costs in battery units
+                </CardDescription>
+              </CardHeader>
+            </div>
+          </div>
+          <CardContent className="pt-6 pb-8">
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {Object.entries(MODEL_BATTERY_USAGE)
-                .filter(([_, model]) => model.estimatedPerMessage > 0)
-                .sort((a, b) => a[1].batteryPerKToken - b[1].batteryPerKToken)
-                .slice(0, 9)
-                .map(([key, model]) => (
-                  <div
-                    key={key}
-                    className="flex items-center justify-between rounded-lg border-2 p-4 transition-all hover:shadow-md"
-                  >
+              {getModelDisplayData().map((model) => (
+                <div
+                  key={model.name}
+                  className={cn(
+                    'relative rounded-xl border-2 p-5 transition-all hover:shadow-lg',
+                    model.tier === 'budget' &&
+                      'border-green-200 bg-green-50/50 dark:border-green-800 dark:bg-green-950/20',
+                    model.tier === 'mid' &&
+                      'border-blue-200 bg-blue-50/50 dark:border-blue-800 dark:bg-blue-950/20',
+                    model.tier === 'premium' &&
+                      'border-purple-200 bg-purple-50/50 dark:border-purple-800 dark:bg-purple-950/20'
+                  )}
+                >
+                  <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
-                      <span className="text-2xl">{model.emoji}</span>
+                      <div
+                        className={cn(
+                          'rounded-lg p-2',
+                          model.tier === 'budget' && 'bg-green-100 dark:bg-green-900/30',
+                          model.tier === 'mid' && 'bg-blue-100 dark:bg-blue-900/30',
+                          model.tier === 'premium' && 'bg-purple-100 dark:bg-purple-900/30'
+                        )}
+                      >
+                        <span className="text-2xl">{model.emoji}</span>
+                      </div>
                       <div>
-                        <p className="font-medium">{model.displayName}</p>
-                        <p className="text-muted-foreground text-sm capitalize">
-                          {model.tier} tier
-                        </p>
+                        <p className="text-lg font-semibold">{model.name}</p>
+                        <p className="text-muted-foreground text-sm">{model.provider}</p>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="text-lg font-bold text-purple-600 dark:text-purple-400">
-                        {model.batteryPerKToken} BU/1K
-                      </p>
-                      <p className="text-muted-foreground text-sm">
-                        ~{model.estimatedPerMessage}/msg
-                      </p>
+                    <Badge
+                      variant="outline"
+                      className={cn(
+                        model.tier === 'budget' &&
+                          'border-green-300 bg-green-100 text-green-700 dark:border-green-700 dark:bg-green-900/30 dark:text-green-300',
+                        model.tier === 'mid' &&
+                          'border-blue-300 bg-blue-100 text-blue-700 dark:border-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+                        model.tier === 'premium' &&
+                          'border-purple-300 bg-purple-100 text-purple-700 dark:border-purple-700 dark:bg-purple-900/30 dark:text-purple-300'
+                      )}
+                    >
+                      {model.tier}
+                    </Badge>
+                  </div>
+                  <div className="mt-4 space-y-2">
+                    <div className="flex items-baseline justify-between">
+                      <span className="text-muted-foreground text-sm">Cost per 1K tokens:</span>
+                      <span
+                        className={cn(
+                          'font-bold',
+                          model.tier === 'budget' && 'text-green-600 dark:text-green-400',
+                          model.tier === 'mid' && 'text-blue-600 dark:text-blue-400',
+                          model.tier === 'premium' && 'text-purple-600 dark:text-purple-400'
+                        )}
+                      >
+                        {model.batteryPerKToken} BU
+                      </span>
+                    </div>
+                    <div className="flex items-baseline justify-between">
+                      <span className="text-muted-foreground text-sm">Per message:</span>
+                      <span className="text-sm font-medium">~{model.estimatedPerMessage} BU</span>
                     </div>
                   </div>
-                ))}
+                </div>
+              ))}
             </div>
           </CardContent>
         </Card>
