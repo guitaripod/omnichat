@@ -1,5 +1,23 @@
 # OmniChat
 
+<div align="center">
+
+[![CI/CD Pipeline](https://github.com/marcusziade/omnichat/actions/workflows/ci.yml/badge.svg)](https://github.com/marcusziade/omnichat/actions/workflows/ci.yml)
+[![Deploy to Cloudflare Pages](https://img.shields.io/badge/Deploy-Cloudflare%20Pages-F38020?logo=cloudflare&logoColor=white)](https://omnichat-7pu.pages.dev)
+[![License](https://img.shields.io/github/license/marcusziade/omnichat)](LICENSE)
+
+[![Next.js](https://img.shields.io/badge/Next.js-15-000000?logo=next.js&logoColor=white)](https://nextjs.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.0-38B2AC?logo=tailwind-css&logoColor=white)](https://tailwindcss.com)
+[![Drizzle ORM](https://img.shields.io/badge/Drizzle-ORM-C5F74F?logo=drizzle&logoColor=black)](https://orm.drizzle.team)
+
+[![OpenAI](https://img.shields.io/badge/OpenAI-API-412991?logo=openai&logoColor=white)](https://openai.com)
+[![Anthropic](https://img.shields.io/badge/Anthropic-Claude-AA6F39?logo=anthropic&logoColor=white)](https://anthropic.com)
+[![Google AI](https://img.shields.io/badge/Google-Gemini-4285F4?logo=google&logoColor=white)](https://ai.google.dev)
+[![Ollama](https://img.shields.io/badge/Ollama-Local_AI-000000?logo=ollama&logoColor=white)](https://ollama.ai)
+
+</div>
+
 AI chat application featuring multi-LLM support, local Ollama integration, and advanced chat features.
 
 ## 🏗️ Architecture
