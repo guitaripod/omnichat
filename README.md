@@ -4,7 +4,7 @@
 
 [![CI/CD Pipeline](https://github.com/marcusziade/omnichat/actions/workflows/ci.yml/badge.svg)](https://github.com/marcusziade/omnichat/actions/workflows/ci.yml)
 [![Deploy to Cloudflare Pages](https://img.shields.io/badge/Deploy-Cloudflare%20Pages-F38020?logo=cloudflare&logoColor=white)](https://omnichat-7pu.pages.dev)
-[![License](https://img.shields.io/github/license/marcusziade/omnichat)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 [![Next.js](https://img.shields.io/badge/Next.js-15-000000?logo=next.js&logoColor=white)](https://nextjs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
