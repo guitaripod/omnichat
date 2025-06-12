@@ -302,7 +302,7 @@ export default function PricingPage() {
         </Card>
 
         <Tabs defaultValue="subscription" className="mb-20">
-          <TabsList className="bg-muted/50 mx-auto mb-12 grid h-14 w-full max-w-md grid-cols-2">
+          <TabsList className="bg-muted/50 sr-only mx-auto mb-12 grid h-14 w-full max-w-md grid-cols-2">
             <TabsTrigger
               value="subscription"
               className="data-[state=active]:bg-background font-semibold data-[state=active]:shadow-sm"
@@ -519,6 +519,12 @@ export default function PricingPage() {
 
           <TabsContent value="paygo" className="mt-12">
             <div className="mx-auto max-w-4xl">
+              <div className="mb-12 text-center">
+                <h2 className="mb-4 text-3xl font-bold">Pay As You Go</h2>
+                <p className="text-muted-foreground text-lg">
+                  Perfect for occasional users or trying out premium models
+                </p>
+              </div>
               <div className="grid gap-6 md:grid-cols-2">
                 {SIMPLE_BATTERY_TOPUPS.map((topup) => (
                   <Card
