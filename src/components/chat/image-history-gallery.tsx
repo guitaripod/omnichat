@@ -30,85 +30,37 @@ export default function ImageHistoryGallery() {
   const [selectedImage, setSelectedImage] = useState<GeneratedImage | null>(null);
   const [sortBy, setSortBy] = useState<'date' | 'model'>('date');
 
-  // Extract images from all conversations
+  // Fetch images directly from R2
   const fetchImages = useCallback(async () => {
     if (!userId) return;
 
     try {
       setLoading(true);
 
-      // Fetch all conversations
-      const conversationsResponse = await fetch('/api/conversations');
-      const conversationsData = (await conversationsResponse.json()) as {
-        success: boolean;
-        conversations?: Array<{ id: string; title: string; createdAt: string }>;
-      };
+      const response = await fetch('/api/images/list');
+      const data = await response.json();
 
-      if (!conversationsData.success || !conversationsData.conversations) {
-        console.error('Failed to fetch conversations');
+      if (!data.success || !data.images) {
+        console.error('Failed to fetch images:', data.error);
         return;
       }
 
-      const allImages: GeneratedImage[] = [];
+      // Transform the API response to our GeneratedImage format
+      const allImages: GeneratedImage[] = data.images.map((img: any) => ({
+        id: img.id,
+        url: img.url,
+        prompt: img.prompt,
+        model: img.model,
+        createdAt: new Date(img.uploaded),
+        conversationId: '', // Not needed for R2-based approach
+        metadata: {
+          originalSize: img.originalSize,
+          compressedSize: img.compressedSize,
+          compressionRatio: img.compressionRatio,
+        },
+      }));
 
-      // Process each conversation
-      for (const conversation of conversationsData.conversations) {
-        // Fetch messages for this conversation
-        const messagesResponse = await fetch(`/api/conversations/${conversation.id}/messages`);
-        const messagesData = (await messagesResponse.json()) as {
-          success: boolean;
-          messages?: Array<{
-            id: string;
-            content: string;
-            role: 'user' | 'assistant';
-            model?: string;
-            createdAt: string;
-          }>;
-        };
-
-        if (!messagesData.success || !messagesData.messages) continue;
-
-        // Extract images from messages
-        for (const message of messagesData.messages) {
-          if (message.role !== 'assistant') continue;
-
-          // Check if message contains generated images
-          const imageMatches = message.content.match(/!\[Generated Image\]\((.*?)\)/g);
-          if (!imageMatches) continue;
-
-          for (const match of imageMatches) {
-            const urlMatch = match.match(/!\[Generated Image\]\((.*?)\)/);
-            if (!urlMatch || !urlMatch[1]) continue;
-
-            const imageUrl = urlMatch[1];
-
-            // Skip if not a valid image URL
-            if (!imageUrl.startsWith('http') && !imageUrl.startsWith('data:')) continue;
-
-            // Extract prompt from the message content or previous user message
-            let prompt = 'Generated image';
-            const messageIndex = messagesData.messages.indexOf(message);
-            if (messageIndex > 0) {
-              const previousMessage = messagesData.messages[messageIndex - 1];
-              if (previousMessage.role === 'user') {
-                prompt = previousMessage.content;
-              }
-            }
-
-            allImages.push({
-              id: `${message.id}-${allImages.length}`,
-              url: imageUrl,
-              prompt: prompt,
-              model: message.model || 'unknown',
-              createdAt: new Date(message.createdAt),
-              conversationId: conversation.id,
-            });
-          }
-        }
-      }
-
-      // Sort by date (newest first)
-      allImages.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+      console.log(`Total images found in R2: ${allImages.length}`);
 
       setImages(allImages);
       setFilteredImages(allImages);

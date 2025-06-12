@@ -22,19 +22,15 @@ interface R2Object {
   body: ReadableStream;
 }
 
-export async function GET(request: NextRequest, { params }: { params: { key: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ key: string }> }) {
   try {
     const { userId } = await auth();
     if (!userId) {
       return Response.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    const key = decodeURIComponent(params.key);
-
-    // Verify access - either user owns the file or it's a generated image
-    if (!key.startsWith(`${userId}/`) && !key.startsWith('generated-images/')) {
-      return Response.json({ success: false, error: 'Access denied' }, { status: 403 });
-    }
+    const { key: paramKey } = await params;
+    let key = paramKey;
 
     // Get R2 binding from Cloudflare environment
     const R2_STORAGE = (process.env as any).R2_STORAGE as R2Bucket | undefined;
@@ -42,9 +38,46 @@ export async function GET(request: NextRequest, { params }: { params: { key: str
       return Response.json({ success: false, error: 'R2 storage not configured' }, { status: 500 });
     }
 
-    const object = await R2_STORAGE.get(key);
-    if (!object) {
-      return Response.json({ success: false, error: 'Image not found' }, { status: 404 });
+    let object: R2Object | null = null;
+
+    // If the key looks like an image ID (e.g., "IXwM6v5WBxFB6xBjPRGaR.webp"),
+    // search for it in the user's generated-images folder
+    if (key.endsWith('.webp') && !key.includes('/')) {
+      const imageId = key.replace('.webp', '');
+
+      // List objects to find the image with this ID
+      // Note: R2 doesn't have a search function, so we need to use a prefix
+      // In production, you'd want to store a mapping of imageId -> full path
+      const possiblePaths = [
+        `${userId}/generated-images/gpt-image-1/${imageId}.webp`,
+        `${userId}/generated-images/dall-e-3/${imageId}.webp`,
+        `${userId}/generated-images/dall-e-2/${imageId}.webp`,
+      ];
+
+      for (const path of possiblePaths) {
+        object = await R2_STORAGE.get(path);
+        if (object) {
+          key = path;
+          break;
+        }
+      }
+
+      if (!object) {
+        return Response.json({ success: false, error: 'Image not found' }, { status: 404 });
+      }
+    } else {
+      // Original logic for full paths
+      key = decodeURIComponent(key);
+
+      // Verify access - either user owns the file or it's a generated image
+      if (!key.startsWith(`${userId}/`) && !key.startsWith('generated-images/')) {
+        return Response.json({ success: false, error: 'Access denied' }, { status: 403 });
+      }
+
+      object = await R2_STORAGE.get(key);
+      if (!object) {
+        return Response.json({ success: false, error: 'Image not found' }, { status: 404 });
+      }
     }
 
     const headers = new Headers();

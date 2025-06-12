@@ -82,13 +82,14 @@ export async function POST(request: NextRequest) {
     });
 
     // Generate the URL for accessing the image
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://omnichat-7pu.pages.dev';
-    const imageUrl = `${baseUrl}/api/images/${encodeURIComponent(r2Key)}`;
+    // Use just the image ID in the URL to avoid encoding issues
+    const imageUrl = `/api/images/${imageId}.webp`;
 
     return Response.json({
       success: true,
       url: imageUrl,
       key: r2Key,
+      imageId: imageId,
       size: compressedSize,
     });
   } catch (error) {
