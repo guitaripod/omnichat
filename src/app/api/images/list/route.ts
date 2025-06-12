@@ -49,7 +49,9 @@ export async function GET(_request: NextRequest) {
 
     // List all images for this user
     const prefix = `${userId}/generated-images/`;
+    console.log('[Image List] Listing images with prefix:', prefix);
     const result = await R2_STORAGE.list({ prefix, limit: 1000 });
+    console.log('[Image List] Found', result.objects.length, 'images');
 
     // Transform R2 objects to image data
     const images = result.objects.map((obj) => {
@@ -59,8 +61,8 @@ export async function GET(_request: NextRequest) {
       const fileName = keyParts[3] || obj.key;
 
       // Generate the URL for accessing the image
-      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://omnichat-7pu.pages.dev';
-      const imageUrl = `${baseUrl}/api/images/${encodeURIComponent(obj.key)}`;
+      // Use relative URL so it works in any environment
+      const imageUrl = `/api/images/${encodeURIComponent(obj.key)}`;
 
       return {
         id: obj.key,

@@ -142,7 +142,7 @@ export default function ImageHistoryItem({
         </div>
 
         {/* Size info if available */}
-        {metadata?.compressionRatio && (
+        {metadata?.compressionRatio && metadata.compressionRatio !== '0' && (
           <div className="text-muted-foreground text-xs">
             Compressed by {metadata.compressionRatio}%
           </div>

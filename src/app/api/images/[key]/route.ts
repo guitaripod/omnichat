@@ -30,7 +30,11 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     const { key: paramKey } = await params;
-    let key = paramKey;
+    // Decode the key first
+    let key = decodeURIComponent(paramKey);
+
+    console.log('[Image API] Requested key:', key);
+    console.log('[Image API] User ID:', userId);
 
     // Get R2 binding from Cloudflare environment
     const R2_STORAGE = (process.env as any).R2_STORAGE as R2Bucket | undefined;
@@ -66,9 +70,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         return Response.json({ success: false, error: 'Image not found' }, { status: 404 });
       }
     } else {
-      // Original logic for full paths
-      key = decodeURIComponent(key);
-
       // Verify access - either user owns the file or it's a generated image
       if (!key.startsWith(`${userId}/`) && !key.startsWith('generated-images/')) {
         return Response.json({ success: false, error: 'Access denied' }, { status: 403 });
