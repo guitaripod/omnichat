@@ -14,6 +14,9 @@ import {
   Loader2,
   Fish,
   Image,
+  Lock,
+  Key,
+  CreditCard,
 } from 'lucide-react';
 import { cn } from '@/utils';
 import { AIProvider, AIModel } from '@/services/ai';
@@ -25,6 +28,10 @@ import {
   getGoogleModels,
   getDeepSeekModels,
 } from '@/lib/ai/available-models';
+import { useUserTier } from '@/hooks/use-user-tier';
+import { UserTier, getModelAccessReason } from '@/lib/tier';
+import { useRouter } from 'next/navigation';
+import type { User } from '@/lib/db/schema';
 
 interface ModelSelectorProps {
   selectedModel: string;
@@ -73,6 +80,9 @@ export function ModelSelector({ selectedModel, onModelChange, className }: Model
   const [expandedProviders, setExpandedProviders] = useState<Set<AIProvider>>(new Set());
   const [ollamaBaseUrl, setOllamaBaseUrl] = useState<string | undefined>(undefined);
   const [isOllamaAvailable, setIsOllamaAvailable] = useState(false);
+  const [userApiKeys, setUserApiKeys] = useState<Record<string, string>>({});
+  const { tier } = useUserTier();
+  const router = useRouter();
 
   // Debug - force visible error
   useEffect(() => {
@@ -83,7 +93,7 @@ export function ModelSelector({ selectedModel, onModelChange, className }: Model
   const { models: fetchedModels, isLoading, error, refetch } = useModels();
   const [availableModels, setAvailableModels] = useState<AIModel[]>([]);
 
-  // Load Ollama URL from localStorage after mount
+  // Load Ollama URL and API keys from localStorage after mount
   useEffect(() => {
     const savedKeys = localStorage.getItem('apiKeys');
     if (savedKeys) {
@@ -91,6 +101,7 @@ export function ModelSelector({ selectedModel, onModelChange, className }: Model
         const parsed = JSON.parse(savedKeys);
         const url = parsed.ollama || 'http://localhost:11434';
         setOllamaBaseUrl(url);
+        setUserApiKeys(parsed);
         // Check if Ollama is available
         fetch(`${url}/api/tags`)
           .then((res) => res.ok && setIsOllamaAvailable(true))
@@ -312,147 +323,330 @@ export function ModelSelector({ selectedModel, onModelChange, className }: Model
             {/* Models List */}
             {!isLoading && !error && (
               <div className="p-2">
-                {Object.entries(groupedModels).map(([provider, models]) => (
-                  <div key={provider} className="mb-3">
-                    {/* Provider Header - Now Clickable */}
-                    <button
-                      onClick={() => {
-                        const newExpanded = new Set(expandedProviders);
-                        if (newExpanded.has(provider as AIProvider)) {
-                          newExpanded.delete(provider as AIProvider);
-                        } else {
-                          newExpanded.add(provider as AIProvider);
-                        }
-                        setExpandedProviders(newExpanded);
-                      }}
-                      className="mb-2 flex w-full items-center gap-2 rounded-lg px-2 py-1.5 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
-                    >
-                      <ChevronRight
-                        className={cn(
-                          'h-3 w-3 text-gray-400 transition-transform',
-                          expandedProviders.has(provider as AIProvider) && 'rotate-90'
-                        )}
-                      />
-                      <span className={providerColors[provider as AIProvider]}>
-                        {providerIcons[provider as AIProvider]}
+                {/* Local Models Section */}
+                <div className="mb-4">
+                  <div className="mb-2 flex items-center gap-2 px-2">
+                    <Server className="h-4 w-4 text-green-600 dark:text-green-400" />
+                    <span className="text-sm font-medium text-gray-900 dark:text-white">
+                      Local Models (Free)
+                    </span>
+                    {isOllamaAvailable ? (
+                      <span className="ml-auto flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
+                        <Wifi className="h-3 w-3" />
+                        Connected
                       </span>
-                      <span className="text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                        {provider}
+                    ) : (
+                      <span className="ml-auto flex items-center gap-1 text-xs text-gray-500">
+                        <WifiOff className="h-3 w-3" />
+                        Not Connected
                       </span>
-                      <span className="text-xs text-gray-400">({models.length})</span>
-                      {provider === 'ollama' && (
-                        <span className="ml-auto flex items-center gap-1">
-                          {isOllamaAvailable ? (
-                            <>
-                              <Wifi className="h-3 w-3 text-green-500" />
-                              <span className="text-xs text-green-500">Connected</span>
-                            </>
-                          ) : (
-                            <>
-                              <WifiOff className="h-3 w-3 text-red-500" />
-                              <span className="text-xs text-red-500">Not available</span>
-                            </>
+                    )}
+                  </div>
+                  <div className="space-y-1">
+                    {groupedModels.ollama?.length > 0 ? (
+                      groupedModels.ollama.map((model) => (
+                        <button
+                          key={model.id}
+                          onClick={() => {
+                            onModelChange(model.id);
+                            setIsOpen(false);
+                          }}
+                          className={cn(
+                            'group relative flex w-full items-center justify-between rounded-lg px-3 py-2 text-left transition-all',
+                            selectedModel === model.id
+                              ? 'bg-green-50 dark:bg-green-900/20'
+                              : 'hover:bg-gray-100 dark:hover:bg-gray-800'
                           )}
-                        </span>
-                      )}
-                    </button>
-
-                    {/* Compact Model List - Collapsible */}
-                    {expandedProviders.has(provider as AIProvider) && (
-                      <div className="space-y-1 pl-6">
-                        {models.map((model) => (
-                          <div key={model.id} className="relative">
-                            <button
-                              onClick={() => {
-                                onModelChange(model.id);
-                                setIsOpen(false);
-                              }}
-                              onMouseEnter={() => setHoveredModel(model.id)}
-                              onMouseLeave={() => setHoveredModel(null)}
-                              className={cn(
-                                'group relative flex w-full items-center justify-between rounded-lg px-3 py-2 text-left transition-all',
-                                selectedModel === model.id
-                                  ? cn(
-                                      'bg-opacity-20',
-                                      providerBgColors[provider as AIProvider].split(' ')[0]
-                                    )
-                                  : 'hover:bg-gray-100 dark:hover:bg-gray-800'
-                              )}
-                            >
-                              {/* Left side - Name and specs */}
-                              <div className="flex flex-1 flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
-                                <span
-                                  className={cn(
-                                    'text-sm font-medium',
-                                    selectedModel === model.id
-                                      ? providerColors[provider as AIProvider]
-                                      : 'text-gray-900 dark:text-white'
-                                  )}
+                        >
+                          <span className="text-sm font-medium text-gray-900 dark:text-white">
+                            {model.name}
+                          </span>
+                          {selectedModel === model.id && (
+                            <Check className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
+                          )}
+                        </button>
+                      ))
+                    ) : (
+                      <div className="rounded-lg bg-gray-50 p-3 text-sm text-gray-600 dark:bg-gray-800 dark:text-gray-400">
+                        {isOllamaAvailable ? (
+                          <p>
+                            No models found. Pull models with:{' '}
+                            <code className="font-mono text-xs">ollama pull llama3.3</code>
+                          </p>
+                        ) : (
+                          <div>
+                            <p className="mb-2">Install Ollama for free local AI:</p>
+                            <ol className="ml-4 list-decimal space-y-1 text-xs">
+                              <li>
+                                Download from{' '}
+                                <a
+                                  href="https://ollama.ai"
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-blue-600 hover:underline"
                                 >
-                                  {model.name}
-                                </span>
-                                <span className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-                                  <span className="font-mono">
-                                    {formatContextSize(model.contextWindow)}
-                                  </span>
-                                  <span className="text-gray-300 dark:text-gray-600">·</span>
-                                  <span className="font-mono">
-                                    {formatContextSize(model.maxOutput)}
-                                  </span>
-                                </span>
-                              </div>
-
-                              {/* Right side - Features and selection */}
-                              <div className="flex shrink-0 items-center gap-2">
-                                {model.supportsImageGeneration && (
-                                  <span className="flex items-center gap-1 text-[10px] text-pink-600 dark:text-pink-400">
-                                    <Image className="h-3 w-3" aria-label="Image generation" />
-                                    Image Gen
-                                  </span>
-                                )}
-                                {model.supportsVision && (
-                                  <span className="text-[10px] text-purple-600 dark:text-purple-400">
-                                    Vision
-                                  </span>
-                                )}
-                                {model.supportsTools && (
-                                  <span className="text-[10px] text-amber-600 dark:text-amber-400">
-                                    Tools
-                                  </span>
-                                )}
-                                {model.supportsWebSearch && (
-                                  <span className="text-[10px] text-blue-600 dark:text-blue-400">
-                                    Search
-                                  </span>
-                                )}
-                                {selectedModel === model.id && (
-                                  <Check className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
-                                )}
-                              </div>
-                            </button>
-
-                            {/* Hover tooltip for description */}
-                            {hoveredModel === model.id && model.description && (
-                              <div
-                                className={cn(
-                                  'absolute bottom-full left-0 z-[10000] mb-2 rounded-lg',
-                                  'hidden w-64 sm:block',
-                                  'border bg-white p-3 shadow-lg',
-                                  'border-gray-200 dark:border-gray-700 dark:bg-gray-800',
-                                  'pointer-events-none'
-                                )}
-                              >
-                                <p className="text-xs text-gray-600 dark:text-gray-300">
-                                  {model.description}
-                                </p>
-                              </div>
-                            )}
+                                  ollama.ai
+                                </a>
+                              </li>
+                              <li>
+                                Run: <code className="font-mono">ollama pull llama3.3</code>
+                              </li>
+                              <li>
+                                Start:{' '}
+                                <code className="font-mono">OLLAMA_ORIGINS="*" ollama serve</code>
+                              </li>
+                            </ol>
                           </div>
-                        ))}
+                        )}
                       </div>
                     )}
                   </div>
-                ))}
+                </div>
+
+                {/* User API Keys Section */}
+                {Object.entries(userApiKeys).some(([key, value]) => value && key !== 'ollama') && (
+                  <div className="mb-4">
+                    <div className="mb-2 flex items-center gap-2 px-2">
+                      <Key className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                      <span className="text-sm font-medium text-gray-900 dark:text-white">
+                        Your API Keys
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Premium Models Section */}
+                <div className="mb-4">
+                  <div className="mb-2 flex items-center gap-2 px-2">
+                    <Lock className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+                    <span className="text-sm font-medium text-gray-900 dark:text-white">
+                      Premium Models
+                    </span>
+                    {tier === UserTier.FREE && (
+                      <button
+                        onClick={() => router.push('/pricing')}
+                        className="ml-auto rounded-full bg-orange-100 px-2 py-0.5 text-xs font-medium text-orange-700 hover:bg-orange-200 dark:bg-orange-900/20 dark:text-orange-400 dark:hover:bg-orange-900/30"
+                      >
+                        Upgrade
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Provider Groups */}
+                {Object.entries(groupedModels).map(([provider, models]) => {
+                  if (provider === 'ollama') return null; // Already rendered above
+                  return (
+                    <div key={provider} className="mb-3">
+                      {/* Provider Header - Now Clickable */}
+                      <button
+                        onClick={() => {
+                          const newExpanded = new Set(expandedProviders);
+                          if (newExpanded.has(provider as AIProvider)) {
+                            newExpanded.delete(provider as AIProvider);
+                          } else {
+                            newExpanded.add(provider as AIProvider);
+                          }
+                          setExpandedProviders(newExpanded);
+                        }}
+                        className="mb-2 flex w-full items-center gap-2 rounded-lg px-2 py-1.5 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+                      >
+                        <ChevronRight
+                          className={cn(
+                            'h-3 w-3 text-gray-400 transition-transform',
+                            expandedProviders.has(provider as AIProvider) && 'rotate-90'
+                          )}
+                        />
+                        <span className={providerColors[provider as AIProvider]}>
+                          {providerIcons[provider as AIProvider]}
+                        </span>
+                        <span className="text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                          {provider}
+                        </span>
+                        <span className="text-xs text-gray-400">({models.length})</span>
+                        {provider === 'ollama' && (
+                          <span className="ml-auto flex items-center gap-1">
+                            {isOllamaAvailable ? (
+                              <>
+                                <Wifi className="h-3 w-3 text-green-500" />
+                                <span className="text-xs text-green-500">Connected</span>
+                              </>
+                            ) : (
+                              <>
+                                <WifiOff className="h-3 w-3 text-red-500" />
+                                <span className="text-xs text-red-500">Not available</span>
+                              </>
+                            )}
+                          </span>
+                        )}
+                      </button>
+
+                      {/* Compact Model List - Collapsible */}
+                      {expandedProviders.has(provider as AIProvider) && (
+                        <div className="space-y-1 pl-6">
+                          {models.map((model) => {
+                            const accessInfo = getModelAccessReason(
+                              { provider: model.provider },
+                              tier === UserTier.PAID
+                                ? ({ tier: UserTier.PAID } as unknown as User)
+                                : null,
+                              userApiKeys
+                            );
+                            const isLocked = !accessInfo.canAccess;
+
+                            return (
+                              <div key={model.id} className="relative">
+                                <button
+                                  onClick={() => {
+                                    if (isLocked) {
+                                      // Show upgrade prompt
+                                      if (userApiKeys[model.provider]) {
+                                        // User has API key but still can't access (shouldn't happen)
+                                        return;
+                                      }
+                                      // Navigate to pricing page
+                                      router.push('/pricing');
+                                    } else {
+                                      onModelChange(model.id);
+                                      setIsOpen(false);
+                                    }
+                                  }}
+                                  onMouseEnter={() => setHoveredModel(model.id)}
+                                  onMouseLeave={() => setHoveredModel(null)}
+                                  className={cn(
+                                    'group relative flex w-full items-center justify-between rounded-lg px-3 py-2 text-left transition-all',
+                                    isLocked
+                                      ? 'cursor-not-allowed opacity-60 hover:bg-red-50 dark:hover:bg-red-900/10'
+                                      : selectedModel === model.id
+                                        ? cn(
+                                            'bg-opacity-20',
+                                            providerBgColors[provider as AIProvider].split(' ')[0]
+                                          )
+                                        : 'hover:bg-gray-100 dark:hover:bg-gray-800'
+                                  )}
+                                >
+                                  {/* Left side - Name and specs */}
+                                  <div className="flex flex-1 flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
+                                    <span
+                                      className={cn(
+                                        'text-sm font-medium',
+                                        selectedModel === model.id
+                                          ? providerColors[provider as AIProvider]
+                                          : 'text-gray-900 dark:text-white'
+                                      )}
+                                    >
+                                      {model.name}
+                                    </span>
+                                    <span className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                                      <span className="font-mono">
+                                        {formatContextSize(model.contextWindow)}
+                                      </span>
+                                      <span className="text-gray-300 dark:text-gray-600">·</span>
+                                      <span className="font-mono">
+                                        {formatContextSize(model.maxOutput)}
+                                      </span>
+                                    </span>
+                                  </div>
+
+                                  {/* Right side - Features and selection */}
+                                  <div className="flex shrink-0 items-center gap-2">
+                                    {isLocked ? (
+                                      <>
+                                        {userApiKeys[model.provider] ? (
+                                          <span className="flex items-center gap-1 text-[10px] text-green-600 dark:text-green-400">
+                                            <Key className="h-3 w-3" />
+                                            Your Key
+                                          </span>
+                                        ) : (
+                                          <span className="flex items-center gap-1 text-[10px] text-orange-600 dark:text-orange-400">
+                                            <Lock className="h-3 w-3" />
+                                            Upgrade
+                                          </span>
+                                        )}
+                                      </>
+                                    ) : (
+                                      <>
+                                        {accessInfo.reason && (
+                                          <span className="flex items-center gap-1 text-[10px] text-gray-500 dark:text-gray-400">
+                                            {accessInfo.reason === 'Using your API key' ? (
+                                              <>
+                                                <Key className="h-3 w-3" /> Your Key
+                                              </>
+                                            ) : accessInfo.reason === 'Using OmniChat credits' ? (
+                                              <>
+                                                <CreditCard className="h-3 w-3" /> Pro
+                                              </>
+                                            ) : null}
+                                          </span>
+                                        )}
+                                        {model.supportsImageGeneration && (
+                                          <span className="flex items-center gap-1 text-[10px] text-pink-600 dark:text-pink-400">
+                                            <Image
+                                              className="h-3 w-3"
+                                              aria-label="Image generation"
+                                            />
+                                            Image Gen
+                                          </span>
+                                        )}
+                                        {model.supportsVision && (
+                                          <span className="text-[10px] text-purple-600 dark:text-purple-400">
+                                            Vision
+                                          </span>
+                                        )}
+                                        {model.supportsTools && (
+                                          <span className="text-[10px] text-amber-600 dark:text-amber-400">
+                                            Tools
+                                          </span>
+                                        )}
+                                        {model.supportsWebSearch && (
+                                          <span className="text-[10px] text-blue-600 dark:text-blue-400">
+                                            Search
+                                          </span>
+                                        )}
+                                        {selectedModel === model.id && !isLocked && (
+                                          <Check className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
+                                        )}
+                                      </>
+                                    )}
+                                  </div>
+                                </button>
+
+                                {/* Hover tooltip for description */}
+                                {hoveredModel === model.id && (
+                                  <div
+                                    className={cn(
+                                      'absolute bottom-full left-0 z-[10000] mb-2 rounded-lg',
+                                      'hidden w-64 sm:block',
+                                      'border bg-white p-3 shadow-lg',
+                                      'border-gray-200 dark:border-gray-700 dark:bg-gray-800',
+                                      'pointer-events-none'
+                                    )}
+                                  >
+                                    {isLocked ? (
+                                      <div>
+                                        <p className="mb-2 text-xs font-semibold text-orange-600 dark:text-orange-400">
+                                          {accessInfo.reason}
+                                        </p>
+                                        <p className="text-xs text-gray-600 dark:text-gray-300">
+                                          {model.description ||
+                                            `Access ${model.name} by upgrading to Pro or adding your ${model.provider} API key.`}
+                                        </p>
+                                      </div>
+                                    ) : (
+                                      <p className="text-xs text-gray-600 dark:text-gray-300">
+                                        {model.description}
+                                      </p>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
 
                 {/* Show Ollama loading state if needed */}
                 {!isLoading && !groupedModels.ollama && ollamaBaseUrl && isOllamaAvailable && (
