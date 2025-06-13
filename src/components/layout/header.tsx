@@ -6,6 +6,7 @@ import { SearchBar } from './search-bar';
 import { useState } from 'react';
 import { useConversationStore } from '@/store/conversations';
 import { ExportDialog } from '@/components/chat/export-dialog';
+import { BatteryWidgetConnected } from '@/components/battery-widget-connected';
 
 export function Header() {
   const { theme, toggleTheme, mounted } = useTheme();
@@ -23,32 +24,37 @@ export function Header() {
         <SearchBar />
       </div>
 
-      <div className="flex items-center gap-2">
-        {hasMessages && (
+      <div className="flex items-center gap-4">
+        {/* Battery Widget - positioned prominently in header */}
+        <BatteryWidgetConnected />
+
+        <div className="flex items-center gap-2">
+          {hasMessages && (
+            <button
+              onClick={() => setShowExportDialog(true)}
+              className="rounded-lg p-2 text-gray-600 transition-colors hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+              aria-label="Export conversation"
+              title="Export conversation"
+            >
+              <Download size={20} />
+            </button>
+          )}
+
           <button
-            onClick={() => setShowExportDialog(true)}
+            onClick={toggleTheme}
             className="rounded-lg p-2 text-gray-600 transition-colors hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
-            aria-label="Export conversation"
-            title="Export conversation"
+            aria-label="Toggle theme"
           >
-            <Download size={20} />
+            {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
           </button>
-        )}
 
-        <button
-          onClick={toggleTheme}
-          className="rounded-lg p-2 text-gray-600 transition-colors hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
-          aria-label="Toggle theme"
-        >
-          {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
-        </button>
-
-        <button
-          className="rounded-lg p-2 text-gray-600 transition-colors hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
-          aria-label="Settings"
-        >
-          <Settings2 size={20} />
-        </button>
+          <button
+            className="rounded-lg p-2 text-gray-600 transition-colors hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+            aria-label="Settings"
+          >
+            <Settings2 size={20} />
+          </button>
+        </div>
       </div>
 
       {/* Export Dialog */}

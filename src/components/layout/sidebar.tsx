@@ -3,15 +3,20 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { cn } from '@/utils';
-import { Menu, X, Settings, User, Image, CreditCard } from 'lucide-react';
+import { Menu, X, Settings, User, Image as ImageIcon, CreditCard } from 'lucide-react';
 import { UserButton } from '@clerk/nextjs';
 import { MockUserButton } from '@/components/ui/mock-user-button';
 import { ConversationList } from './conversation-list';
 import { useDevMode } from '@/hooks/use-dev-mode';
+import { useUserStore } from '@/store/user';
+import { PremiumBadge } from '@/components/premium-badge';
 
 export function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
   const isDevMode = useDevMode();
+  const user = useUserStore((state) => state.user);
+  const isPremium =
+    user?.subscriptionStatus === 'active' || user?.subscriptionStatus === 'trialing';
 
   return (
     <>
@@ -24,14 +29,20 @@ export function Sidebar() {
       <aside
         className={cn(
           'fixed inset-y-0 left-0 z-40 w-64 transform border-r border-gray-200 bg-white transition-transform duration-200 ease-in-out md:relative md:translate-x-0 dark:border-gray-700 dark:bg-gray-800',
-          isOpen ? 'translate-x-0' : '-translate-x-full'
+          isOpen ? 'translate-x-0' : '-translate-x-full',
+          isPremium && 'border-r-2 border-purple-200 dark:border-purple-800'
         )}
       >
-        <div className="flex h-full flex-col">
+        <div className={cn('flex h-full flex-col', isPremium && 'relative overflow-hidden')}>
+          {/* Premium gradient background */}
+          {isPremium && (
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-purple-50/30 via-transparent to-violet-50/30 dark:from-purple-900/10 dark:to-violet-900/10" />
+          )}
           {/* Logo */}
           <div className="flex h-16 items-center justify-between border-b border-gray-200 px-4 dark:border-gray-700">
-            <Link href="/chat" className="text-xl font-bold text-gray-900 dark:text-white">
-              OmniChat
+            <Link href="/chat" className="flex items-center gap-2">
+              <span className="text-xl font-bold text-gray-900 dark:text-white">OmniChat</span>
+              {isPremium && <PremiumBadge size="sm" />}
             </Link>
           </div>
 
@@ -53,7 +64,7 @@ export function Sidebar() {
               href="/images"
               className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-gray-600 transition-colors hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700"
             >
-              <Image size={16} />
+              <ImageIcon size={16} />
               Image History
             </Link>
             <Link
