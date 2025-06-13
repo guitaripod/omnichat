@@ -150,31 +150,35 @@ export function ModelSelector({ selectedModel, onModelChange, className }: Model
     // Build combined models list
     const combinedModels: AIModel[] = [];
 
-    // Show Anthropic models if API key is configured
-    if (hasAnthropicKey) {
+    // For paid users, show all models
+    // For free users, only show models where they have API keys
+    const isPaidUser = tier === UserTier.PAID;
+
+    // Show Anthropic models if paid user OR API key is configured
+    if (isPaidUser || hasAnthropicKey) {
       const anthropicModels =
         fetchedModels.anthropic?.length > 0 ? fetchedModels.anthropic : staticAnthropic;
       combinedModels.push(...anthropicModels);
     }
 
-    // Show other providers' models if they have API keys
-    if (hasXAIKey) {
+    // Show other providers' models if paid user OR they have API keys
+    if (isPaidUser || hasXAIKey) {
       // Use fetched models if available, otherwise use static
       const xaiModels = fetchedModels.xai?.length > 0 ? fetchedModels.xai : staticXAI;
       combinedModels.push(...xaiModels);
     }
 
-    if (hasOpenAIKey) {
+    if (isPaidUser || hasOpenAIKey) {
       const openaiModels = fetchedModels.openai?.length > 0 ? fetchedModels.openai : staticOpenAI;
       combinedModels.push(...openaiModels);
     }
 
-    if (hasGoogleKey) {
+    if (isPaidUser || hasGoogleKey) {
       const googleModels = fetchedModels.google?.length > 0 ? fetchedModels.google : staticGoogle;
       combinedModels.push(...googleModels);
     }
 
-    if (hasDeepSeekKey) {
+    if (isPaidUser || hasDeepSeekKey) {
       const deepseekModels =
         fetchedModels.deepseek?.length > 0 ? fetchedModels.deepseek : staticDeepSeek;
       combinedModels.push(...deepseekModels);
@@ -187,7 +191,7 @@ export function ModelSelector({ selectedModel, onModelChange, className }: Model
 
     console.log('[ModelSelector] Combined models count:', combinedModels.length);
     setAvailableModels(combinedModels);
-  }, [fetchedModels, selectedModel]);
+  }, [fetchedModels, selectedModel, tier]);
 
   // Load Ollama models when URL is available
   useEffect(() => {
