@@ -2,7 +2,7 @@
 
 import { Settings2, Moon, Sun, Download } from 'lucide-react';
 import { useTheme } from '@/hooks/use-theme';
-import { SearchBar } from './search-bar';
+import { AdvancedSearch } from '@/components/search/advanced-search';
 import { useState } from 'react';
 import { useConversationStore } from '@/store/conversations';
 import { ExportDialog } from '@/components/chat/export-dialog';
@@ -21,7 +21,7 @@ export function Header() {
     <header className="flex h-16 items-center justify-between border-b border-gray-200 bg-white px-6 dark:border-gray-700 dark:bg-gray-800">
       <div className="flex items-center gap-4">
         <h1 className="text-lg font-semibold text-gray-900 dark:text-white">Chat</h1>
-        <SearchBar />
+        <AdvancedSearch />
       </div>
 
       <div className="flex items-center gap-4">
