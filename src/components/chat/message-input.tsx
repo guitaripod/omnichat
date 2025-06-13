@@ -28,6 +28,7 @@ import { ImageGenerationParams, ImageGenerationOptions } from './image-generatio
 import { useUserStore } from '@/store/user';
 import { useRouter } from 'next/navigation';
 import { PremiumBadge } from '@/components/premium-badge';
+import { useConversionTracking } from '@/hooks/use-conversion-tracking';
 
 interface MessageInputProps {
   onSendMessage: (message: string, attachments?: FileAttachment[], webSearch?: boolean) => void;
@@ -88,6 +89,7 @@ export function MessageInput({
   const user = useUserStore((state) => state.user);
   const isPremium =
     user?.subscriptionStatus === 'active' || user?.subscriptionStatus === 'trialing';
+  const { trackModelSelection } = useConversionTracking();
 
   const handleSubmit = () => {
     if ((message.trim() || attachments.length > 0) && !isLoading) {
@@ -357,6 +359,7 @@ export function MessageInput({
                                     <button
                                       onClick={() => {
                                         if (isLocked) {
+                                          trackModelSelection(model.id);
                                           router.push('/pricing');
                                         } else {
                                           onModelChange(model.id);

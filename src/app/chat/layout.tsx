@@ -3,6 +3,7 @@
 import { Sidebar } from '@/components/layout/sidebar';
 import { Header } from '@/components/layout/header';
 import { UpgradeBanner } from '@/components/upgrade-banner';
+import { ConversionPrompt } from '@/components/conversion-prompt';
 import { useSync } from '@/hooks/use-sync';
 import { useEffect } from 'react';
 import { syncService } from '@/services/storage/sync';
@@ -33,6 +34,7 @@ export default function ChatLayout({ children }: { children: React.ReactNode }) 
           <main className="flex-1 overflow-hidden">{children}</main>
         </div>
       </div>
+      <ConversionPrompt />
     </>
   );
 }
