@@ -3,103 +3,11 @@ import { NextRequest, NextResponse } from 'next/server';
 export const runtime = 'edge';
 import { getStripe, STRIPE_CONFIG } from '@/lib/stripe-config';
 import { db } from '@/lib/db/index';
-import {
-  users,
-  userSubscriptions,
-  userBattery,
-  batteryTransactions,
-  subscriptionPlans,
-} from '@/lib/db/schema';
+import { users, userSubscriptions, userBattery, batteryTransactions } from '@/lib/db/schema';
 import { eq, sql } from 'drizzle-orm';
 import Stripe from 'stripe';
 
-// Seed plans if they don't exist
-async function ensurePlansExist() {
-  const plans = [
-    {
-      id: 'starter',
-      name: 'Starter',
-      priceMonthly: 3.99,
-      priceAnnual: 39.99,
-      batteryUnits: 10000,
-      dailyBattery: 1000,
-      features: JSON.stringify([
-        '10,000 battery units/month',
-        '1,000 daily battery allowance',
-        'Access to all AI models',
-        'Basic support',
-      ]),
-    },
-    {
-      id: 'daily',
-      name: 'Daily',
-      priceMonthly: 12.99,
-      priceAnnual: 129.99,
-      batteryUnits: 50000,
-      dailyBattery: 5000,
-      features: JSON.stringify([
-        '50,000 battery units/month',
-        '5,000 daily battery allowance',
-        'Priority model access',
-        'Email support',
-      ]),
-    },
-    {
-      id: 'power',
-      name: 'Power',
-      priceMonthly: 24.99,
-      priceAnnual: 249.99,
-      batteryUnits: 100000,
-      dailyBattery: 10000,
-      features: JSON.stringify([
-        '100,000 battery units/month',
-        '10,000 daily battery allowance',
-        'Fastest model access',
-        'Priority support',
-      ]),
-    },
-    {
-      id: 'ultimate',
-      name: 'Ultimate',
-      priceMonthly: 99.99,
-      priceAnnual: 999.99,
-      batteryUnits: 500000,
-      dailyBattery: 50000,
-      features: JSON.stringify([
-        '500,000 battery units/month',
-        '50,000 daily battery allowance',
-        'Unlimited model switching',
-        'Dedicated support',
-      ]),
-    },
-  ];
-
-  for (const plan of plans) {
-    try {
-      await db()
-        .insert(subscriptionPlans)
-        .values({
-          ...plan,
-          stripePriceIdMonthly:
-            process.env[`STRIPE_PRICE_${plan.id.toUpperCase()}_MONTHLY`] || null,
-          stripePriceIdAnnual: process.env[`STRIPE_PRICE_${plan.id.toUpperCase()}_ANNUAL`] || null,
-        })
-        .onConflictDoUpdate({
-          target: subscriptionPlans.id,
-          set: {
-            updatedAt: new Date().toISOString(),
-          },
-        });
-    } catch (error: any) {
-      console.log(`[Webhook] Plan ${plan.id} might already exist:`, error.message);
-    }
-  }
-}
-
 export async function POST(req: NextRequest) {
-  // Ensure plans exist before processing webhook
-  await ensurePlansExist();
-
   const body = await req.text();
   const signature = req.headers.get('stripe-signature') as string;
 
@@ -248,47 +156,98 @@ async function handleSubscriptionCreated(session: Stripe.Checkout.Session) {
       : null,
   });
 
-  // Get the plan details
+  // Get the plan details - use defaults if not in database
   console.log('[Webhook] Looking for plan:', planId);
-  let plan = await db()
-    .select()
-    .from(subscriptionPlans)
-    .where(eq(subscriptionPlans.id, planId))
-    .get();
 
-  if (!plan) {
-    console.error('[Webhook] Plan not found in database:', planId);
-    // Use default values for the plan if not found
-    const defaultPlans: Record<
-      string,
-      { name: string; batteryUnits: number; dailyBattery: number }
-    > = {
-      starter: { name: 'Starter', batteryUnits: 10000, dailyBattery: 1000 },
-      daily: { name: 'Daily', batteryUnits: 50000, dailyBattery: 5000 },
-      power: { name: 'Power', batteryUnits: 100000, dailyBattery: 10000 },
-      ultimate: { name: 'Ultimate', batteryUnits: 500000, dailyBattery: 50000 },
-    };
-
-    const defaultPlan = defaultPlans[planId];
-    if (!defaultPlan) {
-      console.error('[Webhook] No default plan found for:', planId);
-      return;
+  // Default plan configurations
+  const defaultPlans: Record<
+    string,
+    {
+      name: string;
+      batteryUnits: number;
+      dailyBattery: number;
+      priceMonthly: number;
+      priceAnnual: number;
+      features: string[];
     }
+  > = {
+    starter: {
+      name: 'Starter',
+      batteryUnits: 10000,
+      dailyBattery: 1000,
+      priceMonthly: 399,
+      priceAnnual: 3999,
+      features: [
+        '10,000 battery units/month',
+        '1,000 daily battery allowance',
+        'Access to all AI models',
+        'Basic support',
+      ],
+    },
+    daily: {
+      name: 'Daily',
+      batteryUnits: 50000,
+      dailyBattery: 5000,
+      priceMonthly: 1299,
+      priceAnnual: 12999,
+      features: [
+        '50,000 battery units/month',
+        '5,000 daily battery allowance',
+        'Priority model access',
+        'Email support',
+      ],
+    },
+    power: {
+      name: 'Power',
+      batteryUnits: 100000,
+      dailyBattery: 10000,
+      priceMonthly: 2499,
+      priceAnnual: 24999,
+      features: [
+        '100,000 battery units/month',
+        '10,000 daily battery allowance',
+        'Fastest model access',
+        'Priority support',
+      ],
+    },
+    ultimate: {
+      name: 'Ultimate',
+      batteryUnits: 500000,
+      dailyBattery: 50000,
+      priceMonthly: 9999,
+      priceAnnual: 99999,
+      features: [
+        '500,000 battery units/month',
+        '50,000 daily battery allowance',
+        'Unlimited model switching',
+        'Dedicated support',
+      ],
+    },
+  };
 
-    // Use the default plan
-    plan = {
-      id: planId,
-      ...defaultPlan,
-      priceMonthly: 0,
-      priceAnnual: 0,
-      features: '[]',
-      stripePriceIdMonthly: null,
-      stripePriceIdAnnual: null,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    console.log('[Webhook] Using default plan:', plan);
+  const defaultPlan = defaultPlans[planId];
+  if (!defaultPlan) {
+    console.error('[Webhook] Invalid plan ID:', planId);
+    throw new Error(`Invalid plan ID: ${planId}`);
   }
+
+  // Use the default plan configuration
+  const plan = {
+    id: planId,
+    ...defaultPlan,
+    features: JSON.stringify(defaultPlan.features),
+    stripePriceIdMonthly: process.env[`STRIPE_PRICE_${planId.toUpperCase()}_MONTHLY`] || null,
+    stripePriceIdAnnual: process.env[`STRIPE_PRICE_${planId.toUpperCase()}_ANNUAL`] || null,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+
+  console.log('[Webhook] Using plan configuration:', {
+    id: plan.id,
+    name: plan.name,
+    batteryUnits: plan.batteryUnits,
+    dailyBattery: plan.dailyBattery,
+  });
 
   // Create user subscription record
   try {
@@ -485,17 +444,20 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
 
   // Update daily allowance if plan changed
   if (planId) {
-    const plan = await db()
-      .select()
-      .from(subscriptionPlans)
-      .where(eq(subscriptionPlans.id, planId))
-      .get();
+    // Use default plan config
+    const defaultPlans: Record<string, { dailyBattery: number }> = {
+      starter: { dailyBattery: 1000 },
+      daily: { dailyBattery: 5000 },
+      power: { dailyBattery: 10000 },
+      ultimate: { dailyBattery: 50000 },
+    };
 
-    if (plan) {
+    const planConfig = defaultPlans[planId];
+    if (planConfig) {
       await db()
         .update(userBattery)
         .set({
-          dailyAllowance: plan.dailyBattery,
+          dailyAllowance: planConfig.dailyBattery,
           updatedAt: new Date().toISOString(),
         })
         .where(eq(userBattery.userId, userId));
@@ -539,20 +501,22 @@ async function handleSubscriptionRenewal(invoice: Stripe.Invoice) {
   const subscription = stripeSubscription as Stripe.Subscription;
   const planId = subscription.metadata.planId;
 
-  // Get plan details
-  const plan = await db()
-    .select()
-    .from(subscriptionPlans)
-    .where(eq(subscriptionPlans.id, planId))
-    .get();
+  // Use default plan config
+  const defaultPlans: Record<string, { name: string; batteryUnits: number }> = {
+    starter: { name: 'Starter', batteryUnits: 10000 },
+    daily: { name: 'Daily', batteryUnits: 50000 },
+    power: { name: 'Power', batteryUnits: 100000 },
+    ultimate: { name: 'Ultimate', batteryUnits: 500000 },
+  };
 
-  if (!plan) return;
+  const planConfig = defaultPlans[planId];
+  if (!planConfig) return;
 
   // Add monthly battery units
   await db()
     .update(userBattery)
     .set({
-      totalBalance: sql`total_balance + ${plan.batteryUnits}`,
+      totalBalance: sql`total_balance + ${planConfig.batteryUnits}`,
       updatedAt: new Date().toISOString(),
     })
     .where(eq(userBattery.userId, userId));
@@ -570,9 +534,9 @@ async function handleSubscriptionRenewal(invoice: Stripe.Invoice) {
     .values({
       userId,
       type: 'subscription',
-      amount: plan.batteryUnits,
-      balanceAfter: batteryBalance?.totalBalance || plan.batteryUnits,
-      description: `${plan.name} subscription renewed`,
+      amount: planConfig.batteryUnits,
+      balanceAfter: batteryBalance?.totalBalance || planConfig.batteryUnits,
+      description: `${planConfig.name} subscription renewed`,
     });
 }
 
