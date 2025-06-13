@@ -4,6 +4,7 @@ export const runtime = 'edge';
 import { getStripe, STRIPE_CONFIG } from '@/lib/stripe-config';
 import { db } from '@/lib/db/index';
 import {
+  users,
   userSubscriptions,
   userBattery,
   batteryTransactions,
@@ -131,6 +132,17 @@ async function handleSubscriptionCreated(session: Stripe.Checkout.Session) {
       },
     });
 
+  // Update user tier to 'paid'
+  await db()
+    .update(users)
+    .set({
+      tier: 'paid',
+      subscriptionStatus: subscription.status,
+      subscriptionId: subscriptionId,
+      updatedAt: new Date(),
+    })
+    .where(eq(users.id, userId));
+
   // Update user battery with plan allowance
   await db()
     .update(userBattery)
@@ -201,6 +213,7 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
 
   if (!userId) return;
 
+  // Update subscription record
   await db()
     .update(userSubscriptions)
     .set({
@@ -216,6 +229,17 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
       updatedAt: new Date().toISOString(),
     })
     .where(eq(userSubscriptions.stripeSubscriptionId, subscription.id));
+
+  // Update user tier based on subscription status
+  const isActive = subscription.status === 'active' || subscription.status === 'trialing';
+  await db()
+    .update(users)
+    .set({
+      tier: isActive ? 'paid' : 'free',
+      subscriptionStatus: subscription.status,
+      updatedAt: new Date(),
+    })
+    .where(eq(users.id, userId));
 
   // Update daily allowance if plan changed
   if (planId) {
