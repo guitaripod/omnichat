@@ -90,7 +90,7 @@ async function ensurePlansExist() {
             updatedAt: new Date().toISOString(),
           },
         });
-    } catch (error) {
+    } catch (error: any) {
       console.log(`[Webhook] Plan ${plan.id} might already exist:`, error.message);
     }
   }
