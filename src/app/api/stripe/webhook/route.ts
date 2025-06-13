@@ -30,10 +30,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
   }
 
+  console.log('[Webhook] Processing event:', event.type);
+
   try {
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
+        console.log('[Webhook] Checkout session completed:', {
+          mode: session.mode,
+          sessionId: session.id,
+          metadata: session.metadata,
+        });
 
         if (session.mode === 'subscription') {
           // Handle subscription creation
@@ -86,7 +93,17 @@ async function handleSubscriptionCreated(session: Stripe.Checkout.Session) {
   const customerId = session.customer as string;
   const userId = session.metadata?.userId;
 
-  if (!userId || !subscriptionId) return;
+  console.log('[Webhook] handleSubscriptionCreated:', {
+    subscriptionId,
+    customerId,
+    userId,
+    metadata: session.metadata,
+  });
+
+  if (!userId || !subscriptionId) {
+    console.error('[Webhook] Missing userId or subscriptionId:', { userId, subscriptionId });
+    return;
+  }
 
   // Get the subscription details
   const subscription = await getStripe().subscriptions.retrieve(subscriptionId);
@@ -211,7 +228,18 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
   const userId = subscription.metadata.userId;
   const planId = subscription.metadata.planId;
 
-  if (!userId) return;
+  console.log('[Webhook] handleSubscriptionUpdate:', {
+    subscriptionId: subscription.id,
+    userId,
+    planId,
+    metadata: subscription.metadata,
+    status: subscription.status,
+  });
+
+  if (!userId) {
+    console.error('[Webhook] No userId in subscription metadata');
+    return;
+  }
 
   // Update subscription record
   await db()
