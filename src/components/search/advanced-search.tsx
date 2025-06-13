@@ -204,6 +204,17 @@ export function AdvancedSearch() {
     performSearch(query);
   }, [query, filters, performSearch]);
 
+  const handleSelectConversation = useCallback(
+    (conversationId: string) => {
+      setCurrentConversation(conversationId);
+      setIsOpen(false);
+      setQuery('');
+      setResults([]);
+      setFilters(DEFAULT_FILTERS);
+    },
+    [setCurrentConversation]
+  );
+
   // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -229,17 +240,6 @@ export function AdvancedSearch() {
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, results, selectedResult, handleSelectConversation]);
-
-  const handleSelectConversation = useCallback(
-    (conversationId: string) => {
-      setCurrentConversation(conversationId);
-      setIsOpen(false);
-      setQuery('');
-      setResults([]);
-      setFilters(DEFAULT_FILTERS);
-    },
-    [setCurrentConversation]
-  );
 
   const highlightMatch = (text: string, searchQuery: string) => {
     if (!searchQuery.trim()) return text;

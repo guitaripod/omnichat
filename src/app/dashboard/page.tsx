@@ -20,8 +20,10 @@ import {
   AlertCircle,
   Brain,
   Sparkles,
+  FolderArchive,
 } from 'lucide-react';
 import { PremiumBadge } from '@/components/premium-badge';
+import { PremiumExportDialog } from '@/components/export/premium-export-dialog';
 import { AI_MODELS } from '@/services/ai';
 
 interface UsageData {
@@ -57,6 +59,7 @@ export default function DashboardPage() {
     favoriteModel: '',
   });
   const [timeRange, setTimeRange] = useState<'week' | 'month' | 'all'>('month');
+  const [showExportDialog, setShowExportDialog] = useState(false);
 
   const isPremium =
     user?.subscriptionStatus === 'active' || user?.subscriptionStatus === 'trialing';
@@ -207,12 +210,11 @@ export default function DashboardPage() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => {
-              // Export functionality will be implemented in Task 10
-            }}
+            onClick={() => setShowExportDialog(true)}
+            className="bg-gradient-to-r from-purple-50 to-violet-50 hover:from-purple-100 hover:to-violet-100 dark:from-purple-900/20 dark:to-violet-900/20"
           >
-            <Download className="mr-2 h-4 w-4" />
-            Export Data
+            <FolderArchive className="mr-2 h-4 w-4" />
+            Batch Export
           </Button>
         </div>
       </div>
@@ -435,6 +437,11 @@ export default function DashboardPage() {
           Manage Subscription
         </Button>
       </div>
+
+      {/* Export Dialog */}
+      {showExportDialog && (
+        <PremiumExportDialog isOpen={true} onClose={() => setShowExportDialog(false)} />
+      )}
     </div>
   );
 }

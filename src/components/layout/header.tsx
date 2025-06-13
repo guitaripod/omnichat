@@ -6,12 +6,17 @@ import { AdvancedSearch } from '@/components/search/advanced-search';
 import { useState } from 'react';
 import { useConversationStore } from '@/store/conversations';
 import { ExportDialog } from '@/components/chat/export-dialog';
+import { PremiumExportDialog } from '@/components/export/premium-export-dialog';
 import { BatteryWidgetConnected } from '@/components/battery-widget-connected';
+import { useUserStore } from '@/store/user';
 
 export function Header() {
   const { theme, toggleTheme, mounted } = useTheme();
   const [showExportDialog, setShowExportDialog] = useState(false);
   const { currentConversationId, messages } = useConversationStore();
+  const user = useUserStore((state) => state.user);
+  const isPremium =
+    user?.subscriptionStatus === 'active' || user?.subscriptionStatus === 'trialing';
 
   const hasMessages = currentConversationId && messages[currentConversationId]?.length > 0;
 
@@ -58,13 +63,22 @@ export function Header() {
       </div>
 
       {/* Export Dialog */}
-      {showExportDialog && currentConversationId && (
-        <ExportDialog
-          isOpen={true}
-          onClose={() => setShowExportDialog(false)}
-          conversationId={currentConversationId}
-        />
-      )}
+      {showExportDialog &&
+        (isPremium ? (
+          <PremiumExportDialog
+            isOpen={true}
+            onClose={() => setShowExportDialog(false)}
+            conversationId={currentConversationId || undefined}
+          />
+        ) : (
+          currentConversationId && (
+            <ExportDialog
+              isOpen={true}
+              onClose={() => setShowExportDialog(false)}
+              conversationId={currentConversationId}
+            />
+          )
+        ))}
     </header>
   );
 }
