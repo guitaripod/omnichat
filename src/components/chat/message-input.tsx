@@ -16,12 +16,18 @@ import {
   Fish,
   Image,
   Palette,
+  Crown,
+  Lock,
+  TrendingUp,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AIProvider, AIModel, AI_MODELS } from '@/services/ai';
 import { FileUpload, FileAttachmentDisplay } from './file-upload';
 import { FileAttachment } from '@/types/attachments';
 import { ImageGenerationParams, ImageGenerationOptions } from './image-generation-params';
+import { useUserStore } from '@/store/user';
+import { useRouter } from 'next/navigation';
+import { PremiumBadge } from '@/components/premium-badge';
 
 interface MessageInputProps {
   onSendMessage: (message: string, attachments?: FileAttachment[], webSearch?: boolean) => void;
@@ -77,6 +83,11 @@ export function MessageInput({
   const [webSearchEnabled, setWebSearchEnabled] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const modelSelectorRef = useRef<HTMLDivElement>(null);
+
+  const router = useRouter();
+  const user = useUserStore((state) => state.user);
+  const isPremium =
+    user?.subscriptionStatus === 'active' || user?.subscriptionStatus === 'trialing';
 
   const handleSubmit = () => {
     if ((message.trim() || attachments.length > 0) && !isLoading) {
@@ -223,7 +234,9 @@ export function MessageInput({
               onClick={() => setIsModelSelectorOpen(!isModelSelectorOpen)}
               className={cn(
                 'flex w-full items-center justify-between rounded-t-xl px-4 py-2.5 transition-all duration-200',
-                'hover:bg-gray-100 dark:hover:bg-gray-700/70',
+                isPremium
+                  ? 'bg-gradient-to-r from-purple-50 to-violet-50 hover:from-purple-100 hover:to-violet-100 dark:from-purple-900/20 dark:to-violet-900/20 dark:hover:from-purple-900/30 dark:hover:to-violet-900/30'
+                  : 'hover:bg-gray-100 dark:hover:bg-gray-700/70',
                 'border-b border-gray-200 dark:border-gray-600',
                 isModelSelectorOpen && 'bg-gray-100 dark:bg-gray-700/70'
               )}
@@ -242,6 +255,7 @@ export function MessageInput({
                     <span className="text-sm font-medium text-gray-900 dark:text-white">
                       {currentModel.name}
                     </span>
+                    {isPremium && currentModel.provider !== 'ollama' && <PremiumBadge size="xs" />}
                     {currentModel.supportsImageGeneration ? (
                       <span className="text-xs text-pink-600 dark:text-pink-400">• Image Gen</span>
                     ) : (
@@ -269,6 +283,34 @@ export function MessageInput({
             >
               <div className="overflow-hidden">
                 <div className="border-b border-gray-200 bg-white dark:border-gray-600 dark:bg-gray-800">
+                  {/* Free Tier CTA */}
+                  {!isPremium && (
+                    <div className="border-b border-gray-200 bg-gradient-to-r from-amber-50 to-orange-50 p-3 dark:border-gray-600 dark:from-amber-900/20 dark:to-orange-900/20">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <TrendingUp className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+                          <div>
+                            <p className="text-sm font-medium text-orange-700 dark:text-orange-300">
+                              You're using the free tier
+                            </p>
+                            <p className="text-xs text-orange-600 dark:text-orange-400">
+                              Unlock GPT-4, Claude, and 15+ models
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => {
+                            router.push('/pricing');
+                            setIsModelSelectorOpen(false);
+                          }}
+                          className="flex items-center gap-1 rounded-full bg-gradient-to-r from-purple-600 to-violet-600 px-3 py-1.5 text-xs font-medium text-white transition-all hover:from-purple-700 hover:to-violet-700"
+                        >
+                          <Crown className="h-3 w-3" />
+                          Upgrade
+                        </button>
+                      </div>
+                    </div>
+                  )}
                   <div className="relative max-h-[500px] overflow-y-auto p-2">
                     {Object.entries(groupedModels).map(([provider, models]) => (
                       <div key={provider} className="mb-2 last:mb-0">
@@ -308,88 +350,108 @@ export function MessageInput({
                         >
                           <div className="overflow-hidden transition-opacity duration-300">
                             <div className="space-y-0.5 pb-1 pl-6">
-                              {models.map((model) => (
-                                <div key={model.id} className="group relative">
-                                  <button
-                                    onClick={() => {
-                                      onModelChange(model.id);
-                                      setIsModelSelectorOpen(false);
-                                    }}
-                                    onMouseEnter={() => setHoveredModel(model.id)}
-                                    onMouseLeave={() => setHoveredModel(null)}
-                                    className={cn(
-                                      'flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left transition-all duration-150',
-                                      selectedModel === model.id
-                                        ? 'bg-blue-100 text-blue-900 dark:bg-blue-900/30 dark:text-blue-100'
-                                        : hoveredModel === model.id
-                                          ? 'bg-gray-100 dark:bg-gray-700/70'
-                                          : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'
-                                    )}
-                                  >
-                                    <div className="flex min-w-0 items-center gap-2">
-                                      <span
-                                        className={cn(
-                                          'text-sm transition-colors',
-                                          selectedModel === model.id
-                                            ? 'font-medium'
-                                            : 'text-gray-900 dark:text-white'
-                                        )}
-                                      >
-                                        {model.name}
-                                      </span>
-                                      <span
-                                        className={cn(
-                                          'truncate text-xs text-gray-500 transition-all duration-200 dark:text-gray-400',
-                                          hoveredModel === model.id && model.description
-                                            ? 'max-w-xs opacity-100'
-                                            : 'max-w-0 opacity-0'
-                                        )}
-                                      >
-                                        {model.description && `• ${model.description}`}
-                                      </span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                      {model.supportsImageGeneration ? (
+                              {models.map((model) => {
+                                const isLocked = !isPremium && model.provider !== 'ollama';
+                                return (
+                                  <div key={model.id} className="group relative">
+                                    <button
+                                      onClick={() => {
+                                        if (isLocked) {
+                                          router.push('/pricing');
+                                        } else {
+                                          onModelChange(model.id);
+                                          setIsModelSelectorOpen(false);
+                                        }
+                                      }}
+                                      onMouseEnter={() => setHoveredModel(model.id)}
+                                      onMouseLeave={() => setHoveredModel(null)}
+                                      className={cn(
+                                        'flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left transition-all duration-150',
+                                        isLocked
+                                          ? 'cursor-pointer opacity-75 hover:bg-orange-50 dark:hover:bg-orange-900/10'
+                                          : selectedModel === model.id
+                                            ? 'bg-blue-100 text-blue-900 dark:bg-blue-900/30 dark:text-blue-100'
+                                            : hoveredModel === model.id
+                                              ? 'bg-gray-100 dark:bg-gray-700/70'
+                                              : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'
+                                      )}
+                                    >
+                                      <div className="flex min-w-0 items-center gap-2">
                                         <span
                                           className={cn(
-                                            'text-xs',
+                                            'text-sm transition-colors',
                                             selectedModel === model.id
-                                              ? 'text-blue-700 dark:text-blue-300'
-                                              : 'text-pink-600 dark:text-pink-400'
+                                              ? 'font-medium'
+                                              : 'text-gray-900 dark:text-white'
                                           )}
                                         >
-                                          Image Gen
+                                          {model.name}
                                         </span>
-                                      ) : (
-                                        <>
-                                          <span
-                                            className={cn(
-                                              'text-xs',
-                                              selectedModel === model.id
-                                                ? 'text-blue-700 dark:text-blue-300'
-                                                : 'text-gray-500 dark:text-gray-400'
-                                            )}
-                                          >
-                                            {Math.round(model.contextWindow / 1000)}k
-                                          </span>
-                                          {model.supportsVision && (
-                                            <span
-                                              className={cn(
-                                                'text-xs',
-                                                selectedModel === model.id
-                                                  ? 'text-blue-700 dark:text-blue-300'
-                                                  : 'text-purple-600 dark:text-purple-400'
-                                              )}
-                                            >
-                                              Vision
-                                            </span>
+                                        <span
+                                          className={cn(
+                                            'truncate text-xs text-gray-500 transition-all duration-200 dark:text-gray-400',
+                                            hoveredModel === model.id && model.description
+                                              ? 'max-w-xs opacity-100'
+                                              : 'max-w-0 opacity-0'
                                           )}
-                                        </>
-                                      )}
-                                    </div>
-                                  </button>
-                                </div>
-                              ))}
+                                        >
+                                          {model.description && `• ${model.description}`}
+                                        </span>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        {isLocked ? (
+                                          <div className="flex items-center gap-1">
+                                            <Lock className="h-3 w-3 text-orange-500" />
+                                            <span className="text-xs font-medium text-orange-600 dark:text-orange-400">
+                                              Pro
+                                            </span>
+                                          </div>
+                                        ) : (
+                                          <>
+                                            {model.supportsImageGeneration ? (
+                                              <span
+                                                className={cn(
+                                                  'text-xs',
+                                                  selectedModel === model.id
+                                                    ? 'text-blue-700 dark:text-blue-300'
+                                                    : 'text-pink-600 dark:text-pink-400'
+                                                )}
+                                              >
+                                                Image Gen
+                                              </span>
+                                            ) : (
+                                              <>
+                                                <span
+                                                  className={cn(
+                                                    'text-xs',
+                                                    selectedModel === model.id
+                                                      ? 'text-blue-700 dark:text-blue-300'
+                                                      : 'text-gray-500 dark:text-gray-400'
+                                                  )}
+                                                >
+                                                  {Math.round(model.contextWindow / 1000)}k
+                                                </span>
+                                                {model.supportsVision && (
+                                                  <span
+                                                    className={cn(
+                                                      'text-xs',
+                                                      selectedModel === model.id
+                                                        ? 'text-blue-700 dark:text-blue-300'
+                                                        : 'text-purple-600 dark:text-purple-400'
+                                                    )}
+                                                  >
+                                                    Vision
+                                                  </span>
+                                                )}
+                                              </>
+                                            )}
+                                          </>
+                                        )}
+                                      </div>
+                                    </button>
+                                  </div>
+                                );
+                              })}
                             </div>
                           </div>
                         </div>
@@ -600,7 +662,7 @@ export function MessageInput({
           <div className="mt-2 text-center text-xs text-gray-500 dark:text-gray-400">
             {currentModel?.supportsImageGeneration ? (
               <span className="flex items-center justify-center gap-1">
-                <Image className="h-3 w-3 text-pink-500" />
+                <Image className="h-3 w-3 text-pink-500" aria-label="Image generation" />
                 Press Enter to generate image
               </span>
             ) : (
