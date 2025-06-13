@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { db } from '@/lib/db/index';
-import { users } from '@/lib/db/schema';
+import { users, userBattery } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 
 export const runtime = 'edge';
@@ -26,6 +26,35 @@ export async function POST(_req: NextRequest) {
       .where(eq(users.clerkId, userId))
       .returning()
       .get();
+
+    if (updatedUser) {
+      // Also initialize battery with some balance for testing
+      const existingBattery = await db()
+        .select()
+        .from(userBattery)
+        .where(eq(userBattery.userId, updatedUser.id))
+        .get();
+
+      if (!existingBattery) {
+        await db()
+          .insert(userBattery)
+          .values({
+            userId: updatedUser.id,
+            totalBalance: 100000, // Give 100k battery for testing
+            dailyAllowance: 10000, // 10k daily
+            lastDailyReset: new Date().toISOString().split('T')[0],
+          });
+      } else {
+        await db()
+          .update(userBattery)
+          .set({
+            totalBalance: 100000,
+            dailyAllowance: 10000,
+            updatedAt: new Date().toISOString(),
+          })
+          .where(eq(userBattery.userId, updatedUser.id));
+      }
+    }
 
     if (!updatedUser) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });

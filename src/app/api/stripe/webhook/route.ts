@@ -150,7 +150,8 @@ async function handleSubscriptionCreated(session: Stripe.Checkout.Session) {
     });
 
   // Update user tier to 'paid'
-  await db()
+  console.log('[Webhook] Updating user tier for userId:', userId);
+  const updateResult = await db()
     .update(users)
     .set({
       tier: 'paid',
@@ -158,17 +159,42 @@ async function handleSubscriptionCreated(session: Stripe.Checkout.Session) {
       subscriptionId: subscriptionId,
       updatedAt: new Date(),
     })
-    .where(eq(users.id, userId));
+    .where(eq(users.id, userId))
+    .returning();
+
+  console.log('[Webhook] User tier update result:', updateResult);
 
   // Update user battery with plan allowance
-  await db()
-    .update(userBattery)
-    .set({
-      dailyAllowance: plan.dailyBattery,
-      totalBalance: sql`total_balance + ${plan.batteryUnits}`,
-      updatedAt: new Date().toISOString(),
-    })
-    .where(eq(userBattery.userId, userId));
+  console.log('[Webhook] Updating battery for userId:', userId, 'with plan:', plan);
+
+  // First check if userBattery record exists
+  const existingBattery = await db()
+    .select()
+    .from(userBattery)
+    .where(eq(userBattery.userId, userId))
+    .get();
+
+  if (!existingBattery) {
+    console.log('[Webhook] No battery record found, creating one');
+    await db()
+      .insert(userBattery)
+      .values({
+        userId: userId,
+        totalBalance: plan.batteryUnits,
+        dailyAllowance: plan.dailyBattery,
+        lastDailyReset: new Date().toISOString().split('T')[0],
+      });
+  } else {
+    console.log('[Webhook] Updating existing battery record');
+    await db()
+      .update(userBattery)
+      .set({
+        dailyAllowance: plan.dailyBattery,
+        totalBalance: sql`total_balance + ${plan.batteryUnits}`,
+        updatedAt: new Date().toISOString(),
+      })
+      .where(eq(userBattery.userId, userId));
+  }
 
   // Record the transaction
   const batteryBalance = await db()
