@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useUserStore } from '@/store/user';
+import { useUserTier } from '@/hooks/use-user-tier';
+import { UserTier } from '@/lib/tier';
 import { useConversationStore } from '@/store/conversations';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -43,7 +44,7 @@ interface ModelUsageStats {
 
 export default function DashboardPage() {
   const router = useRouter();
-  const user = useUserStore((state) => state.user);
+  const { tier, isLoading } = useUserTier();
   const conversations = useConversationStore((state) => state.conversations);
   const messages = useConversationStore((state) => state.messages);
 
@@ -61,15 +62,14 @@ export default function DashboardPage() {
   const [timeRange, setTimeRange] = useState<'week' | 'month' | 'all'>('month');
   const [showExportDialog, setShowExportDialog] = useState(false);
 
-  const isPremium =
-    user?.subscriptionStatus === 'active' || user?.subscriptionStatus === 'trialing';
+  const isPremium = tier === UserTier.PAID;
 
   // Redirect if not premium
   useEffect(() => {
-    if (user && !isPremium) {
+    if (!isLoading && tier === UserTier.FREE) {
       router.push('/pricing');
     }
-  }, [user, isPremium, router]);
+  }, [tier, isLoading, router]);
 
   // Calculate usage statistics
   useEffect(() => {
@@ -185,7 +185,7 @@ export default function DashboardPage() {
     });
   }, [messages, conversations, timeRange]);
 
-  if (!user || !isPremium) {
+  if (isLoading || !isPremium) {
     return null;
   }
 

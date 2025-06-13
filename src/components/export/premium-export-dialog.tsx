@@ -17,7 +17,8 @@ import { useConversationStore } from '@/store/conversations';
 import { ChatExporter } from '@/utils/export';
 import { ChatImageExporter } from '@/utils/export-image';
 import { useTheme } from '@/hooks/use-theme';
-import { useUserStore } from '@/store/user';
+import { useUserTier } from '@/hooks/use-user-tier';
+import { UserTier } from '@/lib/tier';
 import { Badge } from '@/components/ui/badge';
 import { PremiumBadge } from '@/components/premium-badge';
 import { cn } from '@/lib/utils';
@@ -43,9 +44,8 @@ export function PremiumExportDialog({ isOpen, onClose, conversationId }: Premium
 
   const { theme } = useTheme();
   const { conversations, messages } = useConversationStore();
-  const user = useUserStore((state) => state.user);
-  const isPremium =
-    user?.subscriptionStatus === 'active' || user?.subscriptionStatus === 'trialing';
+  const { tier } = useUserTier();
+  const isPremium = tier === UserTier.PAID;
 
   if (!isOpen) return null;
 

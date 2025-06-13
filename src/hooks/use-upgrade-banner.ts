@@ -1,20 +1,20 @@
 import { useState, useEffect } from 'react';
-import { useUserStore } from '@/store/user';
+import { useUserTier } from '@/hooks/use-user-tier';
+import { UserTier } from '@/lib/tier';
 
 const BANNER_DISMISS_KEY = 'upgrade-banner-dismissed';
 const BANNER_DISMISS_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
 
 export function useUpgradeBanner() {
-  const user = useUserStore((state) => state.user);
+  const { tier, isLoading } = useUserTier();
   const [isVisible, setIsVisible] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
 
   useEffect(() => {
-    if (!user) return;
+    if (isLoading) return;
 
-    // Only show for free users (check subscription status)
-    const isPaid = user.subscriptionStatus === 'active' || user.subscriptionStatus === 'trialing';
-    if (isPaid) {
+    // Only show for free users
+    if (tier === UserTier.PAID) {
       setIsVisible(false);
       return;
     }
@@ -35,7 +35,7 @@ export function useUpgradeBanner() {
     // Show banner with animation
     setIsVisible(true);
     setTimeout(() => setIsAnimating(true), 100);
-  }, [user]);
+  }, [tier, isLoading]);
 
   const dismiss = () => {
     setIsAnimating(false);
@@ -49,8 +49,6 @@ export function useUpgradeBanner() {
     isVisible,
     isAnimating,
     dismiss,
-    isFreeTier: user
-      ? !(user.subscriptionStatus === 'active' || user.subscriptionStatus === 'trialing')
-      : true,
+    isFreeTier: tier === UserTier.FREE,
   };
 }

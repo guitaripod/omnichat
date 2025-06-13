@@ -15,7 +15,8 @@ import {
 } from 'lucide-react';
 import { cn } from '@/utils';
 import { useRouter } from 'next/navigation';
-import { useUserStore } from '@/store/user';
+import { useUserTier } from '@/hooks/use-user-tier';
+import { UserTier } from '@/lib/tier';
 import { ModelTooltip } from './model-tooltip';
 import { PremiumBadge } from '@/components/premium-badge';
 
@@ -81,9 +82,8 @@ export function ModelSelectorEnhanced({
   const [isOpen, setIsOpen] = useState(false);
   const [hoveredModel, setHoveredModel] = useState<string | null>(null);
   const router = useRouter();
-  const user = useUserStore((state) => state.user);
-  const isPremium =
-    user?.subscriptionStatus === 'active' || user?.subscriptionStatus === 'trialing';
+  const { tier } = useUserTier();
+  const isPremium = tier === UserTier.PAID;
 
   const selectedModelInfo = MOCK_MODELS.find((m) => m.id === selectedModel);
 

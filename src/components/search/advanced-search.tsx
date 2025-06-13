@@ -4,7 +4,8 @@ import { useState, useCallback, useEffect } from 'react';
 import { Search, X, Filter, Calendar, Hash, FileText, ChevronDown, Sparkles } from 'lucide-react';
 import { useConversationStore } from '@/store/conversations';
 import { useDebouncedCallback } from 'use-debounce';
-import { useUserStore } from '@/store/user';
+import { useUserTier } from '@/hooks/use-user-tier';
+import { UserTier } from '@/lib/tier';
 import { Badge } from '@/components/ui/badge';
 import { PremiumBadge } from '@/components/premium-badge';
 import { cn } from '@/lib/utils';
@@ -53,9 +54,8 @@ export function AdvancedSearch() {
   const [selectedResult, setSelectedResult] = useState<number>(0);
 
   const { conversations, messages, setCurrentConversation } = useConversationStore();
-  const user = useUserStore((state) => state.user);
-  const isPremium =
-    user?.subscriptionStatus === 'active' || user?.subscriptionStatus === 'trialing';
+  const { tier } = useUserTier();
+  const isPremium = tier === UserTier.PAID;
 
   // Advanced search with filters
   const performAdvancedSearch = useCallback(
