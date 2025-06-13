@@ -39,3 +39,22 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# wrangler
+.wrangler/
+
+# database
+*.db
+*.db-journal
+
+# IDE
+.idea/
+.vscode/
+
+# Cloudflare
+.mf/
+.dev.vars
+
+# Scripts with secrets
+setup-stripe-test-keys.sh
+stripe-keys.env
