@@ -17,10 +17,17 @@ import { BranchManager } from '@/services/branching/branch-manager';
 import { BranchVisualizer } from './branch-visualizer-v2';
 import { compressImage } from '@/utils/image-compression';
 import { ChatBatteryWidget } from './chat-battery-widget';
+import { TemplateModal } from '@/components/templates/template-modal';
+import { useUserStore } from '@/store/user';
+import { Button } from '@/components/ui/button';
+import { Sparkles } from 'lucide-react';
 
 export function ChatContainer() {
   const { currentConversationId, createConversation, addMessage, updateMessage } =
     useConversationStore();
+  const user = useUserStore((state) => state.user);
+  const isPremium =
+    user?.subscriptionStatus === 'active' || user?.subscriptionStatus === 'trialing';
 
   // Subscribe to messages separately to ensure reactivity
   const messages = useConversationStore((state) =>
@@ -35,6 +42,7 @@ export function ChatContainer() {
   const [showBranchVisualizer, setShowBranchVisualizer] = useState(false);
   const [, setActiveBranchId] = useState<string>('main');
   const [creatingBranch, setCreatingBranch] = useState(false);
+  const [showTemplateDialog, setShowTemplateDialog] = useState(false);
   const [imageGenerationOptions, setImageGenerationOptions] = useState<{
     size?: string;
     quality?: string;
@@ -1214,6 +1222,17 @@ export function ChatContainer() {
                   Select a model and send your first message
                 </p>
 
+                {/* Premium Templates Button */}
+                {isPremium && (
+                  <Button
+                    onClick={() => setShowTemplateDialog(true)}
+                    className="mb-6 bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-700 hover:to-violet-700"
+                  >
+                    <Sparkles className="mr-2 h-4 w-4" />
+                    Use a Template
+                  </Button>
+                )}
+
                 {/* Quick Start Guide */}
                 <div className="rounded-lg bg-gray-50 p-4 text-left text-sm dark:bg-gray-800">
                   <p className="mb-3 font-medium text-gray-900 dark:text-white">Quick Start:</p>
@@ -1299,6 +1318,9 @@ export function ChatContainer() {
         isStreaming={isLoading}
         tokensUsed={tokensGenerated}
       />
+
+      {/* Template Modal */}
+      <TemplateModal open={showTemplateDialog} onClose={() => setShowTemplateDialog(false)} />
     </div>
   );
 }
