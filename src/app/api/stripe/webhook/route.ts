@@ -13,7 +13,93 @@ import {
 import { eq, sql } from 'drizzle-orm';
 import Stripe from 'stripe';
 
+// Seed plans if they don't exist
+async function ensurePlansExist() {
+  const plans = [
+    {
+      id: 'starter',
+      name: 'Starter',
+      priceMonthly: 3.99,
+      priceAnnual: 39.99,
+      batteryUnits: 10000,
+      dailyBattery: 1000,
+      features: JSON.stringify([
+        '10,000 battery units/month',
+        '1,000 daily battery allowance',
+        'Access to all AI models',
+        'Basic support',
+      ]),
+    },
+    {
+      id: 'daily',
+      name: 'Daily',
+      priceMonthly: 12.99,
+      priceAnnual: 129.99,
+      batteryUnits: 50000,
+      dailyBattery: 5000,
+      features: JSON.stringify([
+        '50,000 battery units/month',
+        '5,000 daily battery allowance',
+        'Priority model access',
+        'Email support',
+      ]),
+    },
+    {
+      id: 'power',
+      name: 'Power',
+      priceMonthly: 24.99,
+      priceAnnual: 249.99,
+      batteryUnits: 100000,
+      dailyBattery: 10000,
+      features: JSON.stringify([
+        '100,000 battery units/month',
+        '10,000 daily battery allowance',
+        'Fastest model access',
+        'Priority support',
+      ]),
+    },
+    {
+      id: 'ultimate',
+      name: 'Ultimate',
+      priceMonthly: 99.99,
+      priceAnnual: 999.99,
+      batteryUnits: 500000,
+      dailyBattery: 50000,
+      features: JSON.stringify([
+        '500,000 battery units/month',
+        '50,000 daily battery allowance',
+        'Unlimited model switching',
+        'Dedicated support',
+      ]),
+    },
+  ];
+
+  for (const plan of plans) {
+    try {
+      await db()
+        .insert(subscriptionPlans)
+        .values({
+          ...plan,
+          stripePriceIdMonthly:
+            process.env[`STRIPE_PRICE_${plan.id.toUpperCase()}_MONTHLY`] || null,
+          stripePriceIdAnnual: process.env[`STRIPE_PRICE_${plan.id.toUpperCase()}_ANNUAL`] || null,
+        })
+        .onConflictDoUpdate({
+          target: subscriptionPlans.id,
+          set: {
+            updatedAt: new Date().toISOString(),
+          },
+        });
+    } catch (error) {
+      console.log(`[Webhook] Plan ${plan.id} might already exist:`, error.message);
+    }
+  }
+}
+
 export async function POST(req: NextRequest) {
+  // Ensure plans exist before processing webhook
+  await ensurePlansExist();
+
   const body = await req.text();
   const signature = req.headers.get('stripe-signature') as string;
 
@@ -42,7 +128,7 @@ export async function POST(req: NextRequest) {
         Stripe.createSubtleCryptoProvider()
       );
     }
-  } catch (err) {
+  } catch (err: any) {
     console.error('Webhook signature verification failed:', err);
     return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
   }
@@ -106,7 +192,7 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ received: true });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Webhook handler error:', error);
     return NextResponse.json({ error: 'Webhook handler failed' }, { status: 500 });
   }
@@ -238,7 +324,7 @@ async function handleSubscriptionCreated(session: Stripe.Checkout.Session) {
           updatedAt: new Date().toISOString(),
         },
       });
-  } catch (error) {
+  } catch (error: any) {
     console.error('[Webhook] Failed to create/update user subscription:', error);
     throw error;
   }
