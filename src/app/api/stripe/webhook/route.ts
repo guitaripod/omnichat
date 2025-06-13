@@ -24,7 +24,15 @@ export async function POST(req: NextRequest) {
   let event: Stripe.Event;
 
   try {
-    event = getStripe().webhooks.constructEvent(body, signature, STRIPE_CONFIG.webhookSecret);
+    const stripe = getStripe();
+    // Use constructEventAsync for Edge Runtime compatibility
+    event = await stripe.webhooks.constructEventAsync(
+      body,
+      signature,
+      STRIPE_CONFIG.webhookSecret,
+      undefined,
+      Stripe.createSubtleCryptoProvider()
+    );
   } catch (err) {
     console.error('Webhook signature verification failed:', err);
     return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
