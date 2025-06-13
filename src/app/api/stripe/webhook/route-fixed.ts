@@ -48,14 +48,17 @@ export async function POST(req: NextRequest) {
     );
 
     console.log('[Webhook] Signature verified successfully for event:', event.type);
-  } catch (err) {
+  } catch (err: any) {
     console.error('[Webhook] Signature verification failed:', {
-      error: err.message,
-      type: err.constructor.name,
-      code: err.code,
-      statusCode: err.statusCode,
+      error: err instanceof Error ? err.message : String(err),
+      type: err?.constructor?.name || 'Unknown',
+      code: err?.code || 'unknown',
+      statusCode: err?.statusCode || 'unknown',
     });
-    return NextResponse.json({ error: 'Invalid signature', details: err.message }, { status: 400 });
+    return NextResponse.json(
+      { error: 'Invalid signature', details: err instanceof Error ? err.message : String(err) },
+      { status: 400 }
+    );
   }
 
   console.log('[Webhook] Processing event:', event.type, 'ID:', event.id);
@@ -122,8 +125,8 @@ export async function POST(req: NextRequest) {
     console.error('[Webhook] Handler error:', {
       eventType: event.type,
       eventId: event.id,
-      error: error.message,
-      stack: error.stack,
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
     });
 
     // Return 200 to acknowledge receipt even if processing failed
@@ -169,9 +172,10 @@ async function handleSubscriptionCreated(session: Stripe.Checkout.Session) {
     }
 
     // Get period dates with fallbacks
-    const currentPeriodStart = subscription.current_period_start || Math.floor(Date.now() / 1000);
+    const currentPeriodStart =
+      (subscription as any).current_period_start || Math.floor(Date.now() / 1000);
     const currentPeriodEnd =
-      subscription.current_period_end || Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60;
+      (subscription as any).current_period_end || Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60;
 
     console.log('[Webhook] Subscription details:', {
       id: subscription.id,
@@ -394,8 +398,8 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
     .update(userSubscriptions)
     .set({
       status: subscription.status as 'active' | 'canceled' | 'past_due' | 'trialing' | 'incomplete',
-      currentPeriodStart: new Date(subscription.current_period_start * 1000).toISOString(),
-      currentPeriodEnd: new Date(subscription.current_period_end * 1000).toISOString(),
+      currentPeriodStart: new Date((subscription as any).current_period_start * 1000).toISOString(),
+      currentPeriodEnd: new Date((subscription as any).current_period_end * 1000).toISOString(),
       cancelAt: subscription.cancel_at
         ? new Date(subscription.cancel_at * 1000).toISOString()
         : null,
@@ -478,8 +482,8 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
 }
 
 async function handleSubscriptionRenewal(invoice: Stripe.Invoice) {
-  const subscriptionId = invoice.subscription as string;
-  const userId = invoice.subscription_details?.metadata?.userId;
+  const subscriptionId = (invoice as any).subscription as string;
+  const userId = (invoice as any).subscription_details?.metadata?.userId;
 
   if (!userId || !subscriptionId) {
     console.error('[Webhook] Missing data for subscription renewal:', { userId, subscriptionId });
@@ -539,7 +543,7 @@ async function handleSubscriptionRenewal(invoice: Stripe.Invoice) {
 }
 
 async function handlePaymentFailed(invoice: Stripe.Invoice) {
-  const subscriptionId = invoice.subscription as string;
+  const subscriptionId = (invoice as any).subscription as string;
 
   if (!subscriptionId) {
     console.error('[Webhook] No subscription ID for failed payment');

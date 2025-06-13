@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
 
   try {
     // Step 1: Check environment
-    const diagnostics = {
+    const diagnostics: any = {
       timestamp: new Date().toISOString(),
       runtime: 'edge',
       environment: process.env.NODE_ENV,
@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
     } catch (bodyError) {
       diagnostics['body'] = {
         success: false,
-        error: bodyError.message,
+        error: bodyError instanceof Error ? bodyError.message : String(bodyError),
       };
       return NextResponse.json({ error: 'Body read failed', diagnostics }, { status: 400 });
     }
@@ -49,12 +49,12 @@ export async function POST(req: NextRequest) {
       getStripe(); // Test initialization
       diagnostics['stripe'] = {
         initialized: true,
-        version: Stripe.VERSION,
+        version: 'Stripe SDK',
       };
     } catch (stripeError) {
       diagnostics['stripe'] = {
         initialized: false,
-        error: stripeError.message,
+        error: stripeError instanceof Error ? stripeError.message : String(stripeError),
       };
     }
 
@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
     } catch (cryptoError) {
       diagnostics['webCrypto'] = {
         available: false,
-        error: cryptoError.message,
+        error: cryptoError instanceof Error ? cryptoError.message : String(cryptoError),
       };
     }
 
@@ -90,12 +90,12 @@ export async function POST(req: NextRequest) {
           eventType: event.type,
           eventId: event.id,
         };
-      } catch (verifyError) {
+      } catch (verifyError: any) {
         diagnostics['verification'] = {
           success: false,
-          error: verifyError.message,
-          errorType: verifyError.constructor.name,
-          errorCode: verifyError.code,
+          error: verifyError instanceof Error ? verifyError.message : String(verifyError),
+          errorType: verifyError?.constructor?.name || 'Unknown',
+          errorCode: verifyError?.code || 'unknown',
         };
       }
     } else {
@@ -108,7 +108,7 @@ export async function POST(req: NextRequest) {
     // Step 6: Test database connection
     try {
       const { db } = await import('@/lib/db/index');
-      const testQuery = await db().prepare('SELECT 1').first();
+      const testQuery = await db().$client.prepare('SELECT 1').first();
       diagnostics['database'] = {
         connected: true,
         testResult: testQuery,
@@ -116,7 +116,7 @@ export async function POST(req: NextRequest) {
     } catch (dbError) {
       diagnostics['database'] = {
         connected: false,
-        error: dbError.message,
+        error: dbError instanceof Error ? dbError.message : String(dbError),
       };
     }
 
@@ -131,8 +131,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         error: 'Diagnostic failed',
-        message: error.message,
-        stack: error.stack,
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
       },
       { status: 500 }
     );
