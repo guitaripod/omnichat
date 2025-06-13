@@ -16,6 +16,7 @@ import { StreamProgress } from './stream-progress';
 import { BranchManager } from '@/services/branching/branch-manager';
 import { BranchVisualizer } from './branch-visualizer-v2';
 import { compressImage } from '@/utils/image-compression';
+import { ChatBatteryWidget } from './chat-battery-widget';
 
 export function ChatContainer() {
   const { currentConversationId, createConversation, addMessage, updateMessage } =
@@ -1291,6 +1292,13 @@ export function ChatContainer() {
           <StreamRecovery conversationId={currentConversationId} onResume={handleResumeStream} />
         )}
       </div>
+
+      {/* Battery Widget for Premium Users */}
+      <ChatBatteryWidget
+        currentModel={selectedModel}
+        isStreaming={isLoading}
+        tokensUsed={tokensGenerated}
+      />
     </div>
   );
 }
