@@ -1,17 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Check, ArrowRight, Zap, Crown, Rocket, Shield, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { loadStripe } from '@stripe/stripe-js';
+import { loadStripe, Stripe } from '@stripe/stripe-js';
 import { useAuth } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { getStripePublishableKey } from '@/lib/client-config';
 
-// Initialize Stripe
-const stripePromise = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
-  ? loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
-  : null;
+// Stripe promise holder
+let stripePromise: Promise<Stripe | null> | null = null;
 import {
   Card,
   CardContent,
@@ -25,6 +24,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { SIMPLE_BATTERY_PLANS, SIMPLE_BATTERY_TOPUPS } from '@/lib/battery-pricing-simple';
 import { cn } from '@/lib/utils';
 import { Battery as BatteryIcon, Sparkles } from 'lucide-react';
+import { StripeDiagnostic } from '@/components/stripe-diagnostic';
 
 // Plan icons
 const planIcons = {
@@ -138,17 +138,58 @@ const getModelDisplayData = () =>
     },
   ].sort((a, b) => a.batteryPerKToken - b.batteryPerKToken);
 
+// Initialize Stripe on demand
+async function getStripe(): Promise<Stripe | null> {
+  if (!stripePromise) {
+    stripePromise = (async () => {
+      try {
+        const publishableKey = await getStripePublishableKey();
+        console.log('Stripe publishable key loaded:', !!publishableKey);
+
+        if (!publishableKey) {
+          console.error('No Stripe publishable key available');
+          return null;
+        }
+
+        console.log('Initializing Stripe SDK...');
+        const stripe = await loadStripe(publishableKey);
+        console.log('Stripe SDK initialized:', !!stripe);
+        return stripe;
+      } catch (error) {
+        console.error('Failed to initialize Stripe:', error);
+        return null;
+      }
+    })();
+  }
+
+  return stripePromise;
+}
+
 export default function PricingPage() {
   const [isAnnual, setIsAnnual] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [stripeReady, setStripeReady] = useState(false);
   const { isSignedIn } = useAuth();
   const router = useRouter();
+
+  // Pre-load Stripe on component mount
+  useEffect(() => {
+    getStripe().then((stripe) => {
+      setStripeReady(!!stripe);
+      if (!stripe) {
+        console.error('Stripe failed to initialize on mount');
+      }
+    });
+  }, []);
 
   const discount = 0.2; // 20% annual discount
 
   const handleSelectPlan = async (planName: string) => {
+    console.log('Starting checkout for plan:', planName, 'Annual:', isAnnual);
+
     if (!isSignedIn) {
+      console.log('User not signed in, redirecting to sign-in');
       toast.error('Please sign in to subscribe');
       router.push('/sign-in?redirect_url=/pricing');
       return;
@@ -158,6 +199,15 @@ export default function PricingPage() {
     setIsLoading(true);
 
     try {
+      // Check if Stripe is ready
+      if (!stripeReady) {
+        console.error('Stripe SDK not ready');
+        toast.error('Payment system is initializing. Please try again in a moment.');
+        setIsLoading(false);
+        return;
+      }
+
+      console.log('Creating checkout session...');
       // Create checkout session
       const response = await fetch('/api/stripe/checkout', {
         method: 'POST',
@@ -169,27 +219,49 @@ export default function PricingPage() {
         }),
       });
 
+      console.log('Checkout API response status:', response.status);
+
       if (!response.ok) {
-        throw new Error('Failed to create checkout session');
+        const errorData = await response.text();
+        console.error('Checkout API error:', errorData);
+        throw new Error(`Failed to create checkout session: ${response.status}`);
       }
 
-      const { sessionId } = (await response.json()) as { sessionId: string };
+      const data = await response.json();
+      console.log('Checkout session created:', data);
 
-      // Redirect to Stripe checkout
-      const stripe = await stripePromise;
-      if (!stripe) throw new Error('Stripe not loaded');
+      const { sessionId } = data as { sessionId: string };
 
+      // Get Stripe instance
+      console.log('Getting Stripe instance...');
+      const stripe = await getStripe();
+
+      if (!stripe) {
+        console.error('Stripe SDK not available');
+        throw new Error('Payment system unavailable');
+      }
+
+      console.log('Redirecting to Stripe checkout...');
       const { error } = await stripe.redirectToCheckout({ sessionId });
-      if (error) throw error;
-    } catch (_error) {
-      console.error('Checkout error:', _error);
-      toast.error('Failed to start checkout');
+
+      if (error) {
+        console.error('Stripe redirect error:', error);
+        throw error;
+      }
+    } catch (error) {
+      console.error('Checkout error details:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      toast.error(`Checkout failed: ${errorMessage}`);
       setIsLoading(false);
+      setSelectedPlan(null);
     }
   };
 
   const handleBuyBattery = async (units: number, _price: number) => {
+    console.log('Starting battery purchase for units:', units);
+
     if (!isSignedIn) {
+      console.log('User not signed in, redirecting to sign-in');
       toast.error('Please sign in to purchase');
       router.push('/sign-in?redirect_url=/pricing');
       return;
@@ -198,6 +270,15 @@ export default function PricingPage() {
     setIsLoading(true);
 
     try {
+      // Check if Stripe is ready
+      if (!stripeReady) {
+        console.error('Stripe SDK not ready');
+        toast.error('Payment system is initializing. Please try again in a moment.');
+        setIsLoading(false);
+        return;
+      }
+
+      console.log('Creating battery checkout session...');
       const response = await fetch('/api/stripe/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -207,20 +288,39 @@ export default function PricingPage() {
         }),
       });
 
+      console.log('Battery checkout API response status:', response.status);
+
       if (!response.ok) {
-        throw new Error('Failed to create checkout session');
+        const errorData = await response.text();
+        console.error('Battery checkout API error:', errorData);
+        throw new Error(`Failed to create checkout session: ${response.status}`);
       }
 
-      const { sessionId } = (await response.json()) as { sessionId: string };
+      const data = await response.json();
+      console.log('Battery checkout session created:', data);
 
+      const { sessionId } = data as { sessionId: string };
+
+      // Wait for Stripe to load
+      console.log('Loading Stripe SDK for battery purchase...');
       const stripe = await stripePromise;
-      if (!stripe) throw new Error('Stripe not loaded');
 
+      if (!stripe) {
+        console.error('Stripe SDK failed to load');
+        throw new Error('Payment system unavailable');
+      }
+
+      console.log('Redirecting to Stripe checkout for battery purchase...');
       const { error } = await stripe.redirectToCheckout({ sessionId });
-      if (error) throw error;
-    } catch (_error) {
-      console.error('Checkout error:', _error);
-      toast.error('Failed to start checkout');
+
+      if (error) {
+        console.error('Stripe redirect error:', error);
+        throw error;
+      }
+    } catch (error) {
+      console.error('Battery checkout error details:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      toast.error(`Checkout failed: ${errorMessage}`);
       setIsLoading(false);
     }
   };
@@ -228,6 +328,13 @@ export default function PricingPage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
       <div className="container mx-auto max-w-7xl px-4 py-16 lg:py-24">
+        {/* Stripe Diagnostic - Remove this in production */}
+        {process.env.NODE_ENV === 'development' && (
+          <div className="mb-8">
+            <StripeDiagnostic />
+          </div>
+        )}
+
         {/* Header */}
         <div className="mb-16 text-center">
           <h1 className="mb-6 text-5xl font-bold tracking-tight lg:text-6xl">

@@ -9,10 +9,15 @@ import { eq } from 'drizzle-orm';
 import Stripe from 'stripe';
 
 export async function POST(req: NextRequest) {
+  console.log('[Stripe Checkout] Starting checkout session creation');
+
   try {
     // Check authentication
     const { userId } = await auth();
+    console.log('[Stripe Checkout] User ID:', userId);
+
     if (!userId) {
+      console.error('[Stripe Checkout] No user ID found - unauthorized');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -31,6 +36,8 @@ export async function POST(req: NextRequest) {
       batteryUnits,
       returnUrl,
     } = body;
+
+    console.log('[Stripe Checkout] Request body:', { type, planId, isAnnual, batteryUnits });
 
     // Get or create user
     let user = await db().select().from(users).where(eq(users.clerkId, userId)).get();
@@ -100,60 +107,115 @@ export async function POST(req: NextRequest) {
 
     if (type === 'subscription') {
       // Subscription checkout
-      const priceId = getStripePriceId(planId!, isAnnual);
+      console.log('[Stripe Checkout] Creating subscription checkout for plan:', planId);
 
-      sessionConfig = {
-        ...sessionConfig,
-        mode: 'subscription',
-        line_items: [
-          {
-            price: priceId,
-            quantity: 1,
+      try {
+        const priceId = getStripePriceId(planId!, isAnnual);
+        console.log('[Stripe Checkout] Price ID:', priceId);
+
+        if (!priceId) {
+          console.error(
+            '[Stripe Checkout] No price ID found for plan:',
+            planId,
+            'isAnnual:',
+            isAnnual
+          );
+          return NextResponse.json(
+            { error: 'Invalid plan or price not configured' },
+            { status: 400 }
+          );
+        }
+
+        sessionConfig = {
+          ...sessionConfig,
+          mode: 'subscription',
+          line_items: [
+            {
+              price: priceId,
+              quantity: 1,
+            },
+          ],
+          subscription_data: {
+            metadata: {
+              userId: user.id,
+              planId: planId!,
+            },
           },
-        ],
-        subscription_data: {
-          metadata: {
-            userId: user.id,
-            planId: planId!,
-          },
-        },
-        // Enable promo codes
-        allow_promotion_codes: true,
-      };
+          // Enable promo codes
+          allow_promotion_codes: true,
+        };
+      } catch (error) {
+        console.error('[Stripe Checkout] Error getting price ID:', error);
+        return NextResponse.json({ error: 'Failed to get price for plan' }, { status: 400 });
+      }
     } else if (type === 'battery') {
       // Battery pack purchase
-      const priceId = getBatteryPackPriceId(batteryUnits!);
+      console.log('[Stripe Checkout] Creating battery checkout for units:', batteryUnits);
 
-      sessionConfig = {
-        ...sessionConfig,
-        mode: 'payment',
-        line_items: [
-          {
-            price: priceId,
-            quantity: 1,
+      try {
+        const priceId = getBatteryPackPriceId(batteryUnits!);
+        console.log('[Stripe Checkout] Battery price ID:', priceId);
+
+        if (!priceId) {
+          console.error('[Stripe Checkout] No price ID found for battery units:', batteryUnits);
+          return NextResponse.json({ error: 'Invalid battery pack size' }, { status: 400 });
+        }
+
+        sessionConfig = {
+          ...sessionConfig,
+          mode: 'payment',
+          line_items: [
+            {
+              price: priceId,
+              quantity: 1,
+            },
+          ],
+          payment_intent_data: {
+            metadata: {
+              userId: user.id,
+              batteryUnits: batteryUnits!.toString(),
+            },
           },
-        ],
-        payment_intent_data: {
-          metadata: {
-            userId: user.id,
-            batteryUnits: batteryUnits!.toString(),
-          },
-        },
-      };
+        };
+      } catch (error) {
+        console.error('[Stripe Checkout] Error getting battery price ID:', error);
+        return NextResponse.json(
+          { error: 'Failed to get price for battery pack' },
+          { status: 400 }
+        );
+      }
     } else {
+      console.error('[Stripe Checkout] Invalid checkout type:', type);
       return NextResponse.json({ error: 'Invalid checkout type' }, { status: 400 });
     }
 
     // Create checkout session
-    const session = await getStripe().checkout.sessions.create(sessionConfig);
+    console.log(
+      '[Stripe Checkout] Creating session with config:',
+      JSON.stringify(sessionConfig, null, 2)
+    );
 
-    return NextResponse.json({
-      sessionId: session.id,
-      url: session.url,
-    });
+    try {
+      const stripe = getStripe();
+      console.log('[Stripe Checkout] Stripe instance loaded');
+
+      const session = await stripe.checkout.sessions.create(sessionConfig);
+      console.log('[Stripe Checkout] Session created:', session.id);
+
+      return NextResponse.json({
+        sessionId: session.id,
+        url: session.url,
+      });
+    } catch (stripeError) {
+      console.error('[Stripe Checkout] Stripe API error:', stripeError);
+      const errorMessage =
+        stripeError instanceof Error ? stripeError.message : 'Unknown Stripe error';
+      return NextResponse.json({ error: `Stripe error: ${errorMessage}` }, { status: 500 });
+    }
   } catch (error) {
-    console.error('Checkout error:', error);
-    return NextResponse.json({ error: 'Failed to create checkout session' }, { status: 500 });
+    console.error('[Stripe Checkout] General error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    return NextResponse.json({ error: `Checkout failed: ${errorMessage}` }, { status: 500 });
   }
 }
 

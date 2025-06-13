@@ -6,12 +6,21 @@ let stripeInstance: Stripe | null = null;
 export function getStripe(): Stripe {
   if (!stripeInstance) {
     const secretKey = process.env.STRIPE_SECRET_KEY;
+    console.log('[Stripe Config] Initializing Stripe, secret key exists:', !!secretKey);
+
     if (!secretKey) {
+      console.error('[Stripe Config] STRIPE_SECRET_KEY is not configured');
+      console.error(
+        '[Stripe Config] Available env vars:',
+        Object.keys(process.env).filter((k) => k.includes('STRIPE'))
+      );
       throw new Error('STRIPE_SECRET_KEY is not configured');
     }
+
     stripeInstance = new Stripe(secretKey, {
       apiVersion: '2025-05-28.basil',
     });
+    console.log('[Stripe Config] Stripe instance created successfully');
   }
   return stripeInstance;
 }
@@ -85,16 +94,34 @@ export const STRIPE_CONFIG = new Proxy({} as ReturnType<typeof getStripeConfig>,
 // Helper to get price ID based on plan and billing period
 export function getStripePriceId(planId: string, isAnnual: boolean): string {
   const config = getStripeConfig();
+  console.log('[Stripe Config] Getting price for plan:', planId, 'isAnnual:', isAnnual);
+  console.log('[Stripe Config] Available prices:', Object.keys(config.prices));
+
   const plan = config.prices[planId as keyof typeof config.prices];
   if (!plan || typeof plan === 'string') {
+    console.error('[Stripe Config] Plan not found or invalid:', planId);
+    console.error('[Stripe Config] Plan data:', plan);
     throw new Error(`Invalid plan: ${planId}`);
   }
 
   // Type guard to ensure plan has monthly/annual properties
   if ('monthly' in plan && 'annual' in plan) {
-    return isAnnual ? plan.annual : plan.monthly;
+    const priceId = isAnnual ? plan.annual : plan.monthly;
+    console.log('[Stripe Config] Price ID for', planId, ':', priceId || 'NOT SET');
+
+    if (!priceId) {
+      console.error(
+        '[Stripe Config] Price ID not configured for:',
+        planId,
+        isAnnual ? 'annual' : 'monthly'
+      );
+      throw new Error(`Price not configured for ${planId} ${isAnnual ? 'annual' : 'monthly'}`);
+    }
+
+    return priceId;
   }
 
+  console.error('[Stripe Config] Invalid plan structure:', plan);
   throw new Error(`Invalid plan type: ${planId}`);
 }
 
@@ -103,13 +130,28 @@ export function getBatteryPackPriceId(units: number): string {
   const config = getStripeConfig();
   const packs = config.prices.batteryPacks;
 
-  // Handle the BATTERY_TOPUPS values
-  if (units === 1000) return packs.pack1000;
-  if (units === 5000) return packs.pack5000;
-  if (units === 15000) return packs.pack15000;
-  if (units === 50000) return packs.pack50000;
+  console.log('[Stripe Config] Getting battery pack price for units:', units);
+  console.log('[Stripe Config] Available packs:', packs);
 
-  throw new Error(`Invalid battery pack size: ${units}`);
+  let priceId = '';
+
+  // Handle the BATTERY_TOPUPS values
+  if (units === 1000) priceId = packs.pack1000;
+  else if (units === 5000) priceId = packs.pack5000;
+  else if (units === 15000) priceId = packs.pack15000;
+  else if (units === 50000) priceId = packs.pack50000;
+  else {
+    console.error('[Stripe Config] Invalid battery pack size:', units);
+    throw new Error(`Invalid battery pack size: ${units}`);
+  }
+
+  if (!priceId) {
+    console.error('[Stripe Config] Battery pack price not configured for units:', units);
+    throw new Error(`Battery pack price not configured for ${units} units`);
+  }
+
+  console.log('[Stripe Config] Battery pack price ID:', priceId);
+  return priceId;
 }
 
 // Format amount for display
