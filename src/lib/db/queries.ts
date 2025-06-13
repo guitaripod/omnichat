@@ -23,11 +23,11 @@ export async function createUser(
     imageUrl?: string;
   }
 ) {
-  const id = generateId();
+  // Use clerkId as the primary user ID to maintain consistency
   const [user] = await db
     .insert(schema.users)
     .values({
-      id,
+      id: userData.clerkId,
       ...userData,
     })
     .returning();

@@ -41,6 +41,7 @@ export async function POST(req: NextRequest) {
 
     // Get or create user
     let user = await db().select().from(users).where(eq(users.clerkId, userId)).get();
+    console.log('[Stripe Checkout] Existing user lookup:', { userId, user });
 
     if (!user) {
       // Create user if doesn't exist
@@ -61,6 +62,8 @@ export async function POST(req: NextRequest) {
         })
         .returning()
         .get();
+
+      console.log('[Stripe Checkout] Created new user:', user);
 
       // Initialize battery balance
       await db()
@@ -94,6 +97,12 @@ export async function POST(req: NextRequest) {
 
     // Get the app URL from the request or use environment variable
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || `https://${req.headers.get('host')}`;
+
+    console.log('[Stripe Checkout] Using user for session:', {
+      userId: user.id,
+      clerkId: user.clerkId,
+      stripeCustomerId,
+    });
 
     let sessionConfig: Stripe.Checkout.SessionCreateParams = {
       customer: stripeCustomerId,
