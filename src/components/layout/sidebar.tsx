@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { cn } from '@/utils';
-import { Menu, X, Settings, User, Image as ImageIcon, CreditCard } from 'lucide-react';
+import { Menu, X, Settings, User, Image as ImageIcon, CreditCard, BarChart3 } from 'lucide-react';
 import { UserButton } from '@clerk/nextjs';
 import { MockUserButton } from '@/components/ui/mock-user-button';
 import { ConversationList } from './conversation-list';
@@ -53,6 +53,15 @@ export function Sidebar() {
 
           {/* Bottom section */}
           <div className="space-y-2 border-t border-gray-200 p-4 dark:border-gray-700">
+            {isPremium && (
+              <Link
+                href="/dashboard"
+                className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-purple-600 transition-colors hover:bg-purple-50 dark:text-purple-400 dark:hover:bg-purple-900/20"
+              >
+                <BarChart3 size={16} />
+                Premium Dashboard
+              </Link>
+            )}
             <Link
               href="/billing"
               className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-gray-600 transition-colors hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700"
