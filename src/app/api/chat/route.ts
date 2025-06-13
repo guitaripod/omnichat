@@ -116,6 +116,22 @@ export async function POST(req: NextRequest) {
 
     conversationId = body.conversationId;
 
+    // Get database instance and user data before access check
+    let db: ReturnType<typeof getD1Database> | null = null;
+
+    try {
+      db = getD1Database();
+      dbUser = await getUserByClerkId(db, userId);
+      console.log('DB User fetched:', {
+        userId,
+        tier: dbUser?.tier,
+        subscriptionStatus: dbUser?.subscriptionStatus,
+      });
+    } catch (error) {
+      console.error('Database connection error:', error);
+      // Continue without database for now
+    }
+
     // Check if user can access the model
     const isOllamaModel = model?.startsWith('ollama/');
     const modelProvider = isOllamaModel
@@ -188,17 +204,6 @@ export async function POST(req: NextRequest) {
       return new Response('Missing required fields: messages, model, and conversationId', {
         status: 400,
       });
-    }
-
-    // Get database instance
-    let db: ReturnType<typeof getD1Database> | null = null;
-
-    try {
-      db = getD1Database();
-      dbUser = await getUserByClerkId(db, userId);
-    } catch (error) {
-      console.error('Database connection error:', error);
-      // Continue without database for now
     }
 
     // Check battery balance before processing (skip for Ollama models)
