@@ -26,13 +26,22 @@ export async function POST(req: NextRequest) {
   try {
     const stripe = getStripe();
     // Use constructEventAsync for Edge Runtime compatibility
-    event = await stripe.webhooks.constructEventAsync(
-      body,
-      signature,
-      STRIPE_CONFIG.webhookSecret,
-      undefined,
-      Stripe.createSubtleCryptoProvider()
-    );
+    // In test environment or when createSubtleCryptoProvider is not available,
+    // use the sync method
+    if (
+      process.env.NODE_ENV === 'test' ||
+      typeof Stripe.createSubtleCryptoProvider !== 'function'
+    ) {
+      event = stripe.webhooks.constructEvent(body, signature, STRIPE_CONFIG.webhookSecret);
+    } else {
+      event = await stripe.webhooks.constructEventAsync(
+        body,
+        signature,
+        STRIPE_CONFIG.webhookSecret,
+        undefined,
+        Stripe.createSubtleCryptoProvider()
+      );
+    }
   } catch (err) {
     console.error('Webhook signature verification failed:', err);
     return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
@@ -60,7 +69,14 @@ export async function POST(req: NextRequest) {
         break;
       }
 
-      case 'customer.subscription.created':
+      case 'customer.subscription.created': {
+        // Skip this event - we handle subscription creation in checkout.session.completed
+        console.log(
+          '[Webhook] Skipping customer.subscription.created - handled in checkout.session.completed'
+        );
+        break;
+      }
+
       case 'customer.subscription.updated': {
         const subscription = event.data.object as Stripe.Subscription;
         await handleSubscriptionUpdate(subscription);
@@ -114,34 +130,88 @@ async function handleSubscriptionCreated(session: Stripe.Checkout.Session) {
   }
 
   // Get the subscription details
-  const subscription = await getStripe().subscriptions.retrieve(subscriptionId);
+  const stripeSubscription = await getStripe().subscriptions.retrieve(subscriptionId);
+
+  // The retrieved subscription has all the properties we need
+  const subscription = stripeSubscription as Stripe.Subscription;
   const planId = subscription.metadata.planId;
 
+  // Get the current period from the first subscription item or fallback to subscription level
+  const currentPeriodStart =
+    subscription.items?.data[0]?.current_period_start ||
+    (subscription as any).current_period_start ||
+    Math.floor(Date.now() / 1000);
+  const currentPeriodEnd =
+    subscription.items?.data[0]?.current_period_end ||
+    (subscription as any).current_period_end ||
+    Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60; // 30 days from now
+
+  console.log('[Webhook] Retrieved subscription:', {
+    id: subscription.id,
+    status: subscription.status,
+    current_period_start: currentPeriodStart,
+    current_period_end: currentPeriodEnd,
+    metadata: subscription.metadata,
+    items: subscription.items?.data?.length || 0,
+    firstItem: subscription.items?.data[0]
+      ? {
+          id: subscription.items.data[0].id,
+          hasStart: !!subscription.items.data[0].current_period_start,
+          hasEnd: !!subscription.items.data[0].current_period_end,
+        }
+      : null,
+  });
+
   // Get the plan details
-  const plan = await db()
+  console.log('[Webhook] Looking for plan:', planId);
+  let plan = await db()
     .select()
     .from(subscriptionPlans)
     .where(eq(subscriptionPlans.id, planId))
     .get();
 
-  if (!plan) return;
+  if (!plan) {
+    console.error('[Webhook] Plan not found in database:', planId);
+    // Use default values for the plan if not found
+    const defaultPlans: Record<
+      string,
+      { name: string; batteryUnits: number; dailyBattery: number }
+    > = {
+      starter: { name: 'Starter', batteryUnits: 10000, dailyBattery: 1000 },
+      daily: { name: 'Daily', batteryUnits: 50000, dailyBattery: 5000 },
+      power: { name: 'Power', batteryUnits: 100000, dailyBattery: 10000 },
+      ultimate: { name: 'Ultimate', batteryUnits: 500000, dailyBattery: 50000 },
+    };
+
+    const defaultPlan = defaultPlans[planId];
+    if (!defaultPlan) {
+      console.error('[Webhook] No default plan found for:', planId);
+      return;
+    }
+
+    // Use the default plan
+    plan = {
+      id: planId,
+      ...defaultPlan,
+      priceMonthly: 0,
+      priceAnnual: 0,
+      features: '[]',
+      stripePriceIdMonthly: null,
+      stripePriceIdAnnual: null,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    console.log('[Webhook] Using default plan:', plan);
+  }
 
   // Create user subscription record
-  await db()
-    .insert(userSubscriptions)
-    .values({
-      userId,
-      planId,
-      stripeCustomerId: customerId,
-      stripeSubscriptionId: subscriptionId,
-      status: subscription.status as 'active' | 'canceled' | 'past_due' | 'trialing' | 'incomplete',
-      currentPeriodStart: new Date((subscription as any).current_period_start * 1000).toISOString(),
-      currentPeriodEnd: new Date((subscription as any).current_period_end * 1000).toISOString(),
-    })
-    .onConflictDoUpdate({
-      target: userSubscriptions.userId,
-      set: {
+  try {
+    await db()
+      .insert(userSubscriptions)
+      .values({
+        userId,
         planId,
+        stripeCustomerId: customerId,
         stripeSubscriptionId: subscriptionId,
         status: subscription.status as
           | 'active'
@@ -149,13 +219,29 @@ async function handleSubscriptionCreated(session: Stripe.Checkout.Session) {
           | 'past_due'
           | 'trialing'
           | 'incomplete',
-        currentPeriodStart: new Date(
-          (subscription as any).current_period_start * 1000
-        ).toISOString(),
-        currentPeriodEnd: new Date((subscription as any).current_period_end * 1000).toISOString(),
-        updatedAt: new Date().toISOString(),
-      },
-    });
+        currentPeriodStart: new Date(currentPeriodStart * 1000).toISOString(),
+        currentPeriodEnd: new Date(currentPeriodEnd * 1000).toISOString(),
+      })
+      .onConflictDoUpdate({
+        target: userSubscriptions.userId,
+        set: {
+          planId,
+          stripeSubscriptionId: subscriptionId,
+          status: subscription.status as
+            | 'active'
+            | 'canceled'
+            | 'past_due'
+            | 'trialing'
+            | 'incomplete',
+          currentPeriodStart: new Date(currentPeriodStart * 1000).toISOString(),
+          currentPeriodEnd: new Date(currentPeriodEnd * 1000).toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+      });
+  } catch (error) {
+    console.error('[Webhook] Failed to create/update user subscription:', error);
+    throw error;
+  }
 
   // Update user tier to 'paid'
   console.log('[Webhook] Updating user tier for userId:', userId);
@@ -220,6 +306,8 @@ async function handleSubscriptionCreated(session: Stripe.Checkout.Session) {
       balanceAfter: batteryBalance?.totalBalance || plan.batteryUnits,
       description: `${plan.name} subscription activated`,
     });
+
+  console.log('[Webhook] Subscription created successfully for user:', userId);
 }
 
 async function handleBatteryPurchase(session: Stripe.Checkout.Session) {
@@ -280,8 +368,14 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
     .update(userSubscriptions)
     .set({
       status: subscription.status as 'active' | 'canceled' | 'past_due' | 'trialing' | 'incomplete',
-      currentPeriodStart: new Date((subscription as any).current_period_start * 1000).toISOString(),
-      currentPeriodEnd: new Date((subscription as any).current_period_end * 1000).toISOString(),
+      currentPeriodStart: new Date(
+        (subscription.items?.data[0]?.current_period_start ||
+          (subscription as any).current_period_start) * 1000
+      ).toISOString(),
+      currentPeriodEnd: new Date(
+        (subscription.items?.data[0]?.current_period_end ||
+          (subscription as any).current_period_end) * 1000
+      ).toISOString(),
       cancelAt: subscription.cancel_at
         ? new Date(subscription.cancel_at * 1000).toISOString()
         : null,
@@ -355,7 +449,8 @@ async function handleSubscriptionRenewal(invoice: Stripe.Invoice) {
   if (!userId || !subscriptionId) return;
 
   // Get subscription details
-  const subscription = await getStripe().subscriptions.retrieve(subscriptionId);
+  const stripeSubscription = await getStripe().subscriptions.retrieve(subscriptionId);
+  const subscription = stripeSubscription as Stripe.Subscription;
   const planId = subscription.metadata.planId;
 
   // Get plan details

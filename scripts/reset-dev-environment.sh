@@ -53,13 +53,16 @@ execute_d1_command() {
 
 # Truncate all tables in reverse dependency order
 execute_d1_command "DELETE FROM attachments;" "Clearing attachments"
+execute_d1_command "DELETE FROM api_usage;" "Clearing API usage"
+execute_d1_command "DELETE FROM daily_usage_summary;" "Clearing usage summaries"
 execute_d1_command "DELETE FROM messages;" "Clearing messages"
 execute_d1_command "DELETE FROM audit_logs;" "Clearing audit logs"
-execute_d1_command "DELETE FROM api_usage;" "Clearing API usage"
 execute_d1_command "DELETE FROM conversations;" "Clearing conversations"
-execute_d1_command "DELETE FROM subscriptions;" "Clearing subscriptions"
+execute_d1_command "DELETE FROM battery_transactions;" "Clearing battery transactions"
+execute_d1_command "DELETE FROM user_battery;" "Clearing user battery"
+execute_d1_command "DELETE FROM user_subscriptions;" "Clearing user subscriptions"
 execute_d1_command "DELETE FROM users;" "Clearing users"
-# Note: We keep schema_version table to track migrations
+# Note: We keep schema_version and subscription_plans tables
 
 echo ""
 echo "3️⃣ Verifying cleanup..."

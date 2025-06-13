@@ -1,0 +1,4 @@
+-- Migration 0006: Already applied
+-- This migration was already applied to the database
+-- This file exists only to maintain consistency with schema_version records
+-- No operations needed

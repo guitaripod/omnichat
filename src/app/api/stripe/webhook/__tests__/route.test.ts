@@ -64,7 +64,14 @@ describe('Stripe Webhook Route - Signature Validation', () => {
 
     mockDbUpdate.mockReturnValue({
       set: vi.fn().mockReturnValue({
-        where: vi.fn().mockResolvedValue({}),
+        where: vi.fn().mockReturnValue({
+          returning: vi.fn().mockResolvedValue([
+            {
+              id: 'user123',
+              tier: 'power',
+            },
+          ]),
+        }),
       }),
     });
   });
@@ -153,6 +160,19 @@ describe('Stripe Webhook Route - Signature Validation', () => {
       current_period_end: Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60,
     });
 
+    // Mock user lookup
+    mockDbSelect.mockReturnValueOnce({
+      from: vi.fn().mockReturnValue({
+        where: vi.fn().mockReturnValue({
+          get: vi.fn().mockResolvedValue({
+            id: 'user123',
+            clerkId: 'user123',
+            email: 'test@example.com',
+          }),
+        }),
+      }),
+    });
+
     // Mock database queries for plan lookup
     mockDbSelect.mockReturnValueOnce({
       from: vi.fn().mockReturnValue({
@@ -220,6 +240,19 @@ describe('Stripe Webhook Route - Signature Validation', () => {
     const validSignature = 'valid_stripe_signature';
 
     mockConstructEvent.mockReturnValue(validEvent);
+
+    // Mock user lookup
+    mockDbSelect.mockReturnValueOnce({
+      from: vi.fn().mockReturnValue({
+        where: vi.fn().mockReturnValue({
+          get: vi.fn().mockResolvedValue({
+            id: 'user123',
+            clerkId: 'user123',
+            email: 'test@example.com',
+          }),
+        }),
+      }),
+    });
 
     // Mock subscription retrieval to throw an error
     mockSubscriptionRetrieve.mockRejectedValue(new Error('Stripe API error'));
@@ -290,12 +323,27 @@ describe('Stripe Webhook Route - Signature Validation', () => {
 
     mockConstructEvent.mockReturnValue(validEvent);
 
-    // Mock battery balance lookup
-    mockDbSelect.mockReturnValue({
+    // Mock user lookup
+    mockDbSelect.mockReturnValueOnce({
       from: vi.fn().mockReturnValue({
         where: vi.fn().mockReturnValue({
           get: vi.fn().mockResolvedValue({
-            totalBalance: 10000, // New balance after adding 5000
+            id: 'user123',
+            clerkId: 'user123',
+            email: 'test@example.com',
+          }),
+        }),
+      }),
+    });
+
+    // Mock battery balance lookup
+    mockDbSelect.mockReturnValueOnce({
+      from: vi.fn().mockReturnValue({
+        where: vi.fn().mockReturnValue({
+          get: vi.fn().mockResolvedValue({
+            userId: 'user123',
+            totalBalance: 5000,
+            dailyAllowance: 0,
           }),
         }),
       }),

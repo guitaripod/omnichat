@@ -68,6 +68,16 @@ OmniChat is built on Cloudflare's edge infrastructure for global low-latency per
 - Cloudflare account (for deployment)
 - API keys for AI providers (OpenAI, Anthropic, Google, xAI, DeepSeek)
 
+### Database Setup
+
+```bash
+# Set up database schema (required for first-time setup)
+./scripts/setup-database.sh --local  # For local development
+./scripts/setup-database.sh          # For production
+
+# See docs/DATABASE_SETUP.md for detailed instructions
+```
+
 ### Development
 
 ```bash

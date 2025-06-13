@@ -259,7 +259,10 @@ export async function GET(_req: NextRequest) {
         id: subscription.id,
         status: subscription.status,
         planId: subscription.metadata.planId,
-        currentPeriodEnd: new Date((subscription as any).current_period_end * 1000).toISOString(),
+        currentPeriodEnd: new Date(
+          (subscription.items?.data[0]?.current_period_end ||
+            (subscription as any).current_period_end) * 1000
+        ).toISOString(),
         cancelAtPeriodEnd: subscription.cancel_at_period_end,
       },
     });

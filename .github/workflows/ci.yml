@@ -11,40 +11,6 @@ on:
   workflow_dispatch: # Allow manual trigger
 
 jobs:
-  # Quick migration check - runs in parallel with other jobs
-  check-migrations:
-    name: Check for Migrations
-    runs-on: ubuntu-latest
-    if: |
-      github.event_name == 'push' &&
-      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
-    outputs:
-      has-migrations: ${{ steps.check.outputs.has-migrations }}
-      migration-files: ${{ steps.check.outputs.migration-files }}
-
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 2
-
-      - name: Check for new migrations
-        id: check
-        run: |
-          # Check if any migration files have changed
-          MIGRATION_CHANGES=$(git diff --name-only HEAD~1 HEAD -- migrations/*.sql || true)
-
-          if [ -n "$MIGRATION_CHANGES" ]; then
-            echo "has-migrations=true" >> $GITHUB_OUTPUT
-            echo "migration-files<<EOF" >> $GITHUB_OUTPUT
-            echo "$MIGRATION_CHANGES" >> $GITHUB_OUTPUT
-            echo "EOF" >> $GITHUB_OUTPUT
-            echo "📋 Found migration changes:"
-            echo "$MIGRATION_CHANGES"
-          else
-            echo "has-migrations=false" >> $GITHUB_OUTPUT
-            echo "✅ No migration changes detected"
-          fi
-
   # Update AI Models - runs in parallel with test
   update-models:
     name: Update AI Models
@@ -186,29 +152,14 @@ jobs:
           matrix.node-version == '20.x'
         run: |
           echo "📦 Building for Cloudflare Pages..."
-          echo "Current directory: $(pwd)"
-          echo "Directory contents before build:"
-          ls -la
 
           # Run the build command
           npm run pages:build 2>&1 || {
-            echo "❌ Build failed. Checking for common issues..."
-            echo "Directory contents after failed build:"
-            ls -la
-            echo "Checking .vercel directory:"
-            ls -la .vercel/ 2>/dev/null || echo ".vercel directory not found"
-            echo "Checking node_modules:"
-            ls node_modules/@cloudflare/next-on-pages 2>/dev/null || echo "@cloudflare/next-on-pages not found in node_modules"
+            echo "❌ Build failed"
             exit 1
           }
 
-          echo "✅ Build completed. Checking output..."
-          echo "Directory contents after build:"
-          ls -la
-          echo "Checking .vercel/output directory:"
-          ls -la .vercel/output/ 2>/dev/null || echo ".vercel/output directory not found"
-          echo "Checking .vercel/output/static directory:"
-          ls -la .vercel/output/static/ 2>/dev/null || echo ".vercel/output/static directory not found"
+          echo "✅ Build completed successfully"
         env:
           NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
 
@@ -220,17 +171,11 @@ jobs:
           matrix.node-version == '20.x'
         run: |
           if [ ! -d ".vercel/output/static" ]; then
-            echo "❌ Build artifacts directory .vercel/output/static not found!"
-            echo "Current directory contents:"
-            ls -la
-            echo "Looking for .vercel directory recursively:"
-            find . -name ".vercel" -type d 2>/dev/null | head -10
+            echo "❌ Build artifacts not found"
             exit 1
-          else
-            echo "✅ Build artifacts found at .vercel/output/static"
-            echo "Artifact size:"
-            du -sh .vercel/output/static
           fi
+
+          echo "✅ Build artifacts verified"
 
       - name: Upload build artifacts
         # Only upload from Node 20.x to avoid duplicates
@@ -245,14 +190,12 @@ jobs:
           retention-days: 1
           if-no-files-found: error
 
-  # Deploy job - uses artifacts from build
+  # Deploy job - simplified
   deploy:
     name: Deploy to Cloudflare Pages
     runs-on: ubuntu-latest
-    needs: [build-and-test, check-migrations]
+    needs: build-and-test
     if: |
-      always() &&
-      needs.build-and-test.result == 'success' &&
       github.event_name == 'push' &&
       (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
 
@@ -275,81 +218,7 @@ jobs:
           name: build-artifacts
           path: .vercel/output/static
 
-      - name: Verify downloaded artifacts
-        run: |
-          echo "🔍 Checking downloaded artifacts..."
-          echo "Current directory:"
-          pwd
-          echo "Directory contents:"
-          ls -la
-          echo "Checking .vercel directory structure:"
-          if [ -d ".vercel" ]; then
-            echo "✅ Found .vercel directory"
-            find .vercel -type d | head -20
-          else
-            echo "❌ .vercel directory not found"
-          fi
-          if [ -d ".vercel/output/static" ]; then
-            echo "✅ Found .vercel/output/static"
-            echo "Contents:"
-            ls -la .vercel/output/static/ | head -10
-          else
-            echo "❌ .vercel/output/static not found"
-            exit 1
-          fi
-
-      - name: Setup Node.js (minimal)
-        if: needs.check-migrations.outputs.has-migrations == 'true'
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20.x
-
-      - name: Install wrangler only
-        if: needs.check-migrations.outputs.has-migrations == 'true'
-        run: npm install -g wrangler@latest
-
-      - name: Apply D1 Migrations
-        if: needs.check-migrations.outputs.has-migrations == 'true'
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: |
-          echo "🔄 Checking D1 migration setup..."
-
-          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
-            echo "⚠️  Cloudflare credentials not configured. Skipping D1 migrations."
-            echo "To enable automatic migrations, add CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID secrets."
-            echo "📋 Migrations to apply manually:"
-            cat <<EOF
-          ${{ needs.check-migrations.outputs.migration-files }}
-          EOF
-            exit 0
-          fi
-
-          echo "🔄 Applying D1 migrations..."
-
-          # Quick permission check
-          if ! wrangler d1 list --json > /dev/null 2>&1; then
-            echo "❌ API token authentication failed. Please check permissions."
-            echo "📋 Migrations to apply manually:"
-            cat <<EOF
-          ${{ needs.check-migrations.outputs.migration-files }}
-          EOF
-            exit 0
-          fi
-
-          # Apply only the changed migrations
-          for migration in ${{ needs.check-migrations.outputs.migration-files }}; do
-            if [ -f "$migration" ]; then
-              echo "Applying $(basename $migration)..."
-              wrangler d1 execute omnichat-db --remote --file "$migration" 2>&1 || echo "⚠️  Failed (may already be applied)"
-            fi
-          done
-
       - name: Deploy to Cloudflare Pages
-        if: |
-          env.CLOUDFLARE_API_TOKEN != '' && 
-          env.CLOUDFLARE_ACCOUNT_ID != ''
         run: |
           echo "🚀 Deploying to Cloudflare Pages..."
           npx wrangler@latest pages deploy .vercel/output/static \
@@ -360,15 +229,10 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
       - name: Deploy Status
-        if: |
-          env.CLOUDFLARE_API_TOKEN == '' || 
-          env.CLOUDFLARE_ACCOUNT_ID == ''
+        if: failure()
         run: |
-          echo "Deployment skipped: Missing Cloudflare credentials"
-          echo "The build was successful and is ready for deployment"
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          echo "❌ Deployment failed"
+          echo "Please check the wrangler output above for details"
 
   # Status check job - provides single status for branch protection
   ci-status:

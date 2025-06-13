@@ -1,3 +1,6 @@
+-- Migration 0001: Initial schema
+-- This migration is idempotent and can be run multiple times safely
+
 -- Create users table
 CREATE TABLE IF NOT EXISTS users (
     id TEXT PRIMARY KEY,
@@ -12,8 +15,8 @@ CREATE TABLE IF NOT EXISTS users (
     updated_at INTEGER NOT NULL DEFAULT (unixepoch())
 );
 
-CREATE INDEX IF NOT EXISTS email_idx ON users(email);
-CREATE INDEX IF NOT EXISTS clerk_idx ON users(clerk_id);
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+CREATE INDEX IF NOT EXISTS idx_users_clerk_id ON users(clerk_id);
 
 -- Create conversations table
 CREATE TABLE IF NOT EXISTS conversations (
@@ -26,8 +29,8 @@ CREATE TABLE IF NOT EXISTS conversations (
     updated_at INTEGER NOT NULL DEFAULT (unixepoch())
 );
 
-CREATE INDEX IF NOT EXISTS user_idx ON conversations(user_id);
-CREATE INDEX IF NOT EXISTS created_at_idx ON conversations(created_at);
+CREATE INDEX IF NOT EXISTS idx_conversations_user_id ON conversations(user_id);
+CREATE INDEX IF NOT EXISTS idx_conversations_created_at ON conversations(created_at);
 
 -- Create messages table
 CREATE TABLE IF NOT EXISTS messages (
@@ -40,23 +43,25 @@ CREATE TABLE IF NOT EXISTS messages (
     created_at INTEGER NOT NULL DEFAULT (unixepoch())
 );
 
-CREATE INDEX IF NOT EXISTS conversation_idx ON messages(conversation_id);
-CREATE INDEX IF NOT EXISTS parent_idx ON messages(parent_id);
-CREATE INDEX IF NOT EXISTS msg_created_at_idx ON messages(created_at);
+CREATE INDEX IF NOT EXISTS idx_messages_conversation_id ON messages(conversation_id);
+CREATE INDEX IF NOT EXISTS idx_messages_parent_id ON messages(parent_id);
+CREATE INDEX IF NOT EXISTS idx_messages_created_at ON messages(created_at);
 
--- Create attachments table
+-- Create attachments table (with the final schema)
 CREATE TABLE IF NOT EXISTS attachments (
     id TEXT PRIMARY KEY,
     message_id TEXT NOT NULL REFERENCES messages(id) ON DELETE CASCADE,
-    file_name TEXT NOT NULL,
-    file_type TEXT NOT NULL,
-    file_size INTEGER NOT NULL,
-    r2_key TEXT NOT NULL,
+    type TEXT NOT NULL,
+    name TEXT NOT NULL,
+    size INTEGER NOT NULL,
+    mime_type TEXT NOT NULL,
     url TEXT NOT NULL,
-    created_at INTEGER NOT NULL DEFAULT (unixepoch())
+    width INTEGER,
+    height INTEGER,
+    uploaded_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX IF NOT EXISTS message_idx ON attachments(message_id);
+CREATE INDEX IF NOT EXISTS idx_attachments_message_id ON attachments(message_id);
 
 -- Create api_usage table
 CREATE TABLE IF NOT EXISTS api_usage (
@@ -69,10 +74,10 @@ CREATE TABLE IF NOT EXISTS api_usage (
     created_at INTEGER NOT NULL DEFAULT (unixepoch())
 );
 
-CREATE INDEX IF NOT EXISTS user_usage_idx ON api_usage(user_id);
-CREATE INDEX IF NOT EXISTS created_at_usage_idx ON api_usage(created_at);
+CREATE INDEX IF NOT EXISTS idx_api_usage_user_id ON api_usage(user_id);
+CREATE INDEX IF NOT EXISTS idx_api_usage_created_at ON api_usage(created_at);
 
--- Create subscriptions table
+-- Create subscriptions table (the old one, for compatibility)
 CREATE TABLE IF NOT EXISTS subscriptions (
     id TEXT PRIMARY KEY,
     user_id TEXT NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
@@ -87,4 +92,4 @@ CREATE TABLE IF NOT EXISTS subscriptions (
     updated_at INTEGER NOT NULL DEFAULT (unixepoch())
 );
 
-CREATE INDEX IF NOT EXISTS stripe_sub_idx ON subscriptions(stripe_subscription_id);
+CREATE INDEX IF NOT EXISTS idx_subscriptions_stripe_sub_id ON subscriptions(stripe_subscription_id);

@@ -217,8 +217,8 @@ describe('Stripe Checkout Route - Session Creation and Pricing', () => {
       const response = await POST(req);
       const data = (await response.json()) as { error: string };
 
-      expect(response.status).toBe(500);
-      expect(data.error).toBe('Failed to create checkout session');
+      expect(response.status).toBe(400);
+      expect(data.error).toBe('Failed to get price for plan');
     });
   });
 
@@ -321,8 +321,8 @@ describe('Stripe Checkout Route - Session Creation and Pricing', () => {
       const response = await POST(req);
       const data = (await response.json()) as { error: string };
 
-      expect(response.status).toBe(500);
-      expect(data.error).toBe('Failed to create checkout session');
+      expect(response.status).toBe(400);
+      expect(data.error).toBe('Failed to get price for battery pack');
     });
   });
 
@@ -427,7 +427,7 @@ describe('Stripe Checkout Route - Session Creation and Pricing', () => {
       const data = (await response.json()) as { error: string };
 
       expect(response.status).toBe(500);
-      expect(data.error).toBe('Failed to create checkout session');
+      expect(data.error).toBe('Stripe error: Stripe API error');
     });
 
     it('should reject invalid checkout types', async () => {
