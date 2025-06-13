@@ -5,6 +5,9 @@ export interface User {
   email: string;
   name: string | null;
   imageUrl: string | null;
+  clerkId?: string | null;
+  stripeCustomerId?: string | null;
+  tier: 'free' | 'paid';
   createdAt: Date;
   updatedAt: Date;
   subscriptionId: string | null;

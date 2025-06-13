@@ -18,16 +18,14 @@ import { BranchVisualizer } from './branch-visualizer-v2';
 import { compressImage } from '@/utils/image-compression';
 import { ChatBatteryWidget } from './chat-battery-widget';
 import { TemplateModal } from '@/components/templates/template-modal';
-import { useUserStore } from '@/store/user';
+import { useUserData } from '@/hooks/use-user-data';
 import { Button } from '@/components/ui/button';
 import { Sparkles } from 'lucide-react';
 
 export function ChatContainer() {
   const { currentConversationId, createConversation, addMessage, updateMessage } =
     useConversationStore();
-  const user = useUserStore((state) => state.user);
-  const isPremium =
-    user?.subscriptionStatus === 'active' || user?.subscriptionStatus === 'trialing';
+  const { isPremium } = useUserData();
 
   // Subscribe to messages separately to ensure reactivity
   const messages = useConversationStore((state) =>

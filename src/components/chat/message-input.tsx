@@ -25,7 +25,7 @@ import { AIProvider, AIModel, AI_MODELS } from '@/services/ai';
 import { FileUpload, FileAttachmentDisplay } from './file-upload';
 import { FileAttachment } from '@/types/attachments';
 import { ImageGenerationParams, ImageGenerationOptions } from './image-generation-params';
-import { useUserStore } from '@/store/user';
+import { useUserData } from '@/hooks/use-user-data';
 import { useRouter } from 'next/navigation';
 import { PremiumBadge } from '@/components/premium-badge';
 import { useConversionTracking } from '@/hooks/use-conversion-tracking';
@@ -86,9 +86,7 @@ export function MessageInput({
   const modelSelectorRef = useRef<HTMLDivElement>(null);
 
   const router = useRouter();
-  const user = useUserStore((state) => state.user);
-  const isPremium =
-    user?.subscriptionStatus === 'active' || user?.subscriptionStatus === 'trialing';
+  const { isPremium } = useUserData();
   const { trackModelSelection } = useConversionTracking();
 
   const handleSubmit = () => {

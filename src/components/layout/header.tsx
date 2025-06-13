@@ -8,15 +8,13 @@ import { useConversationStore } from '@/store/conversations';
 import { ExportDialog } from '@/components/chat/export-dialog';
 import { PremiumExportDialog } from '@/components/export/premium-export-dialog';
 import { BatteryWidgetConnected } from '@/components/battery-widget-connected';
-import { useUserStore } from '@/store/user';
+import { useUserData } from '@/hooks/use-user-data';
 
 export function Header() {
   const { theme, toggleTheme, mounted } = useTheme();
   const [showExportDialog, setShowExportDialog] = useState(false);
   const { currentConversationId, messages } = useConversationStore();
-  const user = useUserStore((state) => state.user);
-  const isPremium =
-    user?.subscriptionStatus === 'active' || user?.subscriptionStatus === 'trialing';
+  const { isPremium } = useUserData();
 
   const hasMessages = currentConversationId && messages[currentConversationId]?.length > 0;
 

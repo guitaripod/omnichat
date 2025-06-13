@@ -1,0 +1,102 @@
+'use client';
+
+import { useEffect } from 'react';
+import { useUser } from '@clerk/nextjs';
+import { useUserStore } from '@/store/user';
+import { useUserTier } from '@/hooks/use-user-tier';
+// import { useUserSync } from '@/hooks/use-user-sync';
+import type { User, Subscription } from '@/types';
+
+export function UserDataProvider({ children }: { children: React.ReactNode }) {
+  const { user: clerkUser, isLoaded } = useUser();
+  const { setUser, setSubscription, setLoading } = useUserStore();
+  const { tier, isLoading: tierLoading } = useUserTier();
+  // const { syncUserData } = useUserSync();
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      // Wait for Clerk to load
+      if (!isLoaded) return;
+
+      setLoading(true);
+
+      try {
+        if (!clerkUser) {
+          setUser(null);
+          setSubscription(null);
+          setLoading(false);
+          return;
+        }
+
+        // Fetch full user data from our API
+        const response = await fetch('/api/user/upgrade-status');
+        if (response.ok) {
+          const data = (await response.json()) as {
+            email: string;
+            tier: 'free' | 'paid';
+            subscriptionStatus: 'active' | 'canceled' | 'past_due' | 'trialing' | null;
+            stripeCustomerId: string | null;
+            hasPaidAccess: boolean;
+          };
+
+          // Map the API response to our User type
+          const user: User = {
+            id: clerkUser.id,
+            email: data.email || clerkUser.emailAddresses[0]?.emailAddress || '',
+            name: clerkUser.fullName || null,
+            imageUrl: clerkUser.imageUrl || null,
+            clerkId: clerkUser.id,
+            tier: data.tier || 'free',
+            subscriptionStatus: data.subscriptionStatus,
+            stripeCustomerId: data.stripeCustomerId,
+            subscriptionId: null,
+            createdAt: new Date(clerkUser.createdAt || Date.now()),
+            updatedAt: new Date(),
+          };
+
+          setUser(user);
+
+          // If user has a subscription, create subscription object
+          if (data.subscriptionStatus && data.subscriptionStatus !== 'canceled') {
+            const subscription: Subscription = {
+              id: data.stripeCustomerId || '',
+              userId: clerkUser.id,
+              stripeCustomerId: data.stripeCustomerId || '',
+              stripeSubscriptionId: '',
+              stripePriceId: '',
+              status: data.subscriptionStatus,
+              currentPeriodStart: new Date(),
+              currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+              cancelAtPeriodEnd: false,
+              tier: data.tier === 'paid' ? 'pro' : 'free',
+            };
+            setSubscription(subscription);
+          } else {
+            setSubscription(null);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch user data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, [clerkUser, isLoaded, setUser, setSubscription, setLoading]);
+
+  // Also sync when tier changes (from useUserTier hook)
+  useEffect(() => {
+    if (!tierLoading && tier && clerkUser) {
+      const currentUser = useUserStore.getState().user;
+      if (currentUser && currentUser.tier !== tier) {
+        setUser({
+          ...currentUser,
+          tier: tier as 'free' | 'paid',
+        });
+      }
+    }
+  }, [tier, tierLoading, clerkUser, setUser]);
+
+  return <>{children}</>;
+}

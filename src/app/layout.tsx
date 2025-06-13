@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import { ClerkProvider } from '@/components/providers/clerk-provider';
+import { UserDataProvider } from '@/components/providers/user-data-provider';
 import { MigrationErrorBoundary } from '@/components/migration-error-boundary';
 import './globals.css';
 
@@ -31,7 +32,9 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <ClerkProvider>
-          <MigrationErrorBoundary>{children}</MigrationErrorBoundary>
+          <UserDataProvider>
+            <MigrationErrorBoundary>{children}</MigrationErrorBoundary>
+          </UserDataProvider>
         </ClerkProvider>
       </body>
     </html>

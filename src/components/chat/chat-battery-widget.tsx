@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Battery, Zap, TrendingDown, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useUserStore } from '@/store/user';
+import { useUserData } from '@/hooks/use-user-data';
 import { useRouter } from 'next/navigation';
 import { PremiumBadge } from '@/components/premium-badge';
 
@@ -15,13 +15,9 @@ interface ChatBatteryWidgetProps {
 
 export function ChatBatteryWidget({ isStreaming, tokensUsed = 0 }: ChatBatteryWidgetProps) {
   const router = useRouter();
-  const user = useUserStore((state) => state.user);
-  const subscription = useUserStore((state) => state.subscription);
+  const { user, isPremium, subscription } = useUserData();
   const [isExpanded, setIsExpanded] = useState(false);
   const [animatedTokens, setAnimatedTokens] = useState(0);
-
-  const isPremium =
-    user?.subscriptionStatus === 'active' || user?.subscriptionStatus === 'trialing';
 
   // Animate token counter when streaming
   useEffect(() => {

@@ -8,15 +8,13 @@ import { UserButton } from '@clerk/nextjs';
 import { MockUserButton } from '@/components/ui/mock-user-button';
 import { ConversationList } from './conversation-list';
 import { useDevMode } from '@/hooks/use-dev-mode';
-import { useUserStore } from '@/store/user';
+import { useUserData } from '@/hooks/use-user-data';
 import { PremiumBadge } from '@/components/premium-badge';
 
 export function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
   const isDevMode = useDevMode();
-  const user = useUserStore((state) => state.user);
-  const isPremium =
-    user?.subscriptionStatus === 'active' || user?.subscriptionStatus === 'trialing';
+  const { isPremium } = useUserData();
 
   return (
     <>

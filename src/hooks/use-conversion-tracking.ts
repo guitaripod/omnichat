@@ -1,17 +1,14 @@
 import { useEffect, useState } from 'react';
 import { ConversionTriggerManager, ConversionTrigger } from '@/lib/conversion-triggers';
-import { useUserStore } from '@/store/user';
+import { useUserData } from '@/hooks/use-user-data';
 import { useConversationStore } from '@/store/conversations';
 
 export function useConversionTracking() {
   const [activeTrigger, setActiveTrigger] = useState<ConversionTrigger | null>(null);
   const [isVisible, setIsVisible] = useState(false);
-  const user = useUserStore((state) => state.user);
+  const { isPremium } = useUserData();
   const conversations = useConversationStore((state) => state.conversations);
   const messages = useConversationStore((state) => state.messages);
-
-  const isPremium =
-    user?.subscriptionStatus === 'active' || user?.subscriptionStatus === 'trialing';
 
   // Track conversation count
   useEffect(() => {

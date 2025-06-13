@@ -21,7 +21,7 @@ import {
   CONVERSATION_TEMPLATES,
   TEMPLATE_COLORS,
 } from '@/lib/conversation-templates';
-import { useUserStore } from '@/store/user';
+import { useUserData } from '@/hooks/use-user-data';
 import { useConversationStore } from '@/store/conversations';
 import { PremiumBadge } from '@/components/premium-badge';
 import { cn } from '@/lib/utils';
@@ -46,12 +46,9 @@ export function TemplateModal({ open, onClose }: TemplateModalProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedTemplate, setSelectedTemplate] = useState<ConversationTemplate | null>(null);
 
-  const user = useUserStore((state) => state.user);
+  const { isPremium } = useUserData();
   const createConversation = useConversationStore((state) => state.createConversation);
   const addMessage = useConversationStore((state) => state.addMessage);
-
-  const isPremium =
-    user?.subscriptionStatus === 'active' || user?.subscriptionStatus === 'trialing';
 
   // Filter templates based on search and category
   const filteredTemplates = CONVERSATION_TEMPLATES.filter((template) => {
