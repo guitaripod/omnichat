@@ -301,12 +301,12 @@ export default function PricingPage() {
 
       const { sessionId } = data as { sessionId: string };
 
-      // Wait for Stripe to load
-      console.log('Loading Stripe SDK for battery purchase...');
-      const stripe = await stripePromise;
+      // Get Stripe instance
+      console.log('Getting Stripe instance for battery purchase...');
+      const stripe = await getStripe();
 
       if (!stripe) {
-        console.error('Stripe SDK failed to load');
+        console.error('Stripe SDK not available');
         throw new Error('Payment system unavailable');
       }
 

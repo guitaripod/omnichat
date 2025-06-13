@@ -36,13 +36,13 @@ export const stripe = new Proxy({} as Stripe, {
 // Stripe configuration - lazy-loaded to avoid build-time issues
 export function getStripeConfig() {
   return {
-    // Product IDs (you'll create these in Stripe Dashboard)
+    // Product IDs (optional - not used for checkout, only price IDs are needed)
     products: {
-      starter: process.env.STRIPE_PRODUCT_STARTER || '',
-      daily: process.env.STRIPE_PRODUCT_DAILY || '',
-      power: process.env.STRIPE_PRODUCT_POWER || '',
-      ultimate: process.env.STRIPE_PRODUCT_ULTIMATE || '',
-      batteryPack: process.env.STRIPE_PRODUCT_BATTERY_PACK || '',
+      starter: process.env.STRIPE_PRODUCT_STARTER || 'not-used',
+      daily: process.env.STRIPE_PRODUCT_DAILY || 'not-used',
+      power: process.env.STRIPE_PRODUCT_POWER || 'not-used',
+      ultimate: process.env.STRIPE_PRODUCT_ULTIMATE || 'not-used',
+      batteryPack: process.env.STRIPE_PRODUCT_BATTERY_PACK || 'not-used',
     },
 
     // Price IDs (you'll get these after creating products)

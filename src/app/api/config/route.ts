@@ -13,7 +13,7 @@ export async function GET() {
       publishableKey: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || '',
     },
     app: {
-      url: process.env.NEXT_PUBLIC_APP_URL || '',
+      url: process.env.NEXT_PUBLIC_APP_URL || 'https://omnichat-7pu.pages.dev',
       environment: process.env.NODE_ENV || 'development',
     },
   };
