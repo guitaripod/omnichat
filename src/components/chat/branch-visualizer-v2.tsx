@@ -147,7 +147,7 @@ export function BranchVisualizer({
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
               <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
-                {node.message.role === 'user' ? 'You' : 'Assistant'}
+                {node.message.role === 'user' ? 'You' : node.message.model || 'Assistant'}
               </span>
               {hasMultipleChildren && (
                 <span className="rounded bg-purple-100 px-1.5 py-0.5 text-xs text-purple-700 dark:bg-purple-900/30 dark:text-purple-300">

@@ -49,10 +49,8 @@ export class ChatExporter {
         lines.push(message.content);
         lines.push('');
       } else if (message.role === 'assistant') {
-        lines.push(`## Assistant (${timestamp})`);
-        if (message.model) {
-          lines.push(`*Model: ${message.model}*`);
-        }
+        const modelName = message.model || 'Assistant';
+        lines.push(`## ${modelName} (${timestamp})`);
         lines.push('');
         lines.push(message.content);
         lines.push('');

@@ -189,7 +189,7 @@ export function BranchComparison({ messages, onClose }: BranchComparisonProps) {
                             >
                               <div className="mb-2 flex items-center justify-between">
                                 <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
-                                  {message.role === 'user' ? 'You' : 'Assistant'}
+                                  {message.role === 'user' ? 'You' : message.model || 'Assistant'}
                                 </span>
                                 {isDivergent && (
                                   <span className="rounded bg-yellow-100 px-2 py-0.5 text-xs text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">

@@ -115,7 +115,8 @@ export class ChatImageExporter {
       // Draw role label
       ctx.font = `bold ${this.SMALL_TEXT_SIZE}px system-ui, -apple-system, sans-serif`;
       ctx.fillStyle = colors.accent;
-      ctx.fillText(isUser ? 'You' : 'Assistant', this.CARD_PADDING + 15, y + 20);
+      const roleLabel = isUser ? 'You' : message.model || 'Assistant';
+      ctx.fillText(roleLabel, this.CARD_PADDING + 15, y + 20);
 
       // Draw message content
       ctx.font = `${this.TEXT_SIZE}px system-ui, -apple-system, sans-serif`;

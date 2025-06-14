@@ -124,7 +124,7 @@ export function BranchVisualizer({ messages, onBranchSwitch, className }: Branch
                 fill="white"
                 className="pointer-events-none"
               >
-                {node.message.role === 'user' ? 'User' : 'Assistant'}
+                {node.message.role === 'user' ? 'User' : node.message.model || 'Assistant'}
               </text>
             </g>
           )}
