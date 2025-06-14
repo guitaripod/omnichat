@@ -65,6 +65,13 @@ export default function BillingPage() {
     loadBillingData();
   }, [isSignedIn, router]);
 
+  // Redirect free users to pricing page
+  useEffect(() => {
+    if (!loading && !subscription && isSignedIn) {
+      router.push('/pricing');
+    }
+  }, [loading, subscription, isSignedIn, router]);
+
   const loadBillingData = async () => {
     try {
       // Load battery status
