@@ -1115,8 +1115,8 @@ export function ChatContainer() {
       <div className="relative flex flex-1 flex-col">
         {/* Messages */}
         <div ref={scrollContainerRef} onScroll={handleScroll} className="flex-1 overflow-y-auto">
-          {messages.length === 0 ? (
-            <div className="flex h-full items-center justify-center">
+          {messages.length === 0 && !isLoading ? (
+            <div className="flex h-full items-center justify-center transition-opacity duration-300">
               <div className="max-w-md text-center">
                 <h2 className="mb-2 text-2xl font-semibold text-gray-900 dark:text-white">
                   Start a new conversation

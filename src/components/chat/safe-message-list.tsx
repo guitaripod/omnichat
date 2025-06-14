@@ -52,13 +52,12 @@ export function SafeMessageList(props: SafeMessageListProps) {
 
   // Don't render until client-side to avoid hydration issues
   if (!mounted) {
-    return (
-      <div className="flex animate-pulse flex-col">
-        <div className="mb-4 h-20 rounded bg-gray-200 dark:bg-gray-700" />
-        <div className="mb-4 h-20 rounded bg-gray-200 dark:bg-gray-700" />
-      </div>
-    );
+    return null; // Return nothing to prevent flash
   }
 
-  return <MessageList {...props} messages={safeMessages} />;
+  return (
+    <div className="transition-opacity duration-300 ease-in-out">
+      <MessageList {...props} messages={safeMessages} />
+    </div>
+  );
 }
