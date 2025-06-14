@@ -73,7 +73,20 @@ export function ChatContainer() {
     } else {
       setOllamaBaseUrl('http://localhost:11434');
     }
+
+    // Load saved model preference
+    const savedModel = localStorage.getItem('selectedModel');
+    if (savedModel) {
+      setSelectedModel(savedModel);
+    }
   }, []);
+
+  // Save model preference when it changes
+  useEffect(() => {
+    if (selectedModel) {
+      localStorage.setItem('selectedModel', selectedModel);
+    }
+  }, [selectedModel]);
 
   const { isOllamaAvailable } = useOllama(ollamaBaseUrl);
 
