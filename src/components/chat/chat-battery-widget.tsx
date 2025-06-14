@@ -33,7 +33,17 @@ export function ChatBatteryWidget({ isStreaming, tokensUsed = 0 }: ChatBatteryWi
 
   if (!user) return null;
 
-  // Mock battery data for demonstration
+  // Calculate battery data
+  const now = new Date();
+  const endOfDay = new Date(now);
+  endOfDay.setHours(23, 59, 59, 999);
+  const hoursRemaining = Math.max(0, (endOfDay.getTime() - now.getTime()) / (1000 * 60 * 60));
+  const timeRemainingText =
+    hoursRemaining > 1
+      ? `${Math.floor(hoursRemaining)} hours left today`
+      : `${Math.floor(hoursRemaining * 60)} minutes left today`;
+
+  // Mock battery data for demonstration (would be from actual usage tracking)
   const batteryPercentage = 75;
   const dailyUsage = 2500;
   const dailyLimit = 10000;
@@ -42,16 +52,15 @@ export function ChatBatteryWidget({ isStreaming, tokensUsed = 0 }: ChatBatteryWi
   // Free users see upgrade prompt
   if (!isPremium) {
     return (
-      <div className="fixed right-4 bottom-4 z-40">
-        <button
-          onClick={() => router.push('/pricing')}
-          className="group flex items-center gap-2 rounded-full bg-gradient-to-r from-orange-500 to-amber-500 px-4 py-2 text-white shadow-lg transition-all hover:scale-105 hover:shadow-xl"
-        >
-          <AlertCircle className="h-4 w-4" />
-          <span className="text-sm font-medium">Upgrade for unlimited battery</span>
-          <Zap className="h-4 w-4 animate-pulse" />
-        </button>
-      </div>
+      <button
+        onClick={() => router.push('/billing')}
+        className="group fixed right-4 bottom-4 z-40 flex items-center gap-2 rounded-full bg-gradient-to-r from-orange-500 to-amber-500 px-4 py-2 text-white shadow-lg transition-all hover:scale-105 hover:shadow-xl"
+        title="Click to view billing and upgrade"
+      >
+        <AlertCircle className="h-4 w-4" />
+        <span className="text-sm font-medium">Upgrade for unlimited battery</span>
+        <Zap className="h-4 w-4 animate-pulse" />
+      </button>
     );
   }
 
@@ -64,8 +73,12 @@ export function ChatBatteryWidget({ isStreaming, tokensUsed = 0 }: ChatBatteryWi
         )}
       >
         <button
-          onClick={() => setIsExpanded(!isExpanded)}
-          className="flex w-full items-center gap-3 p-3 text-left"
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsExpanded(!isExpanded);
+          }}
+          className="flex w-full items-center gap-3 p-3 text-left transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50"
+          title="Click to expand battery details"
         >
           <div className="relative">
             <div
@@ -110,9 +123,7 @@ export function ChatBatteryWidget({ isStreaming, tokensUsed = 0 }: ChatBatteryWi
                   <span className="font-mono">{animatedTokens} tokens</span>
                 </>
               ) : (
-                <span>
-                  {dailyUsage.toLocaleString()} / {dailyLimit.toLocaleString()} daily
-                </span>
+                <span>{timeRemainingText}</span>
               )}
             </div>
           </div>
@@ -149,9 +160,12 @@ export function ChatBatteryWidget({ isStreaming, tokensUsed = 0 }: ChatBatteryWi
                     style={{ width: `${batteryPercentage}%` }}
                   />
                 </div>
-                <p className="text-right text-xs text-gray-500 dark:text-gray-400">
-                  {(dailyLimit - dailyUsage).toLocaleString()} units remaining today
-                </p>
+                <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
+                  <span>
+                    {dailyUsage.toLocaleString()} / {dailyLimit.toLocaleString()} used
+                  </span>
+                  <span>{(dailyLimit - dailyUsage).toLocaleString()} remaining</span>
+                </div>
               </div>
 
               {/* Current Session Stats */}
@@ -184,10 +198,13 @@ export function ChatBatteryWidget({ isStreaming, tokensUsed = 0 }: ChatBatteryWi
                     {subscription?.tier === 'pro' ? 'Pro' : 'Premium'} Plan
                   </span>
                   <button
-                    onClick={() => router.push('/billing')}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      router.push('/billing');
+                    }}
                     className="font-medium text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300"
                   >
-                    Manage →
+                    View Billing →
                   </button>
                 </div>
               </div>
