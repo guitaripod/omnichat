@@ -8,6 +8,7 @@ import { StreamingIndicator } from './streaming-indicator';
 import { AttachmentPreview } from './attachment-preview';
 import { BranchSelector } from './branch-selector';
 import { ImageGenerationLoading } from './image-generation-loading';
+import { useUser } from '@clerk/nextjs';
 
 interface MessageItemProps {
   message: Message;
@@ -98,6 +99,7 @@ export function MessageItem({
   onCreateBranch,
 }: MessageItemProps) {
   const [copied, setCopied] = useState(false);
+  const { user } = useUser();
   const isUser = message.role === 'user';
   const provider = !isUser ? getProviderFromModel(message.model) : null;
   const providerColor = provider ? providerColors[provider] : null;
@@ -129,7 +131,15 @@ export function MessageItem({
             )}
           >
             {isUser ? (
-              <User size={20} className="text-white" />
+              user?.imageUrl ? (
+                <img
+                  src={user.imageUrl}
+                  alt="You"
+                  className="h-full w-full rounded-xl object-cover"
+                />
+              ) : (
+                <User size={20} className="text-white" />
+              )
             ) : ProviderIcon ? (
               <ProviderIcon size={20} className={providerColor?.icon} />
             ) : (
