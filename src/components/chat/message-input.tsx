@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, KeyboardEvent, useEffect } from 'react';
+import React, { useState, useRef, KeyboardEvent, useEffect, useCallback } from 'react';
 import {
   Send,
   Paperclip,
@@ -19,6 +19,7 @@ import {
   Crown,
   Lock,
   TrendingUp,
+  X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AIProvider, AIModel, AI_MODELS } from '@/services/ai';
@@ -82,6 +83,7 @@ export function MessageInput({
   const [showFileUpload, setShowFileUpload] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [webSearchEnabled, setWebSearchEnabled] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const modelSelectorRef = useRef<HTMLDivElement>(null);
 
@@ -100,6 +102,10 @@ export function MessageInput({
       setAttachments([]);
       setShowFileUpload(false);
       textareaRef.current?.focus();
+      // Reset textarea height
+      if (textareaRef.current) {
+        textareaRef.current.style.height = '24px';
+      }
     }
   };
 
@@ -109,6 +115,45 @@ export function MessageInput({
       handleSubmit();
     }
   };
+
+  // Auto-resize textarea based on content
+  const adjustTextareaHeight = useCallback(() => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      textarea.style.height = '24px';
+      const scrollHeight = textarea.scrollHeight;
+      textarea.style.height = Math.min(scrollHeight, 150) + 'px';
+    }
+  }, []);
+
+  useEffect(() => {
+    adjustTextareaHeight();
+  }, [message, adjustTextareaHeight]);
+
+  // Handle file drop
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+  };
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length > 0) {
+      setShowFileUpload(true);
+      // The FileUpload component will handle the actual upload
+    }
+  }, []);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -565,7 +610,22 @@ export function MessageInput({
             )}
 
             {/* Message Input Area */}
-            <div className="flex items-end gap-2 p-3">
+            <div
+              className={cn(
+                'relative flex items-end gap-2 p-3 transition-all',
+                dragActive && 'bg-blue-50 dark:bg-blue-900/20'
+              )}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+            >
+              {dragActive && (
+                <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                  <div className="text-sm font-medium text-blue-600 dark:text-blue-400">
+                    Drop files here to attach
+                  </div>
+                </div>
+              )}
               <button
                 onClick={() => setShowFileUpload(!showFileUpload)}
                 className={cn(
@@ -581,20 +641,26 @@ export function MessageInput({
                 <textarea
                   ref={textareaRef}
                   value={message}
-                  onChange={(e) => setMessage(e.target.value)}
+                  onChange={(e) => {
+                    setMessage(e.target.value);
+                    adjustTextareaHeight();
+                  }}
                   onKeyDown={handleKeyDown}
                   onFocus={() => setIsFocused(true)}
                   onBlur={() => setIsFocused(false)}
                   placeholder={
-                    currentModel?.supportsImageGeneration
-                      ? 'Describe the image you want to create...'
-                      : 'Type your message...'
+                    attachments.length > 0
+                      ? `Message about ${attachments.length} file${attachments.length > 1 ? 's' : ''}...`
+                      : currentModel?.supportsImageGeneration
+                        ? 'Describe the image you want to create...'
+                        : 'Type your message...'
                   }
                   className="w-full resize-none bg-transparent px-2 py-1 text-gray-900 placeholder-gray-500 focus:outline-none dark:text-white dark:placeholder-gray-400"
                   rows={1}
                   style={{
                     minHeight: '24px',
                     maxHeight: '150px',
+                    height: '24px',
                   }}
                 />
               </div>
@@ -658,6 +724,78 @@ export function MessageInput({
                 )}
               </button>
             </div>
+
+            {/* Inline file previews */}
+            {attachments.length > 0 && !showFileUpload && (
+              <div className="border-t border-gray-200 px-3 py-2 dark:border-gray-600">
+                <div className="flex flex-wrap gap-2">
+                  {attachments.map((attachment, index) => {
+                    const isImage = attachment.mimeType.startsWith('image/');
+                    const isPdf = attachment.mimeType === 'application/pdf';
+                    const isText =
+                      attachment.mimeType.startsWith('text/') ||
+                      attachment.fileName.endsWith('.json') ||
+                      attachment.fileName.endsWith('.csv');
+                    const isCode = attachment.fileName.match(
+                      /\.(js|jsx|ts|tsx|py|java|cpp|c|h|css|html|xml|go|rs|rb|php|swift|kt|scala|sh|bash|zsh|ps1|bat|cmd)$/i
+                    );
+                    const language = isCode
+                      ? attachment.fileName.split('.').pop()?.toUpperCase()
+                      : null;
+
+                    return (
+                      <div
+                        key={attachment.id}
+                        className="flex items-center gap-2 rounded-md bg-gray-100 px-2 py-1 text-xs dark:bg-gray-700"
+                      >
+                        {isImage && (
+                          <img
+                            src={`/api/images/${attachment.r2Key}`}
+                            alt={attachment.fileName}
+                            className="h-8 w-8 rounded object-cover"
+                          />
+                        )}
+                        {isPdf && (
+                          <div className="flex h-8 w-8 items-center justify-center rounded bg-red-100 dark:bg-red-900/30">
+                            <span className="text-xs font-medium text-red-600 dark:text-red-400">
+                              PDF
+                            </span>
+                          </div>
+                        )}
+                        {isText && !isCode && (
+                          <div className="flex h-8 w-8 items-center justify-center rounded bg-blue-100 dark:bg-blue-900/30">
+                            <span className="text-xs font-medium text-blue-600 dark:text-blue-400">
+                              {attachment.fileName.endsWith('.json')
+                                ? 'JSON'
+                                : attachment.fileName.endsWith('.csv')
+                                  ? 'CSV'
+                                  : 'TXT'}
+                            </span>
+                          </div>
+                        )}
+                        {isCode && language && (
+                          <div className="flex h-8 w-8 items-center justify-center rounded bg-green-100 dark:bg-green-900/30">
+                            <span className="text-[10px] font-medium text-green-600 dark:text-green-400">
+                              {language}
+                            </span>
+                          </div>
+                        )}
+                        {!isImage && !isPdf && !isText && !isCode && (
+                          <Paperclip className="h-4 w-4 text-gray-500" />
+                        )}
+                        <span className="max-w-[100px] truncate">{attachment.fileName}</span>
+                        <button
+                          onClick={() => setAttachments(attachments.filter((_, i) => i !== index))}
+                          className="ml-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="mt-2 text-center text-xs text-gray-500 dark:text-gray-400">
