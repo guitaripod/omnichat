@@ -6,7 +6,11 @@ import { useConversationStore } from '@/store/conversations';
 import { cn } from '@/utils';
 import { ExportDialog } from '@/components/chat/export-dialog';
 
-export function ConversationList() {
+interface ConversationListProps {
+  isCollapsed?: boolean;
+}
+
+export function ConversationList({ isCollapsed = false }: ConversationListProps) {
   const {
     conversations,
     currentConversationId,
@@ -54,13 +58,17 @@ export function ConversationList() {
   return (
     <div className="flex h-full flex-col">
       {/* New Chat Button */}
-      <div className="p-4">
+      <div className={cn('p-4', isCollapsed && 'md:px-2')}>
         <button
           onClick={handleNewChat}
-          className="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-500 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-600"
+          className={cn(
+            'flex w-full items-center justify-center gap-2 rounded-lg bg-blue-500 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-600',
+            isCollapsed && 'md:gap-0 md:px-0'
+          )}
+          title="New Chat"
         >
           <Plus className="h-4 w-4" />
-          New Chat
+          <span className={cn(isCollapsed && 'md:hidden')}>New Chat</span>
         </button>
       </div>
 
@@ -79,10 +87,17 @@ export function ConversationList() {
                   'group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors',
                   currentConversationId === conversation.id
                     ? 'bg-gray-100 dark:bg-gray-800'
-                    : 'hover:bg-gray-50 dark:hover:bg-gray-800/50'
+                    : 'hover:bg-gray-50 dark:hover:bg-gray-800/50',
+                  isCollapsed && 'md:justify-center md:px-2'
                 )}
+                title={isCollapsed ? conversation.title : undefined}
               >
-                <MessageSquare className="h-4 w-4 flex-shrink-0 text-gray-500 dark:text-gray-400" />
+                <MessageSquare
+                  className={cn(
+                    'h-4 w-4 flex-shrink-0 text-gray-500 dark:text-gray-400',
+                    currentConversationId === conversation.id && 'text-blue-600 dark:text-blue-400'
+                  )}
+                />
 
                 {editingId === conversation.id ? (
                   <form
@@ -117,13 +132,21 @@ export function ConversationList() {
                   <>
                     <button
                       onClick={() => setCurrentConversation(conversation.id)}
-                      className="flex-1 truncate text-left text-gray-700 dark:text-gray-300"
+                      className={cn(
+                        'flex-1 truncate text-left text-gray-700 dark:text-gray-300',
+                        isCollapsed && 'md:hidden'
+                      )}
                     >
                       {conversation.title}
                     </button>
 
                     {/* Actions Menu */}
-                    <div className="relative opacity-0 transition-opacity group-hover:opacity-100">
+                    <div
+                      className={cn(
+                        'relative opacity-0 transition-opacity group-hover:opacity-100',
+                        isCollapsed && 'md:hidden'
+                      )}
+                    >
                       <button
                         onClick={() =>
                           setMenuOpenId(menuOpenId === conversation.id ? null : conversation.id)

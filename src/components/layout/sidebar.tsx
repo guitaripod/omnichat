@@ -3,7 +3,16 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { cn } from '@/utils';
-import { Menu, X, Settings, User, Image as ImageIcon, CreditCard, BarChart3 } from 'lucide-react';
+import {
+  Menu,
+  X,
+  User,
+  Image as ImageIcon,
+  CreditCard,
+  BarChart3,
+  ChevronLeft,
+  ChevronRight,
+} from 'lucide-react';
 import { UserButton } from '@clerk/nextjs';
 import { MockUserButton } from '@/components/ui/mock-user-button';
 import { ConversationList } from './conversation-list';
@@ -13,6 +22,7 @@ import { PremiumBadge } from '@/components/premium-badge';
 
 export function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const isDevMode = useDevMode();
   const { isPremium } = useUserData();
 
@@ -26,9 +36,10 @@ export function Sidebar() {
       {/* Sidebar */}
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-40 w-64 transform border-r border-gray-200 bg-white transition-transform duration-200 ease-in-out md:relative md:translate-x-0 dark:border-gray-700 dark:bg-gray-800',
+          'fixed inset-y-0 left-0 z-40 transform border-r border-gray-200 bg-white transition-all duration-200 ease-in-out md:relative md:translate-x-0 dark:border-gray-700 dark:bg-gray-800',
           isOpen ? 'translate-x-0' : '-translate-x-full',
-          isPremium && 'border-r-2 border-purple-200 dark:border-purple-800'
+          isPremium && 'border-r-2 border-purple-200 dark:border-purple-800',
+          isCollapsed ? 'md:w-16' : 'w-64'
         )}
       >
         <div className={cn('flex h-full flex-col', isPremium && 'relative overflow-hidden')}>
@@ -39,14 +50,29 @@ export function Sidebar() {
           {/* Logo */}
           <div className="flex h-16 items-center justify-between border-b border-gray-200 px-4 dark:border-gray-700">
             <Link href="/chat" className="flex items-center gap-2">
-              <span className="text-xl font-bold text-gray-900 dark:text-white">OmniChat</span>
-              {isPremium && <PremiumBadge size="sm" />}
+              <span
+                className={cn(
+                  'text-xl font-bold text-gray-900 transition-all duration-200 dark:text-white',
+                  isCollapsed && 'md:hidden'
+                )}
+              >
+                OmniChat
+              </span>
+              {!isCollapsed && isPremium && <PremiumBadge size="sm" />}
             </Link>
+            {/* Desktop collapse button */}
+            <button
+              onClick={() => setIsCollapsed(!isCollapsed)}
+              className="hidden h-8 w-8 items-center justify-center rounded-md transition-colors hover:bg-gray-100 md:flex dark:hover:bg-gray-700"
+              title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            >
+              {isCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+            </button>
           </div>
 
           {/* Conversations list */}
           <div className="flex-1 overflow-hidden">
-            <ConversationList />
+            <ConversationList isCollapsed={isCollapsed} />
           </div>
 
           {/* Bottom section */}
@@ -55,40 +81,37 @@ export function Sidebar() {
               <Link
                 href="/dashboard"
                 className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-purple-600 transition-colors hover:bg-purple-50 dark:text-purple-400 dark:hover:bg-purple-900/20"
+                title="Premium Dashboard"
               >
-                <BarChart3 size={16} />
-                Premium Dashboard
+                <BarChart3 size={16} className={cn(isCollapsed && 'md:mx-auto')} />
+                <span className={cn(isCollapsed && 'md:hidden')}>Premium Dashboard</span>
               </Link>
             )}
             <Link
               href="/billing"
               className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-gray-600 transition-colors hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700"
+              title="Billing"
             >
-              <CreditCard size={16} />
-              Billing
+              <CreditCard size={16} className={cn(isCollapsed && 'md:mx-auto')} />
+              <span className={cn(isCollapsed && 'md:hidden')}>Billing</span>
             </Link>
             <Link
               href="/images"
               className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-gray-600 transition-colors hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700"
+              title="Image History"
             >
-              <ImageIcon size={16} />
-              Image History
+              <ImageIcon size={16} className={cn(isCollapsed && 'md:mx-auto')} />
+              <span className={cn(isCollapsed && 'md:hidden')}>Image History</span>
             </Link>
             <Link
               href="/profile"
               className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-gray-600 transition-colors hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700"
+              title="Profile"
             >
-              <User size={16} />
-              Profile
+              <User size={16} className={cn(isCollapsed && 'md:mx-auto')} />
+              <span className={cn(isCollapsed && 'md:hidden')}>Profile</span>
             </Link>
-            <Link
-              href="/settings"
-              className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-gray-600 transition-colors hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700"
-            >
-              <Settings size={16} />
-              Settings
-            </Link>
-            <div className="pt-2">
+            <div className={cn('pt-2', isCollapsed && 'md:flex md:justify-center')}>
               {!isDevMode && process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ? (
                 <UserButton afterSignOutUrl="/" />
               ) : (
