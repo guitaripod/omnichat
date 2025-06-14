@@ -14,7 +14,6 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { UserButton } from '@clerk/nextjs';
-import { MockUserButton } from '@/components/ui/mock-user-button';
 import { ConversationList } from './conversation-list';
 import { useDevMode } from '@/hooks/use-dev-mode';
 import { useUserData } from '@/hooks/use-user-data';
@@ -115,7 +114,7 @@ export function Sidebar() {
               {!isDevMode && process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ? (
                 <UserButton afterSignOutUrl="/" />
               ) : (
-                <MockUserButton />
+                <div className="h-8 w-8 rounded-full bg-gray-300 dark:bg-gray-600" />
               )}
             </div>
           </div>

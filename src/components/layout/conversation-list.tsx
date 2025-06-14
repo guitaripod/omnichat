@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Plus, MessageSquare, Trash2, Edit2, Check, X, MoreVertical, Download } from 'lucide-react';
 import { useConversationStore } from '@/store/conversations';
 import { cn } from '@/utils';
-import { ExportDialog } from '@/components/chat/export-dialog';
+import { PremiumExportDialog } from '@/components/export/premium-export-dialog';
 
 interface ConversationListProps {
   isCollapsed?: boolean;
@@ -195,7 +195,7 @@ export function ConversationList({ isCollapsed = false }: ConversationListProps)
 
       {/* Export Dialog */}
       {exportDialogId && (
-        <ExportDialog
+        <PremiumExportDialog
           isOpen={true}
           onClose={() => setExportDialogId(null)}
           conversationId={exportDialogId}
