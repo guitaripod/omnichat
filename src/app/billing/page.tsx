@@ -178,15 +178,15 @@ export default function BillingPage() {
             <h1 className="bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-4xl font-bold text-transparent dark:from-white dark:to-gray-300">
               Billing & Usage
             </h1>
-            {subscription && (
-              <Button
-                onClick={handleManageSubscription}
-                className="gap-2 bg-gradient-to-r from-purple-600 to-pink-600 shadow-lg transition-all hover:scale-105 hover:from-purple-700 hover:to-pink-700 hover:shadow-xl"
-              >
-                <CreditCard className="h-4 w-4" />
-                Manage Subscription
-              </Button>
-            )}
+            <Button
+              onClick={subscription ? handleManageSubscription : handleUpgrade}
+              className="gap-2 bg-gradient-to-r from-purple-600 to-pink-600 px-6 py-2 text-white shadow-lg transition-all hover:scale-105 hover:from-purple-700 hover:to-pink-700 hover:shadow-xl"
+            >
+              <CreditCard className="h-4 w-4" />
+              <span className="font-medium">
+                {subscription ? 'Manage Subscription' : 'View Plans'}
+              </span>
+            </Button>
           </div>
           <p className="text-gray-600 dark:text-gray-400">
             Monitor your battery usage and manage your subscription
