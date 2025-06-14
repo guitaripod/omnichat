@@ -600,13 +600,17 @@ export function ChatContainer() {
 
         // Auto-update conversation title after first exchange
         const currentConversation = conversations.find((c) => c.id === currentConversationId);
+        // Get fresh messages from store state
+        const currentMessages =
+          useConversationStore.getState().messages[currentConversationId] || [];
+
         if (
           currentConversation &&
           currentConversation.title === 'New Chat' &&
-          messages.length === 1
+          currentMessages.length === 2 // User message + AI response
         ) {
           // Generate a title that includes the AI model used
-          const firstUserMessage = messages[0]?.content || userMessage.content;
+          const firstUserMessage = currentMessages[0]?.content || userMessage.content;
           const modelName = selectedModel.charAt(0).toUpperCase() + selectedModel.slice(1);
           const titleLength = 40;
           const messagePreview =
