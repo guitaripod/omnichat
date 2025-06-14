@@ -65,12 +65,7 @@ export default function BillingPage() {
     loadBillingData();
   }, [isSignedIn, router]);
 
-  // Redirect free users to pricing page
-  useEffect(() => {
-    if (!loading && !subscription && isSignedIn) {
-      router.push('/pricing');
-    }
-  }, [loading, subscription, isSignedIn, router]);
+  // No longer redirect free users - let them see their usage
 
   const loadBillingData = async () => {
     try {

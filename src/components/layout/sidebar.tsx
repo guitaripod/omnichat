@@ -88,12 +88,12 @@ export function Sidebar() {
               </Link>
             )}
             <Link
-              href="/billing"
+              href="/pricing"
               className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-gray-600 transition-colors hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700"
-              title="Billing"
+              title="Pricing"
             >
               <CreditCard size={16} className={cn(isCollapsed && 'md:mx-auto')} />
-              <span className={cn(isCollapsed && 'md:hidden')}>Billing</span>
+              <span className={cn(isCollapsed && 'md:hidden')}>Pricing</span>
             </Link>
             <Link
               href="/images"

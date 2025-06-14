@@ -609,15 +609,57 @@ export function ChatContainer() {
           currentConversation.title === 'New Chat' &&
           currentMessages.length === 2 // User message + AI response
         ) {
-          // Generate a title that includes the AI model used
+          // Generate a concise title summarizing the conversation
           const firstUserMessage = currentMessages[0]?.content || userMessage.content;
-          const modelName = selectedModel.charAt(0).toUpperCase() + selectedModel.slice(1);
-          const titleLength = 40;
-          const messagePreview =
-            firstUserMessage.length > titleLength
-              ? firstUserMessage.substring(0, titleLength) + '...'
-              : firstUserMessage;
-          const newTitle = `${modelName}: ${messagePreview}`;
+
+          // Create a title based on the user's question
+          let newTitle = '';
+
+          // Extract key topics from the user message
+          const lowerMessage = firstUserMessage.toLowerCase();
+
+          // Common question patterns
+          if (lowerMessage.includes('how to') || lowerMessage.includes('how do')) {
+            newTitle = firstUserMessage.split(/how to|how do/i)[1]?.trim() || '';
+            if (newTitle) newTitle = 'How to ' + newTitle;
+          } else if (lowerMessage.includes('what is') || lowerMessage.includes('what are')) {
+            newTitle = firstUserMessage.split(/what is|what are/i)[1]?.trim() || '';
+            if (newTitle) newTitle = 'About ' + newTitle;
+          } else if (lowerMessage.includes('why')) {
+            newTitle = 'Why ' + firstUserMessage.split(/why/i)[1]?.trim();
+          } else if (lowerMessage.includes('can you') || lowerMessage.includes('could you')) {
+            newTitle = firstUserMessage.split(/can you|could you/i)[1]?.trim() || '';
+            if (newTitle) newTitle = newTitle.charAt(0).toUpperCase() + newTitle.slice(1);
+          } else if (lowerMessage.includes('help')) {
+            newTitle = 'Help with ' + firstUserMessage.split(/help/i)[1]?.trim();
+          } else {
+            // For other cases, extract the main topic (first few meaningful words)
+            const words = firstUserMessage
+              .replace(/[?!.,;:]/g, '')
+              .split(' ')
+              .filter((word) => word.length > 2);
+            newTitle = words.slice(0, 4).join(' ');
+          }
+
+          // Clean up and limit title length
+          newTitle = newTitle
+            .replace(/[?!.,;:]+$/, '') // Remove trailing punctuation
+            .trim()
+            .slice(0, 30);
+
+          // If title is too short or empty, use a truncated version of the message
+          if (!newTitle || newTitle.length < 3) {
+            newTitle = firstUserMessage.slice(0, 30);
+          }
+
+          // Ensure title ends cleanly
+          if (newTitle.length === 30 && !newTitle.endsWith(' ')) {
+            const lastSpace = newTitle.lastIndexOf(' ');
+            if (lastSpace > 20) {
+              newTitle = newTitle.slice(0, lastSpace);
+            }
+          }
+
           renameConversation(currentConversationId, newTitle);
         }
       }
