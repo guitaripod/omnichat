@@ -7,9 +7,9 @@ import { isDevMode, getDevUser } from '@/lib/auth/dev-auth';
 export const runtime = 'edge';
 
 // DELETE /api/conversations/[id] - Delete a conversation
-export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const conversationId = params.id;
+    const { id: conversationId } = await params;
 
     const clerkUser = await currentUser();
     let userId: string;
