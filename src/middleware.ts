@@ -3,14 +3,13 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 const isProtectedRoute = createRouteMatcher([
-  '/chat(.*)',
-  '/api/chat(.*)',
   '/api/conversations(.*)',
   '/api/user(.*)',
   '/api/images(.*)',
   '/profile(.*)',
   '/settings(.*)',
   '/images(.*)',
+  '/billing(.*)',
 ]);
 
 const isApiRoute = createRouteMatcher(['/api(.*)']);
