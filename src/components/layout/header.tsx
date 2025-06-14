@@ -3,13 +3,12 @@
 import { Settings2, Moon, Sun, Download, Monitor, Check } from 'lucide-react';
 import { useTheme } from '@/hooks/use-theme';
 import { AdvancedSearch } from '@/components/search/advanced-search';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useConversationStore } from '@/store/conversations';
 import { ExportDialog } from '@/components/chat/export-dialog';
 import { PremiumExportDialog } from '@/components/export/premium-export-dialog';
 import { BatteryWidgetConnected } from '@/components/battery-widget-connected';
 import { useUserData } from '@/hooks/use-user-data';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 export function Header() {
   const { theme, mounted, setTheme } = useTheme();
@@ -17,8 +16,29 @@ export function Header() {
   const [themeMenuOpen, setThemeMenuOpen] = useState(false);
   const { currentConversationId, messages } = useConversationStore();
   const { isPremium } = useUserData();
+  const themeButtonRef = useRef<HTMLButtonElement>(null);
+  const themeMenuRef = useRef<HTMLDivElement>(null);
 
   const hasMessages = currentConversationId && messages[currentConversationId]?.length > 0;
+
+  // Close theme menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        themeMenuRef.current &&
+        themeButtonRef.current &&
+        !themeMenuRef.current.contains(event.target as Node) &&
+        !themeButtonRef.current.contains(event.target as Node)
+      ) {
+        setThemeMenuOpen(false);
+      }
+    };
+
+    if (themeMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [themeMenuOpen]);
 
   if (!mounted) return null;
 
@@ -63,18 +83,22 @@ export function Header() {
             </button>
           )}
 
-          <Popover open={themeMenuOpen} onOpenChange={setThemeMenuOpen}>
-            <PopoverTrigger asChild>
-              <button
-                className="rounded-lg p-2 text-gray-600 transition-colors hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
-                aria-label={getThemeLabel()}
-                title={getThemeLabel()}
+          <div className="relative">
+            <button
+              ref={themeButtonRef}
+              onClick={() => setThemeMenuOpen(!themeMenuOpen)}
+              className="rounded-lg p-2 text-gray-600 transition-colors hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+              aria-label={getThemeLabel()}
+              title={getThemeLabel()}
+            >
+              {getThemeIcon()}
+            </button>
+
+            {themeMenuOpen && (
+              <div
+                ref={themeMenuRef}
+                className="absolute right-0 mt-2 w-36 rounded-lg border border-gray-200 bg-white py-1 shadow-lg dark:border-gray-700 dark:bg-gray-800"
               >
-                {getThemeIcon()}
-              </button>
-            </PopoverTrigger>
-            <PopoverContent className="w-36" align="end">
-              <div className="space-y-1">
                 {themeOptions.map((option) => (
                   <button
                     key={option.value}
@@ -82,18 +106,18 @@ export function Header() {
                       setTheme(option.value);
                       setThemeMenuOpen(false);
                     }}
-                    className="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-sm hover:bg-gray-100 dark:hover:bg-gray-700"
+                    className="flex w-full items-center justify-between px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
                   >
                     <span className="flex items-center gap-2">
                       {option.icon}
                       {option.label}
                     </span>
-                    {theme === option.value && <Check className="h-4 w-4" />}
+                    {theme === option.value && <Check className="h-4 w-4 text-blue-500" />}
                   </button>
                 ))}
               </div>
-            </PopoverContent>
-          </Popover>
+            )}
+          </div>
 
           <button
             className="rounded-lg p-2 text-gray-600 transition-colors hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
