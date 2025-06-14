@@ -63,8 +63,7 @@ export function StreamProgress({
       }`}
     >
       <div className="flex-1">
-        <div className="mb-1 flex justify-between">
-          <span className="animate-pulse">Generating response...</span>
+        <div className="mb-1 flex justify-end">
           {estimatedTotal && (
             <span className="tabular-nums">
               {tokensGenerated} / ~{estimatedTotal} tokens

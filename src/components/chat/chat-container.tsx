@@ -11,7 +11,6 @@ import { useOllama } from '@/hooks/use-ollama';
 import { OllamaClientProvider } from '@/services/ai/providers/ollama-client';
 import { FileAttachment } from '@/types/attachments';
 import { StreamStateManager, StreamState } from '@/services/streaming/stream-state-manager';
-import { StreamRecovery } from './stream-recovery';
 import { StreamProgress } from './stream-progress';
 import { BranchManager } from '@/services/branching/branch-manager';
 import { BranchVisualizer } from './branch-visualizer-v2';
@@ -623,138 +622,6 @@ export function ChatContainer() {
     }
   };
 
-  const handleResumeStream = async (streamState: StreamState) => {
-    if (!currentConversationId || isLoading) return;
-
-    setIsLoading(true);
-    setStreamingMessage('');
-    setCurrentStreamId(streamState.streamId);
-    setTokensGenerated(streamState.tokensGenerated);
-
-    // Create new AbortController for resumed request
-    abortControllerRef.current = new AbortController();
-
-    try {
-      // Find the message to update
-      const messageToUpdate = messages.find((m) => m.id === streamState.messageId);
-      if (!messageToUpdate) {
-        throw new Error('Message not found for resumption');
-      }
-
-      let response: Response;
-      let reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
-
-      const savedKeys = localStorage.getItem('apiKeys');
-      const currentOllamaUrl = savedKeys ? JSON.parse(savedKeys).ollama : 'http://localhost:11434';
-      const isOllamaModel = streamState.model.startsWith('ollama/');
-
-      if (isOllamaModel && isOllamaAvailable && currentOllamaUrl) {
-        if (!ollamaProviderRef.current) {
-          ollamaProviderRef.current = new OllamaClientProvider(currentOllamaUrl);
-        }
-
-        const streamResponse = await ollamaProviderRef.current.chatCompletion({
-          messages: streamState.messages,
-          model: streamState.model,
-          stream: true,
-        });
-
-        reader = streamResponse.stream.getReader();
-      } else {
-        response = await fetch('/api/chat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            messages: streamState.messages,
-            model: streamState.model,
-            stream: true,
-            ollamaBaseUrl: isOllamaModel ? currentOllamaUrl : undefined,
-            conversationId: currentConversationId,
-            resumeFromToken: streamState.tokensGenerated,
-          }),
-          signal: abortControllerRef.current.signal,
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to resume stream');
-        }
-
-        reader = response.body?.getReader();
-      }
-
-      // Continue streaming from where it left off
-      const decoder = new TextDecoder();
-
-      if (reader) {
-        let accumulatedContent = messageToUpdate.content || '';
-        let tokenCount = streamState.tokensGenerated;
-
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-
-          const chunk = decoder.decode(value);
-          const lines = chunk.split('\n');
-
-          for (const line of lines) {
-            if (line.startsWith('data: ')) {
-              const data = line.slice(6);
-              if (data === '[DONE]') continue;
-
-              try {
-                const parsed = JSON.parse(data);
-
-                let content = '';
-                if (parsed.content) {
-                  content = parsed.content;
-                } else if (parsed.choices?.[0]?.delta?.content) {
-                  content = parsed.choices[0].delta.content;
-                }
-
-                if (content) {
-                  accumulatedContent += content;
-                  tokenCount += content.split(/\s+/).length;
-                  setStreamingMessage(accumulatedContent);
-                  setTokensGenerated(tokenCount);
-
-                  startTransition(() => {
-                    updateMessage(currentConversationId, streamState.messageId, accumulatedContent);
-                  });
-
-                  if (tokenCount % 10 === 0) {
-                    streamState.tokensGenerated = tokenCount;
-                    streamState.lastChunkAt = new Date();
-                    StreamStateManager.saveStreamState(streamState);
-                  }
-                }
-              } catch (e) {
-                console.error('Error parsing resumed stream data:', e);
-              }
-            }
-          }
-        }
-
-        StreamStateManager.markStreamComplete(streamState.streamId);
-      }
-    } catch (error) {
-      if (error instanceof Error && error.name === 'AbortError') {
-        StreamStateManager.markStreamAborted(streamState.streamId, 'Resume cancelled');
-      } else {
-        console.error('Error resuming stream:', error);
-        StreamStateManager.markStreamError(
-          streamState.streamId,
-          error instanceof Error ? error.message : 'Unknown error'
-        );
-      }
-    } finally {
-      setIsLoading(false);
-      setStreamingMessage('');
-      setCurrentStreamId(undefined);
-      setTokensGenerated(0);
-      abortControllerRef.current = null;
-    }
-  };
-
   const handleRegenerateMessage = async (index: number) => {
     if (!currentConversationId || isLoading) return;
 
@@ -1303,11 +1170,6 @@ export function ChatContainer() {
           imageGenerationOptions={imageGenerationOptions}
           onImageParamsChange={setImageGenerationOptions}
         />
-
-        {/* Stream Recovery */}
-        {currentConversationId && (
-          <StreamRecovery conversationId={currentConversationId} onResume={handleResumeStream} />
-        )}
       </div>
 
       {/* Battery Widget for Premium Users */}
