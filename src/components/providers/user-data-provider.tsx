@@ -4,10 +4,12 @@ import { useEffect } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { useUserStore } from '@/store/user';
 import { useUserTier } from '@/hooks/use-user-tier';
+import { useDevMode } from '@/hooks/use-dev-mode';
 // import { useUserSync } from '@/hooks/use-user-sync';
 import type { User, Subscription } from '@/types';
 
 export function UserDataProvider({ children }: { children: React.ReactNode }) {
+  const isDevMode = useDevMode();
   const { user: clerkUser, isLoaded } = useUser();
   const { setUser, setSubscription, setLoading } = useUserStore();
   const { tier, isLoading: tierLoading } = useUserTier();
@@ -15,6 +17,27 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const fetchUserData = async () => {
+      // In dev mode, use mock data
+      if (isDevMode) {
+        const mockUser: User = {
+          id: 'dev-user',
+          email: 'dev@example.com',
+          name: 'Dev User',
+          imageUrl: null,
+          clerkId: 'dev-user',
+          tier: 'free',
+          subscriptionStatus: null,
+          stripeCustomerId: null,
+          subscriptionId: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+        setUser(mockUser);
+        setSubscription(null);
+        setLoading(false);
+        return;
+      }
+
       // Wait for Clerk to load
       if (!isLoaded) return;
 
@@ -83,7 +106,7 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
     };
 
     fetchUserData();
-  }, [clerkUser, isLoaded, setUser, setSubscription, setLoading]);
+  }, [clerkUser, isLoaded, setUser, setSubscription, setLoading, isDevMode]);
 
   // Also sync when tier changes (from useUserTier hook)
   useEffect(() => {

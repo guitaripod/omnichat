@@ -15,10 +15,10 @@ import {
   Mail,
   Crown,
 } from 'lucide-react';
-import type { User as ClerkUser } from '@clerk/nextjs/server';
+import type { UserResource } from '@clerk/types';
 
 interface ProfileContentProps {
-  user: ClerkUser;
+  user: UserResource;
 }
 
 export default function ProfileContent({ user }: ProfileContentProps) {
@@ -60,7 +60,9 @@ export default function ProfileContent({ user }: ProfileContentProps) {
                     </h2>
                     <p className="mt-1 flex items-center gap-2 text-gray-600 dark:text-gray-400">
                       <Mail className="h-4 w-4" />
-                      {user.emailAddresses[0]?.emailAddress}
+                      {user.primaryEmailAddress?.emailAddress ||
+                        user.emailAddresses?.[0]?.emailAddress ||
+                        'No email'}
                     </p>
                   </div>
                 </div>
@@ -90,11 +92,13 @@ export default function ProfileContent({ user }: ProfileContentProps) {
                       </h3>
                     </div>
                     <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                      {new Date(user.createdAt).toLocaleDateString('en-US', {
-                        month: 'long',
-                        day: 'numeric',
-                        year: 'numeric',
-                      })}
+                      {user.createdAt
+                        ? new Date(user.createdAt).toLocaleDateString('en-US', {
+                            month: 'long',
+                            day: 'numeric',
+                            year: 'numeric',
+                          })
+                        : 'N/A'}
                     </p>
                   </div>
 
