@@ -22,8 +22,14 @@ import { Button } from '@/components/ui/button';
 import { Sparkles } from 'lucide-react';
 
 export function ChatContainer() {
-  const { currentConversationId, createConversation, addMessage, updateMessage } =
-    useConversationStore();
+  const {
+    currentConversationId,
+    createConversation,
+    addMessage,
+    updateMessage,
+    renameConversation,
+    conversations,
+  } = useConversationStore();
   const { isPremium } = useUserData();
 
   // Subscribe to messages separately to ensure reactivity
@@ -578,6 +584,23 @@ export function ChatContainer() {
 
         // Final scroll to ensure we're at the bottom
         scrollToBottom(true);
+
+        // Auto-update conversation title after first exchange
+        const currentConversation = conversations.find((c) => c.id === currentConversationId);
+        if (
+          currentConversation &&
+          currentConversation.title === 'New Chat' &&
+          messages.length === 1
+        ) {
+          // Generate a title based on the first user message
+          const firstUserMessage = messages[0]?.content || userMessage.content;
+          const titleLength = 50;
+          const newTitle =
+            firstUserMessage.length > titleLength
+              ? firstUserMessage.substring(0, titleLength) + '...'
+              : firstUserMessage;
+          renameConversation(currentConversationId, newTitle);
+        }
       }
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
