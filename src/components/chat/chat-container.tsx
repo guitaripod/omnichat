@@ -605,13 +605,15 @@ export function ChatContainer() {
           currentConversation.title === 'New Chat' &&
           messages.length === 1
         ) {
-          // Generate a title based on the first user message
+          // Generate a title that includes the AI model used
           const firstUserMessage = messages[0]?.content || userMessage.content;
-          const titleLength = 50;
-          const newTitle =
+          const modelName = selectedModel.charAt(0).toUpperCase() + selectedModel.slice(1);
+          const titleLength = 40;
+          const messagePreview =
             firstUserMessage.length > titleLength
               ? firstUserMessage.substring(0, titleLength) + '...'
               : firstUserMessage;
+          const newTitle = `${modelName}: ${messagePreview}`;
           renameConversation(currentConversationId, newTitle);
         }
       }

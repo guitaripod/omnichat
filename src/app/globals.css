@@ -5,6 +5,11 @@
   --foreground: #171717;
 }
 
+.dark {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -13,7 +18,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not(.light) {
     --background: #0a0a0a;
     --foreground: #ededed;
   }
@@ -26,8 +31,12 @@ body {
 }
 
 /* Highlight.js theme adjustments for dark mode */
+.dark .hljs {
+  background: #1a1a1a !important;
+}
+
 @media (prefers-color-scheme: dark) {
-  .hljs {
+  :root:not(.light) .hljs {
     background: #1a1a1a !important;
   }
 }

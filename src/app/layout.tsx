@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from 'next/font/google';
 import { ClerkProvider } from '@/components/providers/clerk-provider';
 import { UserDataProvider } from '@/components/providers/user-data-provider';
 import { MigrationErrorBoundary } from '@/components/migration-error-boundary';
+import { ThemeScript } from './theme-script';
 import './globals.css';
 
 export const runtime = 'edge';
@@ -29,7 +30,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <ThemeScript />
+      </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <ClerkProvider>
           <UserDataProvider>

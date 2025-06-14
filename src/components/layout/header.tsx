@@ -106,7 +106,7 @@ export function Header() {
                       setTheme(option.value);
                       setThemeMenuOpen(false);
                     }}
-                    className="flex w-full items-center justify-between px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
+                    className="flex w-full items-center justify-between px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
                   >
                     <span className="flex items-center gap-2">
                       {option.icon}
