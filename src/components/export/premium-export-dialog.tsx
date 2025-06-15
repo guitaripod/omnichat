@@ -322,7 +322,6 @@ export function PremiumExportDialog({ isOpen, onClose, conversationId }: Premium
                   {!isPremium && (
                     <Badge variant="secondary" className="absolute -top-2 -right-2 gap-1">
                       <Crown className="h-3 w-3" />
-                      Pro
                     </Badge>
                   )}
                 </button>
@@ -342,7 +341,6 @@ export function PremiumExportDialog({ isOpen, onClose, conversationId }: Premium
                   {!isPremium && (
                     <Badge variant="secondary" className="absolute -top-2 -right-2 gap-1">
                       <Crown className="h-3 w-3" />
-                      Pro
                     </Badge>
                   )}
                 </button>
@@ -362,7 +360,6 @@ export function PremiumExportDialog({ isOpen, onClose, conversationId }: Premium
                   {!isPremium && (
                     <Badge variant="secondary" className="absolute -top-2 -right-2 gap-1">
                       <Crown className="h-3 w-3" />
-                      Pro
                     </Badge>
                   )}
                 </button>
@@ -486,7 +483,7 @@ export function PremiumExportDialog({ isOpen, onClose, conversationId }: Premium
                       <FileSpreadsheet className="h-5 w-5" />
                       <span className="text-xs font-medium">CSV</span>
                       <Badge variant="secondary" className="absolute -top-2 -right-2 text-xs">
-                        Pro
+                        <Crown className="h-3 w-3" />
                       </Badge>
                     </button>
                     <button
@@ -501,7 +498,7 @@ export function PremiumExportDialog({ isOpen, onClose, conversationId }: Premium
                       <FileText className="h-5 w-5" />
                       <span className="text-xs font-medium">PDF</span>
                       <Badge variant="secondary" className="absolute -top-2 -right-2 text-xs">
-                        Pro
+                        <Crown className="h-3 w-3" />
                       </Badge>
                     </button>
                   </>
@@ -594,7 +591,7 @@ export function PremiumExportDialog({ isOpen, onClose, conversationId }: Premium
                 href="/pricing"
                 className="text-purple-600 hover:text-purple-700 dark:text-purple-400"
               >
-                Upgrade to Pro
+                Upgrade to Premium
               </a>
             </p>
           )}

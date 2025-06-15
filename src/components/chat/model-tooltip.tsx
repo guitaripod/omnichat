@@ -2,6 +2,7 @@
 
 import { cn } from '@/lib/utils';
 import { Zap, Gauge, Brain, Search, Image, Wrench } from 'lucide-react';
+import { UPGRADE_MESSAGES } from '@/lib/subscription-plans';
 
 interface ModelTooltipProps {
   model: {
@@ -41,7 +42,7 @@ export function ModelTooltip({ model, isLocked, accessReason, className }: Model
         <h4 className="text-sm font-semibold text-gray-900 dark:text-white">{model.name}</h4>
         {isLocked && (
           <p className="mt-1 text-xs font-medium text-orange-600 dark:text-orange-400">
-            {accessReason || 'Upgrade to Pro or add your API key'}
+            {accessReason || UPGRADE_MESSAGES.apiKey}
           </p>
         )}
       </div>
@@ -119,7 +120,7 @@ export function ModelTooltip({ model, isLocked, accessReason, className }: Model
             🚀 Unlock this model and save hours
           </p>
           <p className="mt-1 text-[10px] text-orange-600 dark:text-orange-400">
-            Pro users save an average of $50/month on API costs
+            Subscribers save an average of $50/month on API costs
           </p>
         </div>
       )}

@@ -108,7 +108,7 @@ export default function ApiSettings() {
             className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-orange-500 to-pink-500 px-4 py-2 text-sm font-medium text-white hover:from-orange-600 hover:to-pink-600"
           >
             <Sparkles className="h-4 w-4" />
-            Upgrade to Pro
+            Upgrade Plan
           </button>
         )}
       </div>
