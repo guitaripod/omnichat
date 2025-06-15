@@ -11,7 +11,7 @@ import type { User, Subscription } from '@/types';
 export function UserDataProvider({ children }: { children: React.ReactNode }) {
   const isDevMode = useDevMode();
   const { user: clerkUser, isLoaded } = useUser();
-  const { setUser, setSubscription, setLoading } = useUserStore();
+  const { setUser, setSubscription, setLoading, setBattery } = useUserStore();
   const { tier, isLoading: tierLoading } = useUserTier();
   // const { syncUserData } = useUserSync();
 
@@ -97,6 +97,29 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
           } else {
             setSubscription(null);
           }
+
+          // Fetch battery data
+          try {
+            const batteryResponse = await fetch('/api/battery');
+            if (batteryResponse.ok) {
+              const batteryData = (await batteryResponse.json()) as {
+                totalBalance?: number;
+                dailyAllowance?: number;
+                lastDailyReset?: string;
+                todayUsage?: number;
+              };
+              setBattery({
+                totalBalance: batteryData.totalBalance || 0,
+                dailyAllowance: batteryData.dailyAllowance || 0,
+                lastDailyReset:
+                  batteryData.lastDailyReset || new Date().toISOString().split('T')[0],
+                todayUsage: batteryData.todayUsage || 0,
+                lastUpdated: new Date(),
+              });
+            }
+          } catch (error) {
+            console.error('Failed to fetch battery data:', error);
+          }
         }
       } catch (error) {
         console.error('Failed to fetch user data:', error);
@@ -106,7 +129,7 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
     };
 
     fetchUserData();
-  }, [clerkUser, isLoaded, setUser, setSubscription, setLoading, isDevMode]);
+  }, [clerkUser, isLoaded, setUser, setSubscription, setLoading, setBattery, isDevMode]);
 
   // Also sync when tier changes (from useUserTier hook)
   useEffect(() => {

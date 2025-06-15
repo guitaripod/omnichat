@@ -4,8 +4,10 @@ import { useState, useEffect } from 'react';
 import { Battery, Zap, TrendingDown, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useUserData } from '@/hooks/use-user-data';
+import { useBatteryData } from '@/hooks/use-battery-data';
 import { useRouter } from 'next/navigation';
 import { PremiumBadge } from '@/components/premium-badge';
+import { calculateBatteryUsage } from '@/lib/battery-pricing';
 
 interface ChatBatteryWidgetProps {
   currentModel?: string;
@@ -13,9 +15,14 @@ interface ChatBatteryWidgetProps {
   tokensUsed?: number;
 }
 
-export function ChatBatteryWidget({ isStreaming, tokensUsed = 0 }: ChatBatteryWidgetProps) {
+export function ChatBatteryWidget({
+  currentModel,
+  isStreaming,
+  tokensUsed = 0,
+}: ChatBatteryWidgetProps) {
   const router = useRouter();
   const { user, isPremium, subscription } = useUserData();
+  const { battery } = useBatteryData();
   const [isExpanded, setIsExpanded] = useState(false);
   const [animatedTokens, setAnimatedTokens] = useState(0);
 
@@ -43,11 +50,22 @@ export function ChatBatteryWidget({ isStreaming, tokensUsed = 0 }: ChatBatteryWi
       ? `${Math.floor(hoursRemaining)} hours left today`
       : `${Math.floor(hoursRemaining * 60)} minutes left today`;
 
-  // Mock battery data for demonstration (would be from actual usage tracking)
-  const batteryPercentage = 75;
-  const dailyUsage = 2500;
-  const dailyLimit = 10000;
-  const estimatedCost = animatedTokens * 0.00002; // Mock cost calculation
+  // Calculate battery percentage and usage
+  const dailyLimit = battery?.dailyAllowance || 10000;
+  const todayUsage = battery?.todayUsage || 0;
+  const totalBalance = battery?.totalBalance || 0;
+  const batteryPercentage = dailyLimit > 0 ? Math.round((totalBalance / dailyLimit) * 100) : 0;
+
+  // Estimate cost for current streaming
+  const estimatedBatteryUsage =
+    currentModel && animatedTokens > 0
+      ? calculateBatteryUsage(
+          currentModel,
+          Math.floor(animatedTokens / 2),
+          Math.floor(animatedTokens / 2),
+          false
+        )
+      : 0;
 
   // Free users see upgrade prompt
   if (!isPremium) {
@@ -112,7 +130,7 @@ export function ChatBatteryWidget({ isStreaming, tokensUsed = 0 }: ChatBatteryWi
           <div className="flex-1">
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium text-gray-900 dark:text-white">
-                {batteryPercentage}% Battery
+                {totalBalance.toLocaleString()} Battery
               </span>
               <PremiumBadge size="xs" />
             </div>
@@ -161,10 +179,8 @@ export function ChatBatteryWidget({ isStreaming, tokensUsed = 0 }: ChatBatteryWi
                   />
                 </div>
                 <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
-                  <span>
-                    {dailyUsage.toLocaleString()} / {dailyLimit.toLocaleString()} used
-                  </span>
-                  <span>{(dailyLimit - dailyUsage).toLocaleString()} remaining</span>
+                  <span>{todayUsage.toLocaleString()} used today</span>
+                  <span>{totalBalance.toLocaleString()} balance</span>
                 </div>
               </div>
 
@@ -182,9 +198,9 @@ export function ChatBatteryWidget({ isStreaming, tokensUsed = 0 }: ChatBatteryWi
                       </span>
                     </div>
                     <div>
-                      <span className="text-gray-600 dark:text-gray-400">Est. Cost:</span>
+                      <span className="text-gray-600 dark:text-gray-400">Est. Battery:</span>
                       <span className="ml-1 font-mono font-medium text-purple-600 dark:text-purple-400">
-                        ${estimatedCost.toFixed(4)}
+                        {estimatedBatteryUsage}
                       </span>
                     </div>
                   </div>
