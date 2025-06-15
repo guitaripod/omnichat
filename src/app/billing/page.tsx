@@ -22,8 +22,12 @@ import {
   Clock,
   ChevronRight,
   Check,
+  MessageSquare,
+  Zap,
+  Info,
 } from 'lucide-react';
 import { BATTERY_PLANS } from '@/lib/battery-pricing-v2';
+import { MODEL_BATTERY_USAGE, getTierColor } from '@/lib/battery-pricing';
 import { loadStripe } from '@stripe/stripe-js';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
@@ -289,10 +293,13 @@ export default function BillingPage() {
     ? BATTERY_PLANS.find((p) => p.name.toLowerCase() === subscription.planId)
     : null;
 
+  // Calculate battery percentage based on plan's total battery, not daily allowance
   const batteryPercentage =
-    batteryStatus && batteryStatus.dailyAllowance > 0
-      ? Math.round((batteryStatus.totalBalance / batteryStatus.dailyAllowance) * 100)
-      : 0;
+    currentPlan && batteryStatus
+      ? Math.min(100, Math.round((batteryStatus.totalBalance / currentPlan.totalBattery) * 100))
+      : batteryStatus
+        ? Math.min(100, Math.round((batteryStatus.totalBalance / 6000) * 100)) // Free tier has ~6000 units
+        : 0;
 
   return (
     <>
@@ -325,12 +332,12 @@ export default function BillingPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <CardTitle className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-3xl font-bold text-transparent">
-                      Battery Overview
+                      Battery Life
                     </CardTitle>
                     <CardDescription className="mt-2 text-base">
                       {subscription
                         ? `${currentPlan?.name} Plan - ${subscription.status === 'active' ? 'Active' : 'Inactive'}`
-                        : 'Free Tier - Upgrade for more battery'}
+                        : 'Free Tier - Limited battery capacity'}
                     </CardDescription>
                   </div>
 
@@ -344,29 +351,46 @@ export default function BillingPage() {
               <CardContent>
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
                   <QuickStat
-                    icon={Gauge}
-                    label="Today's Usage"
-                    value={`${batteryStatus?.todayUsage.toLocaleString() || 0} units`}
-                    color="bg-gradient-to-br from-blue-500 to-cyan-600"
-                  />
-                  <QuickStat
                     icon={BatteryIcon}
-                    label="Total Balance"
+                    label="Battery Remaining"
                     value={`${batteryStatus?.totalBalance.toLocaleString() || 0} units`}
                     color="bg-gradient-to-br from-green-500 to-emerald-600"
                   />
                   <QuickStat
                     icon={Clock}
-                    label="Daily Allowance"
-                    value={`${batteryStatus?.dailyAllowance.toLocaleString() || 0} units`}
+                    label="Estimated Days Left"
+                    value={
+                      batteryStatus && batteryStatus.usageHistory.length > 0
+                        ? (() => {
+                            const avgDaily =
+                              batteryStatus.usageHistory
+                                .slice(-7)
+                                .reduce((a, b) => a + b.usage, 0) /
+                              Math.min(7, batteryStatus.usageHistory.length);
+                            const daysLeft =
+                              avgDaily > 0
+                                ? Math.floor(batteryStatus.totalBalance / avgDaily)
+                                : '∞';
+                            return `${daysLeft} days`;
+                          })()
+                        : '∞ days'
+                    }
                     color="bg-gradient-to-br from-purple-500 to-pink-600"
                   />
                   <QuickStat
+                    icon={Gauge}
+                    label="Monthly Usage"
+                    value={`${Math.round(
+                      batteryStatus?.usageHistory.slice(-30).reduce((a, b) => a + b.usage, 0) ?? 0
+                    ).toLocaleString()} units`}
+                    color="bg-gradient-to-br from-blue-500 to-cyan-600"
+                  />
+                  <QuickStat
                     icon={TrendingUp}
-                    label="7-Day Average"
+                    label="Daily Average"
                     value={`${Math.round(
                       (batteryStatus?.usageHistory.slice(-7).reduce((a, b) => a + b.usage, 0) ??
-                        0) / 7
+                        0) / Math.min(7, batteryStatus?.usageHistory.length || 1)
                     ).toLocaleString()} units`}
                     color="bg-gradient-to-br from-orange-500 to-red-600"
                   />
@@ -539,6 +563,131 @@ export default function BillingPage() {
               </Card>
             </motion.div>
           )}
+
+          {/* Model Pricing Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+            className="mt-8"
+          >
+            <Card className="border-0 shadow-xl">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Zap className="h-5 w-5 text-purple-600" />
+                  AI Model Pricing
+                </CardTitle>
+                <CardDescription>
+                  Battery consumption per model - lower values mean more messages for your battery
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {Object.entries(MODEL_BATTERY_USAGE)
+                    .sort((a, b) => a[1].batteryPerKToken - b[1].batteryPerKToken)
+                    .filter(([key]) => !key.includes('-cached'))
+                    .map(([modelKey, usage]) => {
+                      const messagesPerThousand = Math.floor(1000 / usage.estimatedPerMessage);
+                      const messagesWithCurrentBattery = batteryStatus
+                        ? Math.floor(batteryStatus.totalBalance / usage.estimatedPerMessage)
+                        : 0;
+
+                      return (
+                        <motion.div
+                          key={modelKey}
+                          whileHover={{ scale: 1.02 }}
+                          className="group relative rounded-xl border border-gray-200 bg-white p-4 transition-all hover:shadow-lg dark:border-gray-700 dark:bg-gray-800/50"
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2">
+                                <span className="text-2xl">{usage.emoji}</span>
+                                <h4 className="font-semibold text-gray-900 dark:text-white">
+                                  {usage.displayName}
+                                </h4>
+                              </div>
+                              <div className="mt-1">
+                                <Badge className={cn('text-xs', getTierColor(usage.tier))}>
+                                  {usage.tier.charAt(0).toUpperCase() + usage.tier.slice(1)} Tier
+                                </Badge>
+                              </div>
+                            </div>
+                            <div className="group relative">
+                              <Info className="h-4 w-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
+                              <div className="pointer-events-none absolute top-6 right-0 z-10 w-48 rounded-md bg-gray-900 p-2 text-xs text-white opacity-0 shadow-lg transition-opacity group-hover:pointer-events-auto group-hover:opacity-100 dark:bg-gray-700">
+                                {usage.batteryPerKToken} battery units per 1K tokens
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="mt-4 space-y-2">
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-gray-600 dark:text-gray-400">
+                                <MessageSquare className="mr-1 inline h-3 w-3" />
+                                Per message
+                              </span>
+                              <span className="font-medium">
+                                {usage.estimatedPerMessage < 1
+                                  ? `${usage.estimatedPerMessage.toFixed(2)} BU`
+                                  : `${Math.round(usage.estimatedPerMessage)} BU`}
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-gray-600 dark:text-gray-400">
+                                1,000 BU gets you
+                              </span>
+                              <span className="font-medium text-green-600 dark:text-green-400">
+                                ~{messagesPerThousand} messages
+                              </span>
+                            </div>
+                            {batteryStatus && (
+                              <div className="flex items-center justify-between text-sm">
+                                <span className="text-gray-600 dark:text-gray-400">
+                                  Your battery
+                                </span>
+                                <span className="font-medium text-purple-600 dark:text-purple-400">
+                                  ~{messagesWithCurrentBattery.toLocaleString()} messages
+                                </span>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Tier indicator bar */}
+                          <div className="mt-3 h-1 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
+                            <div
+                              className={cn(
+                                'h-full transition-all',
+                                usage.tier === 'budget' && 'w-1/4 bg-gray-400',
+                                usage.tier === 'mid' && 'w-2/4 bg-blue-400',
+                                usage.tier === 'premium' && 'w-3/4 bg-purple-400',
+                                usage.tier === 'ultra' &&
+                                  'w-full bg-gradient-to-r from-purple-400 to-pink-400'
+                              )}
+                            />
+                          </div>
+                        </motion.div>
+                      );
+                    })}
+                </div>
+
+                {/* Usage tips */}
+                <div className="mt-6 rounded-lg bg-blue-50 p-4 dark:bg-blue-900/20">
+                  <h5 className="mb-2 font-semibold text-blue-900 dark:text-blue-100">
+                    💡 Battery Tips
+                  </h5>
+                  <ul className="space-y-1 text-sm text-blue-800 dark:text-blue-200">
+                    <li>• Budget tier models (⚡) give you the most messages per battery unit</li>
+                    <li>• Premium models (🟣) offer advanced reasoning and capabilities</li>
+                    <li>
+                      • Your subscription provides {currentPlan?.dailyBattery || 0} battery units
+                      daily
+                    </li>
+                    <li>• Unused daily battery rolls over to your total balance</li>
+                  </ul>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
         </div>
       </div>
     </>

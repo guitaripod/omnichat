@@ -5,6 +5,8 @@ import { cn } from '@/lib/utils';
 import { useUserData } from '@/hooks/use-user-data';
 import { useBatteryData } from '@/hooks/use-battery-data';
 import Link from 'next/link';
+import { BATTERY_PLANS } from '@/lib/battery-pricing-v2';
+import { useUserStore } from '@/store/user';
 
 interface SidebarBatteryWidgetProps {
   isCollapsed?: boolean;
@@ -13,13 +15,16 @@ interface SidebarBatteryWidgetProps {
 export function SidebarBatteryWidget({ isCollapsed }: SidebarBatteryWidgetProps) {
   const { user, isPremium } = useUserData();
   const { battery } = useBatteryData();
+  const subscription = useUserStore((state) => state.subscription);
 
   if (!user) return null;
 
   // Calculate battery data
   const totalBalance = battery?.totalBalance || 0;
-  const dailyLimit = battery?.dailyAllowance || 10000;
-  const batteryPercentage = dailyLimit > 0 ? Math.round((totalBalance / dailyLimit) * 100) : 0;
+  const planId = subscription?.planId || subscription?.tier;
+  const plan = BATTERY_PLANS.find((p) => p.name.toLowerCase() === planId?.toLowerCase());
+  const totalBattery = plan?.totalBattery || (isPremium ? 20000 : 6000); // Default to Plus plan or free tier
+  const batteryPercentage = Math.min(100, Math.round((totalBalance / totalBattery) * 100));
 
   // Free users see upgrade prompt
   if (!isPremium) {
@@ -55,10 +60,10 @@ export function SidebarBatteryWidget({ isCollapsed }: SidebarBatteryWidgetProps)
         />
       </div>
       <div className={cn('flex flex-col', isCollapsed && 'md:hidden')}>
-        <span className="font-medium text-gray-900 dark:text-white">
-          {totalBalance.toLocaleString()}
+        <span className="font-medium text-gray-900 dark:text-white">{batteryPercentage}%</span>
+        <span className="text-xs text-gray-500 dark:text-gray-400">
+          {totalBalance.toLocaleString()} BU
         </span>
-        <span className="text-xs text-gray-500 dark:text-gray-400">Battery</span>
       </div>
     </Link>
   );
