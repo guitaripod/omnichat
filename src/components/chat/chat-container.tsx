@@ -18,6 +18,7 @@ import { compressImage } from '@/utils/image-compression';
 import { ChatBatteryWidget } from './chat-battery-widget';
 import { TemplateModal } from '@/components/templates/template-modal';
 import { useUserData } from '@/hooks/use-user-data';
+import { useBatteryData } from '@/hooks/use-battery-data';
 import { Button } from '@/components/ui/button';
 import { Sparkles } from 'lucide-react';
 
@@ -31,6 +32,7 @@ export function ChatContainer() {
     conversations,
   } = useConversationStore();
   const { isPremium } = useUserData();
+  const { trackUsage } = useBatteryData();
 
   // Subscribe to messages separately to ensure reactivity
   const messages = useConversationStore((state) =>
@@ -348,6 +350,8 @@ export function ChatContainer() {
     isAtBottomRef.current = true;
     scrollToBottom(true); // Use smooth scroll for initial positioning
 
+    let tokenCount = 0; // Move this outside try block for access in finally
+
     try {
       let response: Response;
       let reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
@@ -434,7 +438,7 @@ export function ChatContainer() {
 
       if (reader) {
         let accumulatedContent = '';
-        let tokenCount = 0;
+        tokenCount = 0; // Use the outer scope variable
         let lastScrollTime = 0;
         let buffer = ''; // Buffer for incomplete SSE messages
 
@@ -689,6 +693,28 @@ export function ChatContainer() {
       setIsLoading(false);
       setStreamingMessage('');
       setCurrentStreamId(undefined);
+
+      // Track battery usage if we completed successfully and have tokens
+      if (tokenCount > 0 && !abortControllerRef.current?.signal.aborted) {
+        try {
+          // Estimate input tokens from the conversation
+          const inputTokens = Math.floor(
+            [...messages, userMessage].reduce((acc, msg) => acc + msg.content.length / 4, 0)
+          );
+
+          await trackUsage({
+            conversationId: currentConversationId,
+            messageId: assistantMessage.id,
+            model: selectedModel,
+            inputTokens,
+            outputTokens: tokenCount,
+            cached: false,
+          });
+        } catch (error) {
+          console.error('Failed to track battery usage:', error);
+        }
+      }
+
       setTokensGenerated(0);
       abortControllerRef.current = null;
     }
