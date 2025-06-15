@@ -68,6 +68,9 @@ export function normalizeModelIdForPricing(modelId: string): string {
   if (modelId.includes('gemini-1-5-pro') || modelId.includes('gemini-1.5-pro')) {
     return 'gemini-1.5-pro';
   }
+  if (modelId.includes('gemini-2-0-flash') || modelId.includes('gemini-2.0-flash')) {
+    return 'gemini-2.0-flash';
+  }
   if (modelId.includes('gemini-2-5-flash') || modelId.includes('gemini-2.5-flash')) {
     return 'gemini-2.5-flash';
   }
@@ -111,77 +114,84 @@ export interface BatteryTier {
 }
 
 // 1 Battery Unit (BU) = $0.001
-// All rates include 100% markup for profitability
+// All rates include 150% markup + 30% safety buffer for profitability
 export const MODEL_BATTERY_USAGE: Record<string, ModelBatteryUsage> = {
   // Budget Tier - Very cheap to run
   'deepseek-chat': {
-    batteryPerKToken: 1.4, // Uncached rate
-    estimatedPerMessage: 0.35,
+    batteryPerKToken: 2.23, // Uncached rate with markup
+    estimatedPerMessage: 0.56,
     tier: 'budget',
     displayName: 'DeepSeek Chat',
     emoji: '⚡',
   },
   'deepseek-chat-cached': {
-    batteryPerKToken: 0.4,
-    estimatedPerMessage: 0.1,
+    batteryPerKToken: 1.91,
+    estimatedPerMessage: 0.48,
     tier: 'budget',
     displayName: 'DeepSeek Chat (Cached)',
     emoji: '⚡',
   },
   'gpt-4.1-nano': {
-    batteryPerKToken: 0.5,
-    estimatedPerMessage: 0.125,
+    batteryPerKToken: 0.82,
+    estimatedPerMessage: 0.21,
     tier: 'budget',
     displayName: 'GPT-4.1 Nano',
     emoji: '🔵',
   },
   'gemini-1.5-flash': {
-    batteryPerKToken: 0.5,
-    estimatedPerMessage: 0.125,
+    batteryPerKToken: 0.61,
+    estimatedPerMessage: 0.16,
     tier: 'budget',
     displayName: 'Gemini Flash',
     emoji: '✨',
   },
+  'gemini-2.0-flash': {
+    batteryPerKToken: 0.82,
+    estimatedPerMessage: 0.21,
+    tier: 'budget',
+    displayName: 'Gemini 2.0 Flash',
+    emoji: '⚡',
+  },
 
   // Mid Tier - Good balance
   'gpt-4.1-mini': {
-    batteryPerKToken: 2.0,
-    estimatedPerMessage: 0.5,
+    batteryPerKToken: 3.25,
+    estimatedPerMessage: 0.82,
     tier: 'mid',
     displayName: 'GPT-4.1 Mini',
     emoji: '🟢',
   },
   'grok-3-mini': {
-    batteryPerKToken: 1.6,
-    estimatedPerMessage: 0.4,
+    batteryPerKToken: 1.3,
+    estimatedPerMessage: 0.33,
     tier: 'mid',
     displayName: 'Grok 3 Mini',
     emoji: '🤖',
   },
   'claude-haiku-3.5': {
-    batteryPerKToken: 4.8,
-    estimatedPerMessage: 1.2,
+    batteryPerKToken: 7.8,
+    estimatedPerMessage: 1.95,
     tier: 'mid',
     displayName: 'Claude Haiku 3.5',
     emoji: '🎋',
   },
   'claude-sonnet-3.5': {
-    batteryPerKToken: 6.0,
-    estimatedPerMessage: 1.5,
+    batteryPerKToken: 29.25,
+    estimatedPerMessage: 7.32,
     tier: 'mid',
     displayName: 'Claude Sonnet 3.5',
     emoji: '🎼',
   },
   'claude-sonnet-3': {
-    batteryPerKToken: 6.0,
-    estimatedPerMessage: 1.5,
+    batteryPerKToken: 29.25,
+    estimatedPerMessage: 7.32,
     tier: 'mid',
     displayName: 'Claude Sonnet 3',
     emoji: '🎵',
   },
   'claude-opus-3': {
-    batteryPerKToken: 30.0,
-    estimatedPerMessage: 7.5,
+    batteryPerKToken: 146.25,
+    estimatedPerMessage: 36.57,
     tier: 'premium',
     displayName: 'Claude Opus 3',
     emoji: '🎨',
@@ -189,22 +199,22 @@ export const MODEL_BATTERY_USAGE: Record<string, ModelBatteryUsage> = {
 
   // Premium Tier - Higher quality
   'gpt-4.1': {
-    batteryPerKToken: 10.0,
-    estimatedPerMessage: 2.5,
+    batteryPerKToken: 16.25,
+    estimatedPerMessage: 4.07,
     tier: 'premium',
     displayName: 'GPT-4.1',
     emoji: '🟣',
   },
   'gemini-1.5-pro': {
-    batteryPerKToken: 7.5,
-    estimatedPerMessage: 1.875,
+    batteryPerKToken: 10.16,
+    estimatedPerMessage: 2.54,
     tier: 'premium',
     displayName: 'Gemini Pro',
     emoji: '💎',
   },
   'grok-3': {
-    batteryPerKToken: 18.0,
-    estimatedPerMessage: 4.5,
+    batteryPerKToken: 29.25,
+    estimatedPerMessage: 7.32,
     tier: 'premium',
     displayName: 'Grok 3',
     emoji: '🚀',
@@ -212,29 +222,29 @@ export const MODEL_BATTERY_USAGE: Record<string, ModelBatteryUsage> = {
 
   // Ultra Premium - Top tier
   'claude-sonnet-4': {
-    batteryPerKToken: 18.0,
-    estimatedPerMessage: 4.5,
+    batteryPerKToken: 29.25,
+    estimatedPerMessage: 7.32,
     tier: 'ultra',
     displayName: 'Claude Sonnet',
     emoji: '🎭',
   },
   'claude-opus-4': {
-    batteryPerKToken: 90.0,
-    estimatedPerMessage: 22.5,
+    batteryPerKToken: 146.25,
+    estimatedPerMessage: 36.57,
     tier: 'ultra',
     displayName: 'Claude Opus',
     emoji: '🎨',
   },
   o3: {
-    batteryPerKToken: 10.0,
-    estimatedPerMessage: 2.5,
+    batteryPerKToken: 16.25,
+    estimatedPerMessage: 4.07,
     tier: 'ultra',
     displayName: 'OpenAI o3',
     emoji: '🧠',
   },
   'o3-mini': {
-    batteryPerKToken: 5.0,
-    estimatedPerMessage: 1.25,
+    batteryPerKToken: 8.94,
+    estimatedPerMessage: 2.24,
     tier: 'premium',
     displayName: 'OpenAI o3 Mini',
     emoji: '🤔',
@@ -242,15 +252,15 @@ export const MODEL_BATTERY_USAGE: Record<string, ModelBatteryUsage> = {
 
   // Previous generation GPT models
   'gpt-4o': {
-    batteryPerKToken: 5.0,
-    estimatedPerMessage: 1.25,
+    batteryPerKToken: 20.32,
+    estimatedPerMessage: 5.08,
     tier: 'mid',
     displayName: 'GPT-4o',
     emoji: '🔵',
   },
   'gpt-4o-mini': {
-    batteryPerKToken: 1.2,
-    estimatedPerMessage: 0.3,
+    batteryPerKToken: 1.22,
+    estimatedPerMessage: 0.31,
     tier: 'budget',
     displayName: 'GPT-4o Mini',
     emoji: '🟢',
@@ -258,31 +268,31 @@ export const MODEL_BATTERY_USAGE: Record<string, ModelBatteryUsage> = {
 
   // Gemini 2.5 models
   'gemini-2.5-flash': {
-    batteryPerKToken: 0.5,
-    estimatedPerMessage: 0.125,
+    batteryPerKToken: 1.22,
+    estimatedPerMessage: 0.31,
     tier: 'budget',
     displayName: 'Gemini 2.5 Flash',
     emoji: '⚡',
   },
   'gemini-2.5-pro': {
-    batteryPerKToken: 7.5,
-    estimatedPerMessage: 1.875,
+    batteryPerKToken: 18.29,
+    estimatedPerMessage: 4.58,
     tier: 'premium',
     displayName: 'Gemini 2.5 Pro',
     emoji: '💫',
   },
 
-  // Local models - Free
+  // Local models - Minimal server cost
   'llama3.3:latest': {
-    batteryPerKToken: 0,
-    estimatedPerMessage: 0,
+    batteryPerKToken: 0.1,
+    estimatedPerMessage: 0.025,
     tier: 'budget',
     displayName: 'Llama 3.3 (Local)',
     emoji: '🦙',
   },
   'qwen2.5:latest': {
-    batteryPerKToken: 0,
-    estimatedPerMessage: 0,
+    batteryPerKToken: 0.1,
+    estimatedPerMessage: 0.025,
     tier: 'budget',
     displayName: 'Qwen 2.5 (Local)',
     emoji: '🏠',

@@ -186,54 +186,57 @@ async function handleSubscriptionCreated(session: Stripe.Checkout.Session) {
   > = {
     starter: {
       name: 'Starter',
-      batteryUnits: 10000,
-      dailyBattery: 1000,
-      priceMonthly: 399,
-      priceAnnual: 3999,
+      batteryUnits: 6000,
+      dailyBattery: 200,
+      priceMonthly: 499,
+      priceAnnual: 4990,
       features: [
-        '10,000 battery units/month',
-        '1,000 daily battery allowance',
+        '6,000 battery units/month',
+        '200 daily battery units',
         'Access to all AI models',
-        'Basic support',
+        'Email support',
       ],
     },
     daily: {
       name: 'Daily',
-      batteryUnits: 50000,
-      dailyBattery: 5000,
+      batteryUnits: 18000,
+      dailyBattery: 600,
       priceMonthly: 1299,
-      priceAnnual: 12999,
+      priceAnnual: 12990,
       features: [
-        '50,000 battery units/month',
-        '5,000 daily battery allowance',
+        '18,000 battery units/month',
+        '600 daily battery units',
         'Priority model access',
-        'Email support',
+        'Priority email support',
       ],
     },
     power: {
       name: 'Power',
-      batteryUnits: 100000,
-      dailyBattery: 10000,
-      priceMonthly: 2499,
-      priceAnnual: 24999,
+      batteryUnits: 45000,
+      dailyBattery: 1500,
+      priceMonthly: 2999,
+      priceAnnual: 29990,
       features: [
-        '100,000 battery units/month',
-        '10,000 daily battery allowance',
-        'Fastest model access',
+        '45,000 battery units/month',
+        '1,500 daily battery units',
+        'Priority processing',
         'Priority support',
+        'Battery rollover',
       ],
     },
     ultimate: {
       name: 'Ultimate',
-      batteryUnits: 500000,
-      dailyBattery: 50000,
-      priceMonthly: 9999,
-      priceAnnual: 99999,
+      batteryUnits: 150000,
+      dailyBattery: 5000,
+      priceMonthly: 7999,
+      priceAnnual: 79990,
       features: [
-        '500,000 battery units/month',
-        '50,000 daily battery allowance',
-        'Unlimited model switching',
+        '150,000 battery units/month',
+        '5,000 daily battery units',
+        'Priority processing',
         'Dedicated support',
+        'Battery rollover',
+        'Custom integrations',
       ],
     },
   };
@@ -485,10 +488,10 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
   if (planId) {
     // Use default plan config
     const defaultPlans: Record<string, { dailyBattery: number }> = {
-      starter: { dailyBattery: 1000 },
-      daily: { dailyBattery: 5000 },
-      power: { dailyBattery: 10000 },
-      ultimate: { dailyBattery: 50000 },
+      starter: { dailyBattery: 200 },
+      daily: { dailyBattery: 600 },
+      power: { dailyBattery: 1500 },
+      ultimate: { dailyBattery: 5000 },
     };
 
     const planConfig = defaultPlans[planId];
@@ -542,10 +545,10 @@ async function handleSubscriptionRenewal(invoice: Stripe.Invoice) {
 
   // Use default plan config
   const defaultPlans: Record<string, { name: string; batteryUnits: number }> = {
-    starter: { name: 'Starter', batteryUnits: 10000 },
-    daily: { name: 'Daily', batteryUnits: 50000 },
-    power: { name: 'Power', batteryUnits: 100000 },
-    ultimate: { name: 'Ultimate', batteryUnits: 500000 },
+    starter: { name: 'Starter', batteryUnits: 6000 },
+    daily: { name: 'Daily', batteryUnits: 18000 },
+    power: { name: 'Power', batteryUnits: 45000 },
+    ultimate: { name: 'Ultimate', batteryUnits: 150000 },
   };
 
   const planConfig = defaultPlans[planId];
