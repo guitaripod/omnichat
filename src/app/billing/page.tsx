@@ -583,9 +583,57 @@ export default function BillingPage() {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {/* Local Models - FREE */}
                   {Object.entries(MODEL_BATTERY_USAGE)
+                    .filter(
+                      ([key]) =>
+                        key.includes('llama') || key.includes('qwen') || key.startsWith('ollama/')
+                    )
+                    .map(([modelKey, usage]) => (
+                      <motion.div
+                        key={modelKey}
+                        whileHover={{ scale: 1.02 }}
+                        className="group relative rounded-xl border-2 border-green-500 bg-gradient-to-br from-green-50 to-emerald-50 p-4 transition-all hover:shadow-lg dark:border-green-600 dark:from-green-900/20 dark:to-emerald-900/20"
+                      >
+                        <div className="absolute -top-3 right-4">
+                          <Badge className="bg-green-500 text-white">FREE - Local Model</Badge>
+                        </div>
+                        <div className="mt-2 flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="text-2xl">{usage.emoji}</span>
+                              <h4 className="font-semibold text-gray-900 dark:text-white">
+                                {usage.displayName}
+                              </h4>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="mt-4 space-y-2">
+                          <div className="py-3 text-center">
+                            <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+                              0 BU
+                            </p>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                              Runs on your device
+                            </p>
+                          </div>
+                          <div className="text-center text-xs text-gray-500 dark:text-gray-400">
+                            Requires Ollama installed locally
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
+
+                  {/* Cloud Models - Paid */}
+                  {Object.entries(MODEL_BATTERY_USAGE)
+                    .filter(
+                      ([key]) =>
+                        !key.includes('llama') &&
+                        !key.includes('qwen') &&
+                        !key.startsWith('ollama/') &&
+                        !key.includes('-cached')
+                    )
                     .sort((a, b) => a[1].batteryPerKToken - b[1].batteryPerKToken)
-                    .filter(([key]) => !key.includes('-cached'))
                     .map(([modelKey, usage]) => {
                       const messagesPerThousand = Math.floor(1000 / usage.estimatedPerMessage);
                       const messagesWithCurrentBattery = batteryStatus
@@ -676,6 +724,7 @@ export default function BillingPage() {
                     💡 Battery Tips
                   </h5>
                   <ul className="space-y-1 text-sm text-blue-800 dark:text-blue-200">
+                    <li>• Local models (🏠) run FREE on your device with Ollama</li>
                     <li>• Budget tier models (⚡) give you the most messages per battery unit</li>
                     <li>• Premium models (🟣) offer advanced reasoning and capabilities</li>
                     <li>

@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useUserStore } from '@/store/user';
 import { PremiumBadge } from './premium-badge';
 import { cn } from '@/lib/utils';
-import { Battery, Zap } from 'lucide-react';
+import { Zap } from 'lucide-react';
 import { BATTERY_PLANS } from '@/lib/battery-pricing-v2';
 
 export function BatteryWidgetConnected() {
@@ -26,43 +26,43 @@ export function BatteryWidgetConnected() {
     const batteryPercentage = Math.min(100, Math.round((batteryBalance / totalBattery) * 100));
 
     return (
-      <button onClick={() => router.push('/billing')} className="group">
-        <div className="flex items-center gap-3">
-          <div className="relative">
-            <div
-              className={cn(
-                'flex items-center gap-2 rounded-full px-3 py-1.5',
-                'bg-gradient-to-r from-purple-50 to-violet-50 dark:from-purple-900/20 dark:to-violet-900/20',
-                'border border-purple-200 dark:border-purple-800',
-                'transition-all group-hover:scale-105 group-hover:shadow-md'
-              )}
-            >
-              <div className="relative">
-                <Battery
-                  className={cn(
-                    'h-5 w-5',
-                    batteryPercentage > 50
-                      ? 'text-green-600 dark:text-green-400'
-                      : batteryPercentage > 20
-                        ? 'text-yellow-600 dark:text-yellow-400'
-                        : 'text-red-600 dark:text-red-400'
-                  )}
-                />
-                {batteryPercentage > 90 && (
-                  <Zap className="absolute -top-1 -right-1 h-3 w-3 text-yellow-500" />
-                )}
-              </div>
-              <div className="flex flex-col">
-                <span className="text-xs font-medium text-purple-700 dark:text-purple-300">
-                  {batteryPercentage}% ({batteryBalance.toLocaleString()} BU)
-                </span>
-                <span className="text-xs text-purple-600 dark:text-purple-400">
-                  {plan?.name || 'Premium'} Plan
-                </span>
-              </div>
-              <PremiumBadge size="xs" />
-            </div>
+      <button
+        onClick={() => router.push('/billing')}
+        className="group relative flex items-center gap-2 rounded-full bg-gradient-to-r from-purple-100 to-pink-100 px-4 py-2 transition-all hover:scale-105 hover:shadow-lg dark:from-purple-900/30 dark:to-pink-900/30"
+      >
+        {/* Background shimmer effect */}
+        <div className="absolute inset-0 rounded-full bg-gradient-to-r from-purple-400/20 via-pink-400/20 to-purple-400/20 opacity-0 blur-xl transition-opacity group-hover:opacity-100" />
+
+        {/* Battery visualization */}
+        <div className="relative flex h-8 w-20 items-center rounded-full bg-gray-200 p-0.5 dark:bg-gray-700">
+          <div
+            className={cn(
+              'h-full rounded-full transition-all duration-500',
+              batteryPercentage > 50
+                ? 'bg-gradient-to-r from-green-400 to-green-500'
+                : batteryPercentage > 20
+                  ? 'bg-gradient-to-r from-yellow-400 to-orange-400'
+                  : 'bg-gradient-to-r from-red-400 to-red-500'
+            )}
+            style={{ width: `${batteryPercentage}%` }}
+          >
+            {batteryPercentage > 90 && (
+              <Zap className="absolute top-1/2 right-1 h-4 w-4 -translate-y-1/2 animate-pulse text-white" />
+            )}
           </div>
+        </div>
+
+        {/* Text info */}
+        <div className="flex flex-col items-start">
+          <div className="flex items-center gap-1">
+            <span className="text-sm font-bold text-gray-900 dark:text-white">
+              {batteryPercentage}%
+            </span>
+            <PremiumBadge size="xs" />
+          </div>
+          <span className="text-xs text-gray-600 dark:text-gray-400">
+            {batteryBalance.toLocaleString()} BU • {plan?.name || 'Premium'}
+          </span>
         </div>
       </button>
     );
@@ -75,25 +75,32 @@ export function BatteryWidgetConnected() {
   return (
     <button
       onClick={() => router.push('/pricing')}
-      className="group flex items-center gap-2 rounded-full bg-gray-100 px-3 py-1.5 transition-all hover:scale-105 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700"
+      className="group relative flex items-center gap-2 rounded-full bg-gray-100 px-4 py-2 transition-all hover:scale-105 hover:bg-gray-200 hover:shadow-md dark:bg-gray-800 dark:hover:bg-gray-700"
     >
-      <Battery
-        className={cn(
-          'h-4 w-4',
-          freePercentage > 50
-            ? 'text-green-500'
-            : freePercentage > 20
-              ? 'text-yellow-500'
-              : 'text-red-500'
-        )}
-      />
-      <div className="flex flex-col text-left">
-        <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
-          {freePercentage}% ({batteryBalance} BU)
-        </span>
-        <span className="text-xs text-gray-500 dark:text-gray-400">Free Tier</span>
+      {/* Battery visualization */}
+      <div className="relative flex h-8 w-20 items-center rounded-full bg-gray-300 p-0.5 dark:bg-gray-600">
+        <div
+          className={cn(
+            'h-full rounded-full transition-all duration-500',
+            freePercentage > 50
+              ? 'bg-gradient-to-r from-green-400 to-green-500'
+              : freePercentage > 20
+                ? 'bg-gradient-to-r from-yellow-400 to-orange-400'
+                : 'bg-gradient-to-r from-red-400 to-red-500'
+          )}
+          style={{ width: `${freePercentage}%` }}
+        />
       </div>
-      <span className="text-xs font-medium text-purple-600 group-hover:text-purple-700 dark:text-purple-400">
+
+      {/* Text info */}
+      <div className="flex flex-col items-start">
+        <span className="text-sm font-semibold text-gray-900 dark:text-white">
+          {freePercentage}%
+        </span>
+        <span className="text-xs text-gray-600 dark:text-gray-400">{batteryBalance} BU • Free</span>
+      </div>
+
+      <span className="ml-1 text-xs font-medium text-purple-600 transition-colors group-hover:text-purple-700 dark:text-purple-400">
         Upgrade →
       </span>
     </button>

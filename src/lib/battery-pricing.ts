@@ -282,17 +282,17 @@ export const MODEL_BATTERY_USAGE: Record<string, ModelBatteryUsage> = {
     emoji: '💫',
   },
 
-  // Local models - Minimal server cost
+  // Local models - FREE
   'llama3.3:latest': {
-    batteryPerKToken: 0.1,
-    estimatedPerMessage: 0.025,
+    batteryPerKToken: 0,
+    estimatedPerMessage: 0,
     tier: 'budget',
     displayName: 'Llama 3.3 (Local)',
     emoji: '🦙',
   },
   'qwen2.5:latest': {
-    batteryPerKToken: 0.1,
-    estimatedPerMessage: 0.025,
+    batteryPerKToken: 0,
+    estimatedPerMessage: 0,
     tier: 'budget',
     displayName: 'Qwen 2.5 (Local)',
     emoji: '🏠',
