@@ -18,6 +18,7 @@ import { ConversationList } from './conversation-list';
 import { useDevMode } from '@/hooks/use-dev-mode';
 import { useUserData } from '@/hooks/use-user-data';
 import { PremiumBadge } from '@/components/premium-badge';
+import { SidebarBatteryWidget } from './sidebar-battery-widget';
 
 export function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -110,6 +111,7 @@ export function Sidebar() {
               <User size={16} className={cn(isCollapsed && 'md:mx-auto')} />
               <span className={cn(isCollapsed && 'md:hidden')}>Profile</span>
             </Link>
+            <SidebarBatteryWidget isCollapsed={isCollapsed} />
             <div className={cn('pt-2', isCollapsed && 'md:flex md:justify-center')}>
               {!isDevMode && process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ? (
                 <UserButton afterSignOutUrl="/" />

@@ -15,7 +15,6 @@ import { StreamProgress } from './stream-progress';
 import { BranchManager } from '@/services/branching/branch-manager';
 import { BranchVisualizer } from './branch-visualizer-v2';
 import { compressImage } from '@/utils/image-compression';
-import { ChatBatteryWidget } from './chat-battery-widget';
 import { TemplateModal } from '@/components/templates/template-modal';
 import { useUserData } from '@/hooks/use-user-data';
 import { useBatteryData } from '@/hooks/use-battery-data';
@@ -1281,13 +1280,6 @@ export function ChatContainer() {
           onImageParamsChange={setImageGenerationOptions}
         />
       </div>
-
-      {/* Battery Widget for Premium Users */}
-      <ChatBatteryWidget
-        currentModel={selectedModel}
-        isStreaming={isLoading}
-        tokensUsed={tokensGenerated}
-      />
 
       {/* Template Modal */}
       <TemplateModal open={showTemplateDialog} onClose={() => setShowTemplateDialog(false)} />
