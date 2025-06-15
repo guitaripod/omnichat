@@ -104,35 +104,5 @@ export const MODELS: Record<
   },
 };
 
-export const SUBSCRIPTION_TIERS = {
-  free: {
-    name: 'Free',
-    price: 0,
-    limits: {
-      messagesPerDay: 50,
-      maxFileSize: 5 * 1024 * 1024, // 5MB
-      maxConversations: 10,
-      models: ['gpt-4o-mini', 'claude-3-5-haiku', 'gemini-2.0-flash'],
-    },
-  },
-  pro: {
-    name: 'Pro',
-    price: 20,
-    limits: {
-      messagesPerDay: 1000,
-      maxFileSize: 50 * 1024 * 1024, // 50MB
-      maxConversations: -1, // unlimited
-      models: Object.keys(MODELS),
-    },
-  },
-  enterprise: {
-    name: 'Enterprise',
-    price: 100,
-    limits: {
-      messagesPerDay: -1, // unlimited
-      maxFileSize: 100 * 1024 * 1024, // 100MB
-      maxConversations: -1,
-      models: Object.keys(MODELS),
-    },
-  },
-};
+// Note: Subscription tiers have been moved to battery-based pricing
+// See src/lib/battery-pricing-v2.ts and src/lib/subscription-plans.ts

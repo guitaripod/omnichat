@@ -1,3 +1,7 @@
+// DEPRECATED: This file is no longer used.
+// The project has migrated to battery-based pricing.
+// See src/lib/battery-pricing-v2.ts and src/lib/subscription-plans.ts
+
 export interface ModelPricing {
   inputCost: number; // per million tokens
   outputCost: number; // per million tokens
