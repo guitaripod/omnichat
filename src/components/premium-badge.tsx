@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 interface PremiumBadgeProps {
   size?: 'xs' | 'sm' | 'md' | 'lg';
   showText?: boolean;
+  text?: string;
   className?: string;
 }
 
@@ -36,7 +37,12 @@ const sizeConfig = {
   },
 };
 
-export function PremiumBadge({ size = 'sm', showText = false, className }: PremiumBadgeProps) {
+export function PremiumBadge({
+  size = 'sm',
+  showText = false,
+  text = 'Premium',
+  className,
+}: PremiumBadgeProps) {
   const config = sizeConfig[size];
 
   return (
@@ -49,7 +55,7 @@ export function PremiumBadge({ size = 'sm', showText = false, className }: Premi
       )}
     >
       <Crown className={cn(config.icon, 'text-yellow-300')} />
-      {showText && <span className={cn(config.text, 'font-medium')}>Pro</span>}
+      {showText && <span className={cn(config.text, 'font-medium')}>{text}</span>}
     </div>
   );
 }
