@@ -29,7 +29,8 @@ export async function GET(_req: NextRequest) {
     }
 
     // Get user battery balance
-    const battery = await db()
+    const database = db();
+    const battery = await database
       .select()
       .from(userBattery)
       .where(eq(userBattery.userId, userId))
@@ -37,7 +38,7 @@ export async function GET(_req: NextRequest) {
 
     if (!battery) {
       // Create default battery record
-      await db()
+      await database
         .insert(userBattery)
         .values({
           userId,
@@ -58,7 +59,7 @@ export async function GET(_req: NextRequest) {
 
     // Get today's usage
     const today = new Date().toISOString().split('T')[0];
-    const todayUsage = await db()
+    const todayUsage = await database
       .select()
       .from(dailyUsageSummary)
       .where(and(eq(dailyUsageSummary.userId, userId), eq(dailyUsageSummary.date, today)))

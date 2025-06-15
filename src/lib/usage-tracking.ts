@@ -34,7 +34,8 @@ export async function trackApiUsage({
     const batteryUsed = calculateBatteryUsage(model, inputTokens, outputTokens, cached);
 
     // Get current battery balance
-    const userBatteryRecord = await db()
+    const database = db();
+    const userBatteryRecord = await database
       .select()
       .from(userBattery)
       .where(eq(userBattery.userId, userId))
@@ -51,7 +52,7 @@ export async function trackApiUsage({
     }
 
     // Start transaction
-    await db().transaction(async (tx: any) => {
+    await database.transaction(async (tx) => {
       // Record API usage
       await tx.insert(apiUsageTracking).values({
         userId,
@@ -132,7 +133,8 @@ export async function checkBatteryBalance(
   estimatedTokens: number = 500
 ) {
   try {
-    const userBatteryRecord = await db()
+    const database = db();
+    const userBatteryRecord = await database
       .select()
       .from(userBattery)
       .where(eq(userBattery.userId, userId))
@@ -169,7 +171,8 @@ export async function getUserUsageHistory(userId: string, days: number = 30) {
   const startDateStr = startDate.toISOString().split('T')[0];
 
   try {
-    const usage = await db()
+    const database = db();
+    const usage = await database
       .select({
         date: dailyUsageSummary.date,
         usage: dailyUsageSummary.totalBatteryUsed,
@@ -204,7 +207,8 @@ export async function resetDailyBatteryAllowances() {
 
   try {
     // Get all users with subscriptions
-    const usersWithAllowances = await db()
+    const database = db();
+    const usersWithAllowances = await database
       .select({
         userId: userBattery.userId,
         dailyAllowance: userBattery.dailyAllowance,
@@ -216,7 +220,7 @@ export async function resetDailyBatteryAllowances() {
     for (const user of usersWithAllowances) {
       if (user.lastReset !== today) {
         // Add daily allowance to total balance
-        await db()
+        await database
           .update(userBattery)
           .set({
             totalBalance: sql`total_balance + ${user.dailyAllowance}`,
@@ -226,14 +230,14 @@ export async function resetDailyBatteryAllowances() {
           .where(eq(userBattery.userId, user.userId));
 
         // Record the transaction
-        const newBalance = await db()
+        const newBalance = await database
           .select()
           .from(userBattery)
           .where(eq(userBattery.userId, user.userId))
           .get();
 
         if (newBalance) {
-          await db().insert(batteryTransactions).values({
+          await database.insert(batteryTransactions).values({
             userId: user.userId,
             type: 'subscription',
             amount: user.dailyAllowance,
