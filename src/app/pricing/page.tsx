@@ -183,7 +183,7 @@ export default function PricingPage() {
   const handleSubscribe = async (planName: string) => {
     if (!isSignedIn) {
       toast.error('Please sign in to subscribe');
-      router.push('/sign-in?redirect_url=/pricing');
+      router.push('/auth/sign-in?redirect_url=/pricing');
       return;
     }
 
@@ -236,7 +236,7 @@ export default function PricingPage() {
   const handleBuyBattery = async (units: number, _price: number) => {
     if (!isSignedIn) {
       toast.error('Please sign in to purchase');
-      router.push('/sign-in?redirect_url=/pricing');
+      router.push('/auth/sign-in?redirect_url=/pricing');
       return;
     }
 
