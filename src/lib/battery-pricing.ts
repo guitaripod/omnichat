@@ -200,10 +200,18 @@ export function calculateBatteryUsage(
   const modelKey = useCache && model === 'deepseek-chat' ? 'deepseek-chat-cached' : model;
   const usage = MODEL_BATTERY_USAGE[modelKey];
 
-  if (!usage) return 0;
+  if (!usage) {
+    console.error(`[Battery Pricing] Model not found in pricing: ${modelKey}`);
+    console.error(`[Battery Pricing] Available models:`, Object.keys(MODEL_BATTERY_USAGE));
+    return 0;
+  }
 
   const totalTokens = inputTokens + outputTokens;
   const batteryUsed = (totalTokens / 1000) * usage.batteryPerKToken;
+
+  console.log(
+    `[Battery Pricing] Model: ${modelKey}, Tokens: ${totalTokens}, Battery Used: ${batteryUsed}`
+  );
 
   return Math.ceil(batteryUsed); // Round up to nearest unit
 }

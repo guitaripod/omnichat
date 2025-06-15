@@ -27,11 +27,22 @@ export async function trackApiUsage({
   outputTokens,
   cached = false,
 }: TrackUsageParams) {
+  console.log('[Usage Tracking] trackApiUsage called with:', {
+    userId,
+    conversationId,
+    messageId,
+    model,
+    inputTokens,
+    outputTokens,
+    cached,
+  });
+
   try {
     // Use the imported db instance
 
     // Calculate battery usage
     const batteryUsed = calculateBatteryUsage(model, inputTokens, outputTokens, cached);
+    console.log('[Usage Tracking] Battery used:', batteryUsed);
 
     // Get current battery balance
     const database = db();
