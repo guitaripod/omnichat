@@ -1,460 +1,302 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { AIProviderFactory } from '@/services/ai/provider-factory';
-import { OllamaProvider } from '@/services/ai/providers/ollama';
 import { useUserTier } from '@/hooks/use-user-tier';
 import { UserTier } from '@/lib/tier';
 import { useRouter } from 'next/navigation';
-import { Key, CreditCard, Sparkles } from 'lucide-react';
+import { Key, CreditCard, Sparkles, Check, X, Eye, EyeOff } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+
+interface ApiKeyConfig {
+  provider: string;
+  name: string;
+  placeholder: string;
+  helpUrl: string;
+  helpText: string;
+  required?: boolean;
+}
+
+const API_KEY_CONFIGS: ApiKeyConfig[] = [
+  {
+    provider: 'openai',
+    name: 'OpenAI',
+    placeholder: 'sk-...',
+    helpUrl: 'https://platform.openai.com/api-keys',
+    helpText: 'platform.openai.com',
+    required: true,
+  },
+  {
+    provider: 'anthropic',
+    name: 'Anthropic',
+    placeholder: 'sk-ant-...',
+    helpUrl: 'https://console.anthropic.com/account/keys',
+    helpText: 'console.anthropic.com',
+    required: true,
+  },
+  {
+    provider: 'google',
+    name: 'Google',
+    placeholder: 'AIza...',
+    helpUrl: 'https://makersuite.google.com/app/apikey',
+    helpText: 'makersuite.google.com',
+  },
+  {
+    provider: 'xai',
+    name: 'xAI (Grok)',
+    placeholder: 'xai-...',
+    helpUrl: 'https://console.x.ai/team',
+    helpText: 'console.x.ai',
+  },
+  {
+    provider: 'deepseek',
+    name: 'DeepSeek',
+    placeholder: 'sk-...',
+    helpUrl: 'https://platform.deepseek.com/api_keys',
+    helpText: 'platform.deepseek.com',
+  },
+];
 
 export default function ApiSettings() {
-  const [apiKeys, setApiKeys] = useState({
-    openai: '',
-    anthropic: '',
-    google: '',
-    xai: '',
-    deepseek: '',
-    ollama: 'http://localhost:11434',
-  });
-
-  const [showKeys, setShowKeys] = useState({
-    openai: false,
-    anthropic: false,
-    google: false,
-    xai: false,
-    deepseek: false,
-  });
-
+  const [apiKeys, setApiKeys] = useState<Record<string, string>>({});
+  const [showKeys, setShowKeys] = useState<Record<string, boolean>>({});
+  const [ollamaUrl, setOllamaUrl] = useState('http://localhost:11434');
   const [ollamaStatus, setOllamaStatus] = useState<'checking' | 'connected' | 'disconnected'>(
     'checking'
   );
-  const [ollamaModels, setOllamaModels] = useState<string[]>([]);
   const { tier } = useUserTier();
   const router = useRouter();
 
   useEffect(() => {
-    // Load saved settings from localStorage
-    const savedKeys = localStorage.getItem('apiKeys');
-    if (savedKeys) {
-      setApiKeys(JSON.parse(savedKeys));
-    }
-  }, []);
-
-  useEffect(() => {
-    // Check Ollama connection
-    checkOllamaConnection();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [apiKeys.ollama]);
-
-  const checkOllamaConnection = async () => {
-    setOllamaStatus('checking');
-    try {
-      const provider = new OllamaProvider(apiKeys.ollama);
-      const isConnected = await provider.testConnection();
-
-      if (isConnected) {
-        setOllamaStatus('connected');
-        const models = await provider.listModels();
-        setOllamaModels(models);
-      } else {
-        setOllamaStatus('disconnected');
-        setOllamaModels([]);
+    // Load saved API keys
+    API_KEY_CONFIGS.forEach(({ provider }) => {
+      const savedKey = localStorage.getItem(`${provider}_api_key`);
+      if (savedKey) {
+        setApiKeys((prev) => ({ ...prev, [provider]: savedKey }));
       }
+    });
+
+    // Load Ollama URL
+    const savedOllamaUrl = localStorage.getItem('ollama_base_url');
+    if (savedOllamaUrl) {
+      setOllamaUrl(savedOllamaUrl);
+    }
+
+    // Check Ollama connection
+    checkOllamaConnection(savedOllamaUrl || ollamaUrl);
+  }, [ollamaUrl]);
+
+  const checkOllamaConnection = async (url: string) => {
+    try {
+      const response = await fetch(`${url}/api/tags`);
+      const isAvailable = response.ok;
+      setOllamaStatus(isAvailable ? 'connected' : 'disconnected');
     } catch {
       setOllamaStatus('disconnected');
-      setOllamaModels([]);
     }
   };
 
-  const handleSave = (provider: keyof typeof apiKeys) => {
-    const updatedKeys = { ...apiKeys };
-    localStorage.setItem('apiKeys', JSON.stringify(updatedKeys));
-
-    // Update the AI provider factory
-    switch (provider) {
-      case 'openai':
-        AIProviderFactory.updateApiKey('openai', apiKeys.openai);
-        break;
-      case 'anthropic':
-        AIProviderFactory.updateApiKey('anthropic', apiKeys.anthropic);
-        break;
-      case 'google':
-        AIProviderFactory.updateApiKey('google', apiKeys.google);
-        break;
-      case 'xai':
-        AIProviderFactory.updateApiKey('xai', apiKeys.xai);
-        break;
-      case 'deepseek':
-        AIProviderFactory.updateApiKey('deepseek', apiKeys.deepseek);
-        break;
-      case 'ollama':
-        AIProviderFactory.updateApiKey('ollama', apiKeys.ollama);
-        break;
+  const handleSave = (provider: string, value: string) => {
+    if (value) {
+      localStorage.setItem(`${provider}_api_key`, value);
+      // Clear any cached providers
+      window.location.reload();
+    } else {
+      localStorage.removeItem(`${provider}_api_key`);
     }
   };
 
-  const toggleShowKey = (provider: keyof typeof showKeys) => {
+  const handleOllamaSave = () => {
+    localStorage.setItem('ollama_base_url', ollamaUrl);
+    checkOllamaConnection(ollamaUrl);
+  };
+
+  const toggleShowKey = (provider: string) => {
     setShowKeys((prev) => ({ ...prev, [provider]: !prev[provider] }));
   };
 
   return (
-    <div className="rounded-lg bg-white p-6 shadow-md dark:bg-gray-800">
-      <div className="mb-6 flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">API Configuration</h3>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-lg font-semibold">API Configuration</h3>
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            Add your own API keys to use AI models without OmniChat credits
+          </p>
+        </div>
         {tier === UserTier.FREE && (
-          <button
-            onClick={() => router.push('/pricing')}
-            className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-orange-500 to-pink-500 px-4 py-2 text-sm font-medium text-white hover:from-orange-600 hover:to-pink-600"
-          >
+          <Button onClick={() => router.push('/pricing')} className="gap-2" variant="default">
             <Sparkles className="h-4 w-4" />
             Upgrade Plan
-          </button>
+          </Button>
         )}
       </div>
 
       {/* Pro Benefits Banner */}
       {tier === UserTier.FREE && (
-        <div className="mb-6 rounded-lg bg-gradient-to-r from-purple-50 to-pink-50 p-4 dark:from-purple-900/20 dark:to-pink-900/20">
-          <div className="flex items-start gap-3">
-            <CreditCard className="mt-0.5 h-5 w-5 text-purple-600 dark:text-purple-400" />
-            <div>
-              <h4 className="font-medium text-gray-900 dark:text-white">
-                Skip the API key hassle with Pro!
-              </h4>
-              <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
-                Get instant access to all premium AI models without managing API keys. OmniChat
-                handles everything for you.
+        <Card className="border-purple-200 bg-gradient-to-r from-purple-50 to-pink-50 dark:border-purple-800 dark:from-purple-900/20 dark:to-pink-900/20">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <CreditCard className="h-5 w-5 text-purple-600" />
+              Use all models without API keys
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <div className="flex items-center gap-2 text-sm">
+              <Check className="h-4 w-4 text-green-600" />
+              <span>Access to all AI models</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm">
+              <Check className="h-4 w-4 text-green-600" />
+              <span>No API key management</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm">
+              <Check className="h-4 w-4 text-green-600" />
+              <span>Save up to $50/month on API costs</span>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* API Keys Grid */}
+      <div className="grid gap-4 md:grid-cols-2">
+        {API_KEY_CONFIGS.map(({ provider, name, placeholder, helpUrl, helpText, required }) => (
+          <Card key={provider} className="overflow-hidden">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base">{name}</CardTitle>
+                {required && tier === UserTier.FREE && (
+                  <Badge variant="outline" className="text-xs">
+                    <Key className="mr-1 h-3 w-3" />
+                    Required
+                  </Badge>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="space-y-2">
+                <Label htmlFor={`${provider}-key`} className="sr-only">
+                  {name} API Key
+                </Label>
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Input
+                      id={`${provider}-key`}
+                      type={showKeys[provider] ? 'text' : 'password'}
+                      value={apiKeys[provider] || ''}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                        setApiKeys({ ...apiKeys, [provider]: e.target.value })
+                      }
+                      placeholder={placeholder}
+                      className="pr-10"
+                    />
+                    <button
+                      onClick={() => toggleShowKey(provider)}
+                      className="absolute top-1/2 right-2 -translate-y-1/2 p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                    >
+                      {showKeys[provider] ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
+                  <Button onClick={() => handleSave(provider, apiKeys[provider] || '')} size="sm">
+                    Save
+                  </Button>
+                </div>
+              </div>
+              <p className="text-xs text-gray-500">
+                Get your key from{' '}
+                <a
+                  href={helpUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:underline dark:text-blue-400"
+                >
+                  {helpText}
+                </a>
               </p>
-              <button
-                onClick={() => router.push('/pricing')}
-                className="mt-2 text-sm font-medium text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300"
-              >
-                View Pro benefits →
-              </button>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Ollama Section */}
+      <Card className="border-green-200 bg-gradient-to-r from-green-50 to-emerald-50 dark:border-green-800 dark:from-green-900/20 dark:to-emerald-900/20">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              Ollama (Local AI Models)
+              <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300">
+                <Sparkles className="mr-1 h-3 w-3" />
+                Always Free!
+              </Badge>
+            </CardTitle>
+            <div className="flex items-center gap-2">
+              {ollamaStatus === 'connected' ? (
+                <>
+                  <Check className="h-4 w-4 text-green-600" />
+                  <span className="text-sm text-green-600">Connected</span>
+                </>
+              ) : (
+                <>
+                  <X className="h-4 w-4 text-red-600" />
+                  <span className="text-sm text-red-600">Disconnected</span>
+                </>
+              )}
             </div>
           </div>
-        </div>
-      )}
-
-      {tier === UserTier.PAID && (
-        <div className="mb-6 rounded-lg bg-green-50 p-4 dark:bg-green-900/20">
-          <div className="flex items-center gap-2">
-            <CreditCard className="h-5 w-5 text-green-600 dark:text-green-400" />
-            <p className="text-sm font-medium text-green-800 dark:text-green-300">
-              Pro subscriber - You can use all models without API keys!
-            </p>
-          </div>
-          <p className="mt-1 text-xs text-green-700 dark:text-green-400">
-            Add your own API keys below to use your own quotas instead of OmniChat credits.
-          </p>
-        </div>
-      )}
-
-      {/* OpenAI */}
-      <div className="mb-6 border-b border-gray-200 pb-6 dark:border-gray-700">
-        <div className="mb-2 flex items-center justify-between">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-            OpenAI API Key
-          </label>
-          {tier === UserTier.FREE && (
-            <span className="flex items-center gap-1 text-xs text-gray-500">
-              <Key className="h-3 w-3" />
-              Required for GPT models
-            </span>
-          )}
-        </div>
-        <div className="flex gap-2">
-          <input
-            type={showKeys.openai ? 'text' : 'password'}
-            value={apiKeys.openai}
-            onChange={(e) => setApiKeys({ ...apiKeys, openai: e.target.value })}
-            placeholder="sk-..."
-            className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-          />
-          <button
-            onClick={() => toggleShowKey('openai')}
-            className="rounded-md bg-gray-100 px-3 py-2 text-sm hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
-          >
-            {showKeys.openai ? 'Hide' : 'Show'}
-          </button>
-          <button
-            onClick={() => handleSave('openai')}
-            className="rounded-md bg-blue-500 px-4 py-2 text-sm text-white hover:bg-blue-600"
-          >
-            Save
-          </button>
-        </div>
-        <p className="mt-2 text-xs text-gray-500">
-          Get your key from{' '}
-          <a
-            href="https://platform.openai.com/api-keys"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-600 hover:underline"
-          >
-            platform.openai.com
-          </a>
-        </p>
-      </div>
-
-      {/* Anthropic */}
-      <div className="mb-6 border-b border-gray-200 pb-6 dark:border-gray-700">
-        <div className="mb-2 flex items-center justify-between">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-            Anthropic API Key
-          </label>
-          {tier === UserTier.FREE && (
-            <span className="flex items-center gap-1 text-xs text-gray-500">
-              <Key className="h-3 w-3" />
-              Required for Claude models
-            </span>
-          )}
-        </div>
-        <div className="flex gap-2">
-          <input
-            type={showKeys.anthropic ? 'text' : 'password'}
-            value={apiKeys.anthropic}
-            onChange={(e) => setApiKeys({ ...apiKeys, anthropic: e.target.value })}
-            placeholder="sk-ant-..."
-            className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-          />
-          <button
-            onClick={() => toggleShowKey('anthropic')}
-            className="rounded-md bg-gray-100 px-3 py-2 text-sm hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
-          >
-            {showKeys.anthropic ? 'Hide' : 'Show'}
-          </button>
-          <button
-            onClick={() => handleSave('anthropic')}
-            className="rounded-md bg-blue-500 px-4 py-2 text-sm text-white hover:bg-blue-600"
-          >
-            Save
-          </button>
-        </div>
-        <p className="mt-2 text-xs text-gray-500">
-          Get your key from{' '}
-          <a
-            href="https://console.anthropic.com/api-keys"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-600 hover:underline"
-          >
-            console.anthropic.com
-          </a>
-        </p>
-      </div>
-
-      {/* Google */}
-      <div className="mb-6 border-b border-gray-200 pb-6 dark:border-gray-700">
-        <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-          Google API Key
-        </label>
-        <div className="flex gap-2">
-          <input
-            type={showKeys.google ? 'text' : 'password'}
-            value={apiKeys.google}
-            onChange={(e) => setApiKeys({ ...apiKeys, google: e.target.value })}
-            placeholder="AIza..."
-            className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-          />
-          <button
-            onClick={() => toggleShowKey('google')}
-            className="rounded-md bg-gray-100 px-3 py-2 text-sm hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
-          >
-            {showKeys.google ? 'Hide' : 'Show'}
-          </button>
-          <button
-            onClick={() => handleSave('google')}
-            className="rounded-md bg-blue-500 px-4 py-2 text-sm text-white hover:bg-blue-600"
-          >
-            Save
-          </button>
-        </div>
-      </div>
-
-      {/* xAI */}
-      <div className="mb-6 border-b border-gray-200 pb-6 dark:border-gray-700">
-        <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-          xAI API Key (Grok)
-        </label>
-        <div className="flex gap-2">
-          <input
-            type={showKeys.xai ? 'text' : 'password'}
-            value={apiKeys.xai}
-            onChange={(e) => setApiKeys({ ...apiKeys, xai: e.target.value })}
-            placeholder="xai-..."
-            className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-          />
-          <button
-            onClick={() => toggleShowKey('xai')}
-            className="rounded-md bg-gray-100 px-3 py-2 text-sm hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
-          >
-            {showKeys.xai ? 'Hide' : 'Show'}
-          </button>
-          <button
-            onClick={() => handleSave('xai')}
-            className="rounded-md bg-blue-500 px-4 py-2 text-sm text-white hover:bg-blue-600"
-          >
-            Save
-          </button>
-        </div>
-      </div>
-
-      {/* DeepSeek */}
-      <div className="mb-6 border-b border-gray-200 pb-6 dark:border-gray-700">
-        <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-          DeepSeek API Key
-        </label>
-        <div className="flex gap-2">
-          <input
-            type={showKeys.deepseek ? 'text' : 'password'}
-            value={apiKeys.deepseek}
-            onChange={(e) => setApiKeys({ ...apiKeys, deepseek: e.target.value })}
-            placeholder="sk-..."
-            className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-          />
-          <button
-            onClick={() => toggleShowKey('deepseek')}
-            className="rounded-md bg-gray-100 px-3 py-2 text-sm hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
-          >
-            {showKeys.deepseek ? 'Hide' : 'Show'}
-          </button>
-          <button
-            onClick={() => handleSave('deepseek')}
-            className="rounded-md bg-blue-500 px-4 py-2 text-sm text-white hover:bg-blue-600"
-          >
-            Save
-          </button>
-        </div>
-      </div>
-
-      {/* Ollama */}
-      <div className="mb-4">
-        <div className="mb-3">
-          <div className="mb-2 flex items-center justify-between">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-              Ollama (Local AI Models)
-            </label>
-            <span className="flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900/20 dark:text-green-400">
-              <Sparkles className="h-3 w-3" />
-              Always Free!
-            </span>
-          </div>
-          <div className="mb-4 rounded-lg bg-green-50 p-4 text-sm text-green-800 dark:bg-green-900/20 dark:text-green-200">
-            <p className="mb-2 font-medium">🎉 Free unlimited AI with Ollama!</p>
-            <p className="mb-3 text-xs">
-              Run powerful AI models locally on your computer - no API keys or credits needed.
-            </p>
-            <p className="mb-2 font-medium">Quick Setup:</p>
-            <ol className="ml-4 list-decimal space-y-1 text-xs">
+          <CardDescription>
+            Run powerful AI models locally on your computer - no API keys or credits needed
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="rounded-lg bg-white/80 p-4 dark:bg-gray-800/80">
+            <h4 className="mb-2 font-medium">Quick Setup:</h4>
+            <ol className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
               <li>
-                Install Ollama:{' '}
-                <code className="rounded bg-green-100 px-1 dark:bg-green-800">
-                  curl -fsSL https://ollama.com/install.sh | sh
-                </code>
+                1. Install Ollama from{' '}
+                <a
+                  href="https://ollama.ai"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:underline"
+                >
+                  ollama.ai
+                </a>
               </li>
               <li>
-                Enable CORS:{' '}
-                <code className="rounded bg-green-100 px-1 dark:bg-green-800">
-                  OLLAMA_ORIGINS="*" ollama serve
-                </code>
-              </li>
-              <li>
-                Pull a model:{' '}
-                <code className="rounded bg-green-100 px-1 dark:bg-green-800">
+                2. Run:{' '}
+                <code className="rounded bg-gray-100 px-1 dark:bg-gray-700">
                   ollama pull llama3.2
                 </code>
               </li>
-              <li>Configure the URL below (default: http://localhost:11434)</li>
+              <li>3. Start Ollama and select a model below</li>
             </ol>
-            <p className="mt-2 text-xs">
-              <a
-                href="https://ollama.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline hover:text-blue-600 dark:hover:text-blue-300"
-              >
-                Learn more about Ollama →
-              </a>
-            </p>
           </div>
-        </div>
 
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={apiKeys.ollama}
-            onChange={(e) => setApiKeys({ ...apiKeys, ollama: e.target.value })}
-            placeholder="http://localhost:11434"
-            className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-          />
-          <button
-            onClick={() => handleSave('ollama')}
-            className="rounded-md bg-blue-500 px-4 py-2 text-sm text-white hover:bg-blue-600"
-          >
-            Save
-          </button>
-        </div>
-
-        {/* Connection Status */}
-        <div className="mt-2 flex items-center gap-2">
-          <div
-            className={`h-2 w-2 rounded-full ${
-              ollamaStatus === 'connected'
-                ? 'bg-green-500'
-                : ollamaStatus === 'checking'
-                  ? 'bg-yellow-500'
-                  : 'bg-red-500'
-            }`}
-          />
-          <span className="text-sm text-gray-600 dark:text-gray-400">
-            {ollamaStatus === 'connected'
-              ? 'Connected'
-              : ollamaStatus === 'checking'
-                ? 'Checking...'
-                : 'Disconnected'}
-          </span>
-          {ollamaStatus === 'connected' && ollamaModels.length > 0 && (
-            <span className="text-sm text-gray-500 dark:text-gray-500">
-              ({ollamaModels.length} models available)
-            </span>
-          )}
-        </div>
-
-        {/* Troubleshooting */}
-        {ollamaStatus === 'disconnected' && (
-          <div className="mt-3 rounded-md bg-red-50 p-3 text-xs text-red-700 dark:bg-red-900/20 dark:text-red-300">
-            <p className="font-medium">Connection failed. Check that:</p>
-            <ul className="mt-1 ml-4 list-disc space-y-0.5">
-              <li>
-                Ollama is running (<code>ollama serve</code>)
-              </li>
-              <li>CORS is enabled (see setup instructions above)</li>
-              <li>The URL is correct (default: http://localhost:11434)</li>
-            </ul>
-          </div>
-        )}
-
-        {/* Available Models */}
-        {ollamaStatus === 'connected' && ollamaModels.length > 0 && (
-          <div className="mt-3">
-            <p className="mb-1 text-xs font-medium text-gray-500 dark:text-gray-400">
-              Available Models:
-            </p>
-            <div className="flex flex-wrap gap-1">
-              {ollamaModels.map((model) => (
-                <span
-                  key={model}
-                  className="rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-700 dark:bg-gray-700 dark:text-gray-300"
-                >
-                  {model}
-                </span>
-              ))}
+          <div className="space-y-2">
+            <Label htmlFor="ollama-url">Ollama Server URL</Label>
+            <div className="flex gap-2">
+              <Input
+                id="ollama-url"
+                type="url"
+                value={ollamaUrl}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setOllamaUrl(e.target.value)}
+                placeholder="http://localhost:11434"
+              />
+              <Button onClick={handleOllamaSave} variant="outline">
+                Test Connection
+              </Button>
             </div>
           </div>
-        )}
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
