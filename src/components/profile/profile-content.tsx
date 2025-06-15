@@ -25,6 +25,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { useUserData } from '@/hooks/use-user-data';
+import { getPlanName } from '@/lib/subscription-plans';
 
 interface ProfileContentProps {
   user: UserResource;
@@ -101,6 +103,7 @@ function QuickAction({
 
 export default function ProfileContent({ user }: ProfileContentProps) {
   const [activeTab] = useState('overview');
+  const { subscription } = useUserData();
 
   return (
     <>
@@ -140,10 +143,12 @@ export default function ProfileContent({ user }: ProfileContentProps) {
                       <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
                         {user.firstName} {user.lastName}
                       </h2>
-                      <Badge className="bg-gradient-to-r from-purple-600 to-pink-600 text-white">
-                        <Crown className="mr-1 h-3 w-3" />
-                        Premium
-                      </Badge>
+                      {subscription && (
+                        <Badge className="bg-gradient-to-r from-purple-600 to-pink-600 text-white">
+                          <Crown className="mr-1 h-3 w-3" />
+                          {subscription.planId ? getPlanName(subscription.planId) : 'Premium'}
+                        </Badge>
+                      )}
                     </div>
                     <p className="mt-1 text-gray-600 dark:text-gray-400">
                       {user.primaryEmailAddress?.emailAddress ||

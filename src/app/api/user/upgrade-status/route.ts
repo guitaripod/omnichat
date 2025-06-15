@@ -3,6 +3,7 @@ import { auth } from '@clerk/nextjs/server';
 import { db } from '@/lib/db/index';
 import { users, userBattery } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
+import { getUserSubscription } from '@/lib/db/queries';
 
 export const runtime = 'edge';
 
@@ -89,12 +90,26 @@ export async function GET(_req: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
+    // Get subscription details if user is paid
+    let subscription = null;
+    if (user.tier === 'paid') {
+      subscription = await getUserSubscription(db(), user.id);
+    }
+
     return NextResponse.json({
       email: user.email,
       tier: user.tier,
       subscriptionStatus: user.subscriptionStatus,
       stripeCustomerId: user.stripeCustomerId,
       hasPaidAccess: user.tier === 'paid',
+      subscription: subscription
+        ? {
+            planId: subscription.planId,
+            status: subscription.status,
+            billingInterval: subscription.billingInterval,
+            currentPeriodEnd: subscription.currentPeriodEnd,
+          }
+        : null,
     });
   } catch (error) {
     console.error('Get status error:', error);

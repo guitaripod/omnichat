@@ -8,6 +8,7 @@ import { useBatteryData } from '@/hooks/use-battery-data';
 import { useRouter } from 'next/navigation';
 import { PremiumBadge } from '@/components/premium-badge';
 import { calculateBatteryUsage } from '@/lib/battery-pricing';
+import { getPlanName } from '@/lib/subscription-plans';
 
 interface ChatBatteryWidgetProps {
   currentModel?: string;
@@ -211,7 +212,7 @@ export function ChatBatteryWidget({
               <div className="border-t border-gray-200 pt-3 dark:border-gray-700">
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-gray-600 dark:text-gray-400">
-                    {subscription?.tier === 'pro' ? 'Pro' : 'Premium'} Plan
+                    {subscription?.planId ? getPlanName(subscription.planId) : 'Premium Plan'}
                   </span>
                   <button
                     onClick={(e) => {

@@ -60,6 +60,12 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
             subscriptionStatus: 'active' | 'canceled' | 'past_due' | 'trialing' | null;
             stripeCustomerId: string | null;
             hasPaidAccess: boolean;
+            subscription?: {
+              planId: string;
+              status: 'active' | 'canceled' | 'past_due' | 'trialing';
+              billingInterval: 'monthly' | 'annual';
+              currentPeriodEnd: string;
+            } | null;
           };
 
           // Map the API response to our User type
@@ -80,7 +86,24 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
           setUser(user);
 
           // If user has a subscription, create subscription object
-          if (data.subscriptionStatus && data.subscriptionStatus !== 'canceled') {
+          if (data.subscription) {
+            const subscription: Subscription = {
+              id: data.stripeCustomerId || '',
+              userId: clerkUser.id,
+              stripeCustomerId: data.stripeCustomerId || '',
+              stripeSubscriptionId: '',
+              stripePriceId: '',
+              status: data.subscription.status,
+              currentPeriodStart: new Date(),
+              currentPeriodEnd: new Date(data.subscription.currentPeriodEnd),
+              cancelAtPeriodEnd: false,
+              tier: data.tier === 'paid' ? 'pro' : 'free',
+              planId: data.subscription.planId,
+              billingInterval: data.subscription.billingInterval,
+            };
+            setSubscription(subscription);
+          } else if (data.subscriptionStatus && data.subscriptionStatus !== 'canceled') {
+            // Fallback for backward compatibility
             const subscription: Subscription = {
               id: data.stripeCustomerId || '',
               userId: clerkUser.id,

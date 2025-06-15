@@ -74,6 +74,8 @@ export interface Subscription {
   currentPeriodEnd: Date;
   cancelAtPeriodEnd: boolean;
   tier: 'free' | 'pro' | 'enterprise';
+  planId?: string;
+  billingInterval?: 'monthly' | 'annual';
 }
 
 export interface StreamingResponse {
