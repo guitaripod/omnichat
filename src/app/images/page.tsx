@@ -6,9 +6,5 @@ export const metadata = {
 };
 
 export default function ImageHistoryPage() {
-  return (
-    <div className="container mx-auto px-4 py-8">
-      <ImageHistoryGallery />
-    </div>
-  );
+  return <ImageHistoryGallery />;
 }
