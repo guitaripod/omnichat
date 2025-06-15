@@ -45,9 +45,10 @@ describe('Battery Pricing Calculations', () => {
       expect(usage).toBe(0);
     });
 
-    it('should return 0 for unknown models', () => {
+    it('should return default cost for unknown models', () => {
       const usage = calculateBatteryUsage('unknown-model', 1000, 1000, false);
-      expect(usage).toBe(0);
+      // Default cost is 10 BU per 1K tokens, so 2000 tokens = 20 BU
+      expect(usage).toBe(20);
     });
 
     it('should always round up to protect revenue', () => {
