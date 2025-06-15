@@ -35,14 +35,34 @@ export async function trackApiUsage({
 
     // Get current battery balance
     const database = db();
-    const userBatteryRecord = await database
+    let userBatteryRecord = await database
       .select()
       .from(userBattery)
       .where(eq(userBattery.userId, userId))
       .get();
 
     if (!userBatteryRecord) {
-      throw new Error('User battery record not found');
+      // Create default battery record if it doesn't exist
+      await database
+        .insert(userBattery)
+        .values({
+          userId,
+          totalBalance: 0,
+          dailyAllowance: 0,
+          lastDailyReset: new Date().toISOString().split('T')[0],
+        })
+        .onConflictDoNothing();
+
+      // Fetch the created record
+      userBatteryRecord = await database
+        .select()
+        .from(userBattery)
+        .where(eq(userBattery.userId, userId))
+        .get();
+
+      if (!userBatteryRecord) {
+        throw new Error('Failed to create user battery record');
+      }
     }
 
     // Check if user has enough battery
@@ -141,7 +161,19 @@ export async function checkBatteryBalance(
       .get();
 
     if (!userBatteryRecord) {
-      return { hasBalance: false, currentBalance: 0, estimatedCost: 0 };
+      // Create default battery record if it doesn't exist
+      await database
+        .insert(userBattery)
+        .values({
+          userId,
+          totalBalance: 0,
+          dailyAllowance: 0,
+          lastDailyReset: new Date().toISOString().split('T')[0],
+        })
+        .onConflictDoNothing();
+
+      // Return default values for new users
+      return { hasBalance: false, currentBalance: 0, estimatedCost: 0, dailyAllowance: 0 };
     }
 
     // Estimate battery cost (assume 50/50 input/output split)
