@@ -278,6 +278,7 @@ export async function POST(req: NextRequest) {
 
     // Generate response
     console.log('Calling chatCompletion...');
+    console.log('[DEPLOYMENT v2] Battery tracking enabled');
     console.log('Request parameters:', {
       model,
       messagesCount: messages.length,
