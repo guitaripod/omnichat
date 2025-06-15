@@ -51,6 +51,7 @@ interface Subscription {
   planId: string;
   currentPeriodEnd: string;
   cancelAtPeriodEnd: boolean;
+  billingInterval?: 'monthly' | 'annual' | null;
 }
 
 // Animated background component
@@ -429,9 +430,16 @@ export default function BillingPage() {
                       <div className="space-y-3">
                         <div className="flex items-center justify-between rounded-lg bg-white/50 p-3 dark:bg-gray-800/50">
                           <span className="text-sm text-gray-600 dark:text-gray-400">
-                            Monthly Cost
+                            {subscription.billingInterval === 'annual'
+                              ? 'Annual Cost'
+                              : 'Monthly Cost'}
                           </span>
-                          <span className="font-semibold">${currentPlan.price}</span>
+                          <span className="font-semibold">
+                            $
+                            {subscription.billingInterval === 'annual'
+                              ? Math.round(currentPlan.price * 12 * 0.8).toFixed(2)
+                              : currentPlan.price.toFixed(2)}
+                          </span>
                         </div>
                         <div className="flex items-center justify-between rounded-lg bg-white/50 p-3 dark:bg-gray-800/50">
                           <span className="text-sm text-gray-600 dark:text-gray-400">
