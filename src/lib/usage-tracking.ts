@@ -27,6 +27,7 @@ export async function trackApiUsage({
   outputTokens,
   cached = false,
 }: TrackUsageParams) {
+  console.log('[Usage Tracking] ==================== START ====================');
   console.log('[Usage Tracking] trackApiUsage called with:', {
     userId,
     conversationId,
@@ -35,24 +36,50 @@ export async function trackApiUsage({
     inputTokens,
     outputTokens,
     cached,
+    timestamp: new Date().toISOString(),
   });
 
   try {
     // Use the imported db instance
 
     // Calculate battery usage
+    console.log('[Usage Tracking] Calculating battery usage...');
     const batteryUsed = calculateBatteryUsage(model, inputTokens, outputTokens, cached);
-    console.log('[Usage Tracking] Battery used:', batteryUsed);
+    console.log('[Usage Tracking] Battery calculation result:', {
+      model,
+      inputTokens,
+      outputTokens,
+      cached,
+      batteryUsed,
+      calculation: `(${inputTokens} + ${outputTokens}) tokens = ${batteryUsed} BU`,
+    });
 
     // Get current battery balance
+    console.log('[Usage Tracking] Getting database instance...');
     const database = db();
+    console.log('[Usage Tracking] Database instance obtained:', !!database);
+
+    console.log('[Usage Tracking] Fetching user battery record for userId:', userId);
     let userBatteryRecord = await database
       .select()
       .from(userBattery)
       .where(eq(userBattery.userId, userId))
       .get();
 
+    console.log(
+      '[Usage Tracking] User battery record:',
+      userBatteryRecord
+        ? {
+            userId: userBatteryRecord.userId,
+            totalBalance: userBatteryRecord.totalBalance,
+            dailyAllowance: userBatteryRecord.dailyAllowance,
+            lastDailyReset: userBatteryRecord.lastDailyReset,
+          }
+        : 'NOT FOUND'
+    );
+
     if (!userBatteryRecord) {
+      console.log('[Usage Tracking] No battery record found, creating new one...');
       // Create default battery record if it doesn't exist
       await database
         .insert(userBattery)
@@ -64,6 +91,7 @@ export async function trackApiUsage({
         })
         .onConflictDoNothing();
 
+      console.log('[Usage Tracking] Battery record created, fetching it...');
       // Fetch the created record
       userBatteryRecord = await database
         .select()
@@ -72,87 +100,121 @@ export async function trackApiUsage({
         .get();
 
       if (!userBatteryRecord) {
+        console.error('[Usage Tracking] ERROR: Failed to create user battery record');
         throw new Error('Failed to create user battery record');
       }
+      console.log('[Usage Tracking] New battery record created successfully');
     }
 
     // Check if user has enough battery
     const currentBalance = userBatteryRecord.totalBalance;
+    console.log('[Usage Tracking] Battery balance check:', {
+      currentBalance,
+      batteryNeeded: batteryUsed,
+      sufficient: currentBalance >= batteryUsed,
+    });
+
     if (currentBalance < batteryUsed) {
+      console.error('[Usage Tracking] ERROR: Insufficient battery balance');
       throw new Error('Insufficient battery balance');
     }
 
-    // Start transaction
-    await database.transaction(async (tx) => {
-      // Record API usage
-      await tx.insert(apiUsageTracking).values({
-        userId,
-        conversationId,
-        messageId,
-        model,
-        inputTokens,
-        outputTokens,
-        batteryUsed,
-        cached,
-      });
+    // Sequential operations for D1 compatibility (no transactions)
+    const newBalance = currentBalance - batteryUsed;
+    console.log('[Usage Tracking] New balance will be:', {
+      oldBalance: currentBalance,
+      batteryUsed,
+      newBalance,
+    });
 
-      // Update battery balance
-      const newBalance = currentBalance - batteryUsed;
-      await tx
-        .update(userBattery)
+    // 1. Record API usage
+    console.log('[Usage Tracking] Step 1/4: Recording API usage...');
+    await database.insert(apiUsageTracking).values({
+      userId,
+      conversationId,
+      messageId,
+      model,
+      inputTokens,
+      outputTokens,
+      batteryUsed,
+      cached,
+    });
+    console.log('[Usage Tracking] ✓ API usage recorded');
+
+    // 2. Update battery balance
+    console.log('[Usage Tracking] Step 2/4: Updating battery balance...');
+    await database
+      .update(userBattery)
+      .set({
+        totalBalance: newBalance,
+        updatedAt: new Date().toISOString(),
+      })
+      .where(eq(userBattery.userId, userId));
+    console.log('[Usage Tracking] ✓ Battery balance updated');
+
+    // 3. Record battery transaction
+    console.log('[Usage Tracking] Step 3/4: Recording battery transaction...');
+    await database.insert(batteryTransactions).values({
+      userId,
+      type: 'usage',
+      amount: -batteryUsed, // negative for usage
+      balanceAfter: newBalance,
+      description: `Used ${model} - ${inputTokens + outputTokens} tokens`,
+      metadata: JSON.stringify({ conversationId, messageId, model }),
+    });
+    console.log('[Usage Tracking] ✓ Battery transaction recorded');
+
+    // 4. Update daily usage summary
+    const today = new Date().toISOString().split('T')[0];
+    const existingSummary = await database
+      .select()
+      .from(dailyUsageSummary)
+      .where(and(eq(dailyUsageSummary.userId, userId), eq(dailyUsageSummary.date, today)))
+      .get();
+
+    if (existingSummary) {
+      // Update existing summary
+      const modelsUsed = JSON.parse(existingSummary.modelsUsed);
+      modelsUsed[model] = (modelsUsed[model] || 0) + 1;
+
+      await database
+        .update(dailyUsageSummary)
         .set({
-          totalBalance: newBalance,
+          totalBatteryUsed: existingSummary.totalBatteryUsed + batteryUsed,
+          totalMessages: existingSummary.totalMessages + 1,
+          modelsUsed: JSON.stringify(modelsUsed),
           updatedAt: new Date().toISOString(),
         })
-        .where(eq(userBattery.userId, userId));
-
-      // Record battery transaction
-      await tx.insert(batteryTransactions).values({
+        .where(eq(dailyUsageSummary.id, existingSummary.id));
+    } else {
+      // Create new summary
+      await database.insert(dailyUsageSummary).values({
         userId,
-        type: 'usage',
-        amount: -batteryUsed, // negative for usage
-        balanceAfter: newBalance,
-        description: `Used ${model} - ${inputTokens + outputTokens} tokens`,
-        metadata: JSON.stringify({ conversationId, messageId, model }),
+        date: today,
+        totalBatteryUsed: batteryUsed,
+        totalMessages: 1,
+        modelsUsed: JSON.stringify({ [model]: 1 }),
       });
+    }
 
-      // Update daily usage summary
-      const today = new Date().toISOString().split('T')[0];
-      const existingSummary = await tx
-        .select()
-        .from(dailyUsageSummary)
-        .where(and(eq(dailyUsageSummary.userId, userId), eq(dailyUsageSummary.date, today)))
-        .get();
-
-      if (existingSummary) {
-        // Update existing summary
-        const modelsUsed = JSON.parse(existingSummary.modelsUsed);
-        modelsUsed[model] = (modelsUsed[model] || 0) + 1;
-
-        await tx
-          .update(dailyUsageSummary)
-          .set({
-            totalBatteryUsed: existingSummary.totalBatteryUsed + batteryUsed,
-            totalMessages: existingSummary.totalMessages + 1,
-            modelsUsed: JSON.stringify(modelsUsed),
-            updatedAt: new Date().toISOString(),
-          })
-          .where(eq(dailyUsageSummary.id, existingSummary.id));
-      } else {
-        // Create new summary
-        await tx.insert(dailyUsageSummary).values({
-          userId,
-          date: today,
-          totalBatteryUsed: batteryUsed,
-          totalMessages: 1,
-          modelsUsed: JSON.stringify({ [model]: 1 }),
-        });
-      }
+    console.log('[Usage Tracking] ✓ All operations completed successfully');
+    console.log('[Usage Tracking] Final result:', {
+      success: true,
+      batteryUsed,
+      oldBalance: currentBalance,
+      newBalance: currentBalance - batteryUsed,
     });
+    console.log('[Usage Tracking] ==================== END ====================');
 
     return { success: true, batteryUsed, newBalance: currentBalance - batteryUsed };
   } catch (error) {
-    console.error('Usage tracking error:', error);
+    console.error('[Usage Tracking] ==================== ERROR ====================');
+    console.error('[Usage Tracking] Error details:', error);
+    console.error(
+      '[Usage Tracking] Error stack:',
+      error instanceof Error ? error.stack : 'No stack trace'
+    );
+    console.error('[Usage Tracking] ==================== END ERROR ====================');
     throw error;
   }
 }
@@ -163,15 +225,38 @@ export async function checkBatteryBalance(
   model: string,
   estimatedTokens: number = 500
 ) {
+  console.log('[Battery Check] ==================== START ====================');
+  console.log('[Battery Check] Checking battery balance:', {
+    userId,
+    model,
+    estimatedTokens,
+    timestamp: new Date().toISOString(),
+  });
+
   try {
     const database = db();
+    console.log('[Battery Check] Database instance obtained:', !!database);
+
+    console.log('[Battery Check] Fetching user battery record...');
     const userBatteryRecord = await database
       .select()
       .from(userBattery)
       .where(eq(userBattery.userId, userId))
       .get();
 
+    console.log(
+      '[Battery Check] User battery record:',
+      userBatteryRecord
+        ? {
+            totalBalance: userBatteryRecord.totalBalance,
+            dailyAllowance: userBatteryRecord.dailyAllowance,
+            lastDailyReset: userBatteryRecord.lastDailyReset,
+          }
+        : 'NOT FOUND'
+    );
+
     if (!userBatteryRecord) {
+      console.log('[Battery Check] No battery record found, creating default...');
       // Create default battery record if it doesn't exist
       await database
         .insert(userBattery)
@@ -184,10 +269,13 @@ export async function checkBatteryBalance(
         .onConflictDoNothing();
 
       // Return default values for new users
+      console.log('[Battery Check] Returning default values for new user');
+      console.log('[Battery Check] ==================== END ====================');
       return { hasBalance: false, currentBalance: 0, estimatedCost: 0, dailyAllowance: 0 };
     }
 
     // Estimate battery cost (assume 50/50 input/output split)
+    console.log('[Battery Check] Calculating estimated cost...');
     const estimatedCost = calculateBatteryUsage(
       model,
       Math.floor(estimatedTokens / 2),
@@ -195,14 +283,24 @@ export async function checkBatteryBalance(
       false
     );
 
-    return {
+    const result = {
       hasBalance: userBatteryRecord.totalBalance >= estimatedCost,
       currentBalance: userBatteryRecord.totalBalance,
       estimatedCost,
       dailyAllowance: userBatteryRecord.dailyAllowance,
     };
+
+    console.log('[Battery Check] Result:', {
+      ...result,
+      sufficient: result.hasBalance ? '✓ YES' : '✗ NO',
+    });
+    console.log('[Battery Check] ==================== END ====================');
+
+    return result;
   } catch (error) {
-    console.error('Battery check error:', error);
+    console.error('[Battery Check] ==================== ERROR ====================');
+    console.error('[Battery Check] Error:', error);
+    console.error('[Battery Check] ==================== END ERROR ====================');
     return { hasBalance: false, currentBalance: 0, estimatedCost: 0 };
   }
 }

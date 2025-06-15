@@ -1,5 +1,99 @@
 // Battery-based pricing system for sustainable profitability
 
+/**
+ * Normalizes model IDs to match battery pricing keys
+ * Maps actual API model IDs (like claude-3-5-haiku-20241022) to pricing keys (like claude-haiku-3.5)
+ */
+export function normalizeModelIdForPricing(modelId: string): string {
+  console.log('[Battery Pricing] Normalizing model ID:', modelId);
+
+  // Claude model mappings
+  if (modelId.startsWith('claude-')) {
+    // Claude 3.5 Haiku
+    if (modelId.includes('haiku') && modelId.includes('3-5')) {
+      console.log('[Battery Pricing] Normalized claude-3-5-haiku -> claude-haiku-3.5');
+      return 'claude-haiku-3.5';
+    }
+    // Claude Opus 4
+    if (modelId.includes('opus-4')) {
+      console.log('[Battery Pricing] Normalized claude-opus-4 -> claude-opus-4');
+      return 'claude-opus-4';
+    }
+    // Claude Sonnet 4
+    if (modelId.includes('sonnet-4')) {
+      console.log('[Battery Pricing] Normalized claude-sonnet-4 -> claude-sonnet-4');
+      return 'claude-sonnet-4';
+    }
+    // Claude 3.7 Sonnet (treat as Sonnet 4 for pricing)
+    if (modelId.includes('3-7-sonnet')) {
+      console.log('[Battery Pricing] Normalized claude-3-7-sonnet -> claude-sonnet-4');
+      return 'claude-sonnet-4';
+    }
+    // Claude 3.5 Sonnet (treat as mid-tier)
+    if (modelId.includes('3-5-sonnet')) {
+      console.log('[Battery Pricing] Normalized claude-3-5-sonnet -> claude-sonnet-3.5');
+      return 'claude-sonnet-3.5';
+    }
+    // Claude 3 Opus (treat as premium)
+    if (modelId.includes('3-opus')) {
+      console.log('[Battery Pricing] Normalized claude-3-opus -> claude-opus-3');
+      return 'claude-opus-3';
+    }
+    // Claude 3 Sonnet (treat as mid-tier)
+    if (modelId.includes('3-sonnet')) {
+      console.log('[Battery Pricing] Normalized claude-3-sonnet -> claude-sonnet-3');
+      return 'claude-sonnet-3';
+    }
+  }
+
+  // GPT models
+  if (modelId.startsWith('gpt-')) {
+    // GPT-4.1 variants
+    if (modelId === 'gpt-4.1') return 'gpt-4.1';
+    if (modelId === 'gpt-4.1-mini') return 'gpt-4.1-mini';
+    if (modelId === 'gpt-4.1-nano') return 'gpt-4.1-nano';
+    // GPT-4o variants (treat as previous gen)
+    if (modelId === 'gpt-4o') return 'gpt-4o';
+    if (modelId === 'gpt-4o-mini') return 'gpt-4o-mini';
+  }
+
+  // O3 models
+  if (modelId === 'o3') return 'o3';
+  if (modelId === 'o3-mini') return 'o3-mini';
+
+  // Gemini models
+  if (modelId.includes('gemini-1-5-flash') || modelId.includes('gemini-1.5-flash')) {
+    return 'gemini-1.5-flash';
+  }
+  if (modelId.includes('gemini-1-5-pro') || modelId.includes('gemini-1.5-pro')) {
+    return 'gemini-1.5-pro';
+  }
+  if (modelId.includes('gemini-2-5-flash') || modelId.includes('gemini-2.5-flash')) {
+    return 'gemini-2.5-flash';
+  }
+  if (modelId.includes('gemini-2-5-pro') || modelId.includes('gemini-2.5-pro')) {
+    return 'gemini-2.5-pro';
+  }
+
+  // Grok models
+  if (modelId === 'grok-3') return 'grok-3';
+  if (modelId === 'grok-3-mini') return 'grok-3-mini';
+
+  // DeepSeek models
+  if (modelId.includes('deepseek-chat')) {
+    return 'deepseek-chat';
+  }
+
+  // Local/Ollama models - free
+  if (modelId.includes('llama') || modelId.includes('qwen') || modelId.startsWith('ollama/')) {
+    return modelId; // Keep as-is for local models
+  }
+
+  // Default: return as-is
+  console.log('[Battery Pricing] No normalization needed, returning:', modelId);
+  return modelId;
+}
+
 export interface ModelBatteryUsage {
   batteryPerKToken: number; // Battery units per 1K tokens
   estimatedPerMessage: number; // Average battery units per message
@@ -68,8 +162,29 @@ export const MODEL_BATTERY_USAGE: Record<string, ModelBatteryUsage> = {
     batteryPerKToken: 4.8,
     estimatedPerMessage: 1.2,
     tier: 'mid',
-    displayName: 'Claude Haiku',
+    displayName: 'Claude Haiku 3.5',
     emoji: '🎋',
+  },
+  'claude-sonnet-3.5': {
+    batteryPerKToken: 6.0,
+    estimatedPerMessage: 1.5,
+    tier: 'mid',
+    displayName: 'Claude Sonnet 3.5',
+    emoji: '🎼',
+  },
+  'claude-sonnet-3': {
+    batteryPerKToken: 6.0,
+    estimatedPerMessage: 1.5,
+    tier: 'mid',
+    displayName: 'Claude Sonnet 3',
+    emoji: '🎵',
+  },
+  'claude-opus-3': {
+    batteryPerKToken: 30.0,
+    estimatedPerMessage: 7.5,
+    tier: 'premium',
+    displayName: 'Claude Opus 3',
+    emoji: '🎨',
   },
 
   // Premium Tier - Higher quality
@@ -116,6 +231,45 @@ export const MODEL_BATTERY_USAGE: Record<string, ModelBatteryUsage> = {
     tier: 'ultra',
     displayName: 'OpenAI o3',
     emoji: '🧠',
+  },
+  'o3-mini': {
+    batteryPerKToken: 5.0,
+    estimatedPerMessage: 1.25,
+    tier: 'premium',
+    displayName: 'OpenAI o3 Mini',
+    emoji: '🤔',
+  },
+
+  // Previous generation GPT models
+  'gpt-4o': {
+    batteryPerKToken: 5.0,
+    estimatedPerMessage: 1.25,
+    tier: 'mid',
+    displayName: 'GPT-4o',
+    emoji: '🔵',
+  },
+  'gpt-4o-mini': {
+    batteryPerKToken: 1.2,
+    estimatedPerMessage: 0.3,
+    tier: 'budget',
+    displayName: 'GPT-4o Mini',
+    emoji: '🟢',
+  },
+
+  // Gemini 2.5 models
+  'gemini-2.5-flash': {
+    batteryPerKToken: 0.5,
+    estimatedPerMessage: 0.125,
+    tier: 'budget',
+    displayName: 'Gemini 2.5 Flash',
+    emoji: '⚡',
+  },
+  'gemini-2.5-pro': {
+    batteryPerKToken: 7.5,
+    estimatedPerMessage: 1.875,
+    tier: 'premium',
+    displayName: 'Gemini 2.5 Pro',
+    emoji: '💫',
   },
 
   // Local models - Free
@@ -197,23 +351,54 @@ export function calculateBatteryUsage(
   outputTokens: number,
   useCache: boolean = false
 ): number {
-  const modelKey = useCache && model === 'deepseek-chat' ? 'deepseek-chat-cached' : model;
+  console.log('[Battery Pricing] calculateBatteryUsage called with:', {
+    model,
+    inputTokens,
+    outputTokens,
+    useCache,
+  });
+
+  // Normalize the model ID for pricing lookup
+  const normalizedModel = normalizeModelIdForPricing(model);
+  const modelKey =
+    useCache && normalizedModel === 'deepseek-chat' ? 'deepseek-chat-cached' : normalizedModel;
+
+  console.log('[Battery Pricing] Model lookup:', {
+    originalModel: model,
+    normalizedModel,
+    finalKey: modelKey,
+    modelExists: !!MODEL_BATTERY_USAGE[modelKey],
+  });
+
   const usage = MODEL_BATTERY_USAGE[modelKey];
 
   if (!usage) {
-    console.error(`[Battery Pricing] Model not found in pricing: ${modelKey}`);
+    console.error(`[Battery Pricing] ERROR: Model not found in pricing configuration`);
+    console.error(`[Battery Pricing] Model: ${model}`);
+    console.error(`[Battery Pricing] Normalized: ${normalizedModel}`);
+    console.error(`[Battery Pricing] Final key: ${modelKey}`);
     console.error(`[Battery Pricing] Available models:`, Object.keys(MODEL_BATTERY_USAGE));
-    return 0;
+
+    // Return a default cost to prevent free usage
+    const defaultCost = Math.ceil(((inputTokens + outputTokens) / 1000) * 10); // Default 10 BU per 1K tokens
+    console.error(`[Battery Pricing] Using default cost: ${defaultCost} BU`);
+    return defaultCost;
   }
 
   const totalTokens = inputTokens + outputTokens;
   const batteryUsed = (totalTokens / 1000) * usage.batteryPerKToken;
+  const finalBatteryUsed = Math.ceil(batteryUsed); // Round up to nearest unit
 
-  console.log(
-    `[Battery Pricing] Model: ${modelKey}, Tokens: ${totalTokens}, Battery Used: ${batteryUsed}`
-  );
+  console.log('[Battery Pricing] Battery calculation:', {
+    model: modelKey,
+    batteryPerKToken: usage.batteryPerKToken,
+    totalTokens,
+    rawBatteryUsed: batteryUsed,
+    finalBatteryUsed,
+    calculation: `${totalTokens} tokens / 1000 * ${usage.batteryPerKToken} = ${batteryUsed} -> ${finalBatteryUsed} BU`,
+  });
 
-  return Math.ceil(batteryUsed); // Round up to nearest unit
+  return finalBatteryUsed;
 }
 
 // Get battery percentage

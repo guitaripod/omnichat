@@ -24,13 +24,15 @@ export function createTokenTrackingStream({
   messages,
   isOllamaModel,
 }: StreamWrapperOptions): ReadableStream<Uint8Array> {
-  console.log('[Stream Wrapper] Creating token tracking stream for:', {
+  console.log('[Stream Wrapper] ==================== START ====================');
+  console.log('[Stream Wrapper] Creating token tracking stream with:', {
     userId,
     conversationId,
     messageId,
     model,
     isOllamaModel,
     messageCount: messages.length,
+    timestamp: new Date().toISOString(),
   });
 
   const encoder = new TextEncoder();
@@ -47,18 +49,29 @@ export function createTokenTrackingStream({
           const { done, value } = await reader.read();
 
           if (done) {
+            console.log('[Stream Wrapper] Stream completed, processing final data...');
+
             // Stream is done, track usage and send final data
             if (!isDone && !isOllamaModel) {
               isDone = true;
+              console.log('[Stream Wrapper] Processing battery usage tracking...');
+
               try {
                 const tokenCount = tokenTracker.getTokenCount();
-                console.log('[Stream Wrapper] Final token count:', tokenCount);
+                console.log('[Stream Wrapper] Final token count:', {
+                  inputTokens: tokenCount.inputTokens,
+                  outputTokens: tokenCount.outputTokens,
+                  totalTokens: tokenCount.totalTokens,
+                  model,
+                });
 
                 // Get database instance
+                console.log('[Stream Wrapper] Getting database instance...');
                 const db = getD1Database();
-                console.log('[Stream Wrapper] Database instance:', !!db);
+                console.log('[Stream Wrapper] Database instance obtained:', !!db);
 
                 if (db) {
+                  console.log('[Stream Wrapper] Calling trackApiUsage...');
                   // Track usage in database
                   await trackApiUsage({
                     userId,
@@ -70,9 +83,9 @@ export function createTokenTrackingStream({
                     cached: false,
                   });
 
-                  console.log('[Stream Wrapper] Usage tracked successfully');
+                  console.log('[Stream Wrapper] ✓ Usage tracked successfully');
                 } else {
-                  console.error('[Stream Wrapper] No database instance available');
+                  console.error('[Stream Wrapper] ERROR: No database instance available');
                 }
 
                 // Send usage data to client
@@ -84,13 +97,22 @@ export function createTokenTrackingStream({
                 controller.enqueue(encoder.encode(usageChunk));
                 console.log('[Stream Wrapper] Sent usage data to client:', usageData);
               } catch (error) {
-                console.error('[Stream Wrapper] Failed to track usage:', error);
+                console.error('[Stream Wrapper] ERROR: Failed to track usage');
+                console.error('[Stream Wrapper] Error details:', error);
+                console.error(
+                  '[Stream Wrapper] Error stack:',
+                  error instanceof Error ? error.stack : 'No stack trace'
+                );
               }
+            } else if (isOllamaModel) {
+              console.log('[Stream Wrapper] Skipping battery tracking for Ollama model');
             }
 
             // Send done signal
+            console.log('[Stream Wrapper] Sending [DONE] signal');
             controller.enqueue(encoder.encode('data: [DONE]\n\n'));
             controller.close();
+            console.log('[Stream Wrapper] ==================== END ====================');
             break;
           }
 
@@ -111,6 +133,14 @@ export function createTokenTrackingStream({
                     const content = parsed.content || parsed.choices?.[0]?.delta?.content;
                     if (content) {
                       tokenTracker.addChunk(content);
+                      // Log every 10th chunk to avoid spam
+                      if (Math.random() < 0.1) {
+                        const currentUsage = tokenTracker.getCurrentUsage();
+                        console.log('[Stream Wrapper] Token tracking progress:', {
+                          outputTokensSoFar: currentUsage.outputTokens,
+                          totalTokensSoFar: currentUsage.totalTokens,
+                        });
+                      }
                     }
                   } catch {
                     // Ignore parse errors

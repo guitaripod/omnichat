@@ -351,11 +351,19 @@ export async function POST(req: NextRequest) {
 
       // Track usage for non-streaming response
       if (!isOllamaModel && db && messageId && typeof response === 'string') {
+        console.log('[Chat API] Non-streaming response, tracking usage...');
         try {
           const { StreamingTokenTracker } = await import('@/lib/token-counting');
           const tokenTracker = new StreamingTokenTracker(fullMessages, actualModelName);
           tokenTracker.addChunk(response);
           const tokenCount = tokenTracker.getTokenCount();
+
+          console.log('[Chat API] Token count for non-streaming:', {
+            inputTokens: tokenCount.inputTokens,
+            outputTokens: tokenCount.outputTokens,
+            totalTokens: tokenCount.totalTokens,
+            model: actualModelName,
+          });
 
           await trackApiUsage({
             userId,
@@ -366,17 +374,34 @@ export async function POST(req: NextRequest) {
             outputTokens: tokenCount.outputTokens,
             cached: false,
           });
+
+          console.log('[Chat API] ✓ Usage tracked for non-streaming response');
         } catch (error) {
-          console.error('[Chat API] Failed to track usage:', error);
+          console.error('[Chat API] ERROR: Failed to track usage for non-streaming');
+          console.error('[Chat API] Error details:', error);
         }
+      } else if (isOllamaModel) {
+        console.log('[Chat API] Ollama model - skipping usage tracking for non-streaming');
       }
 
       // Return non-streaming response
+      console.log('[Chat API] Returning non-streaming response');
+      console.log('[Chat API] ==================== END CHAT REQUEST ====================');
       return NextResponse.json({ message: response });
     }
   } catch (error) {
-    console.error('Chat API Error:', error);
-    console.error('Error type:', error?.constructor?.name);
+    console.error('[Chat API] ==================== ERROR ====================');
+    console.error('[Chat API] Chat API Error:', error);
+    console.error('[Chat API] Error type:', error?.constructor?.name);
+    console.error('[Chat API] Error details:', {
+      userId: user?.id,
+      conversationId,
+      messageId,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      stack:
+        error instanceof Error ? error.stack?.split('\n').slice(0, 5).join('\n') : 'No stack trace',
+    });
+    console.error('[Chat API] ==================== END ERROR ====================');
     console.error('Error stack:', error instanceof Error ? error.stack : 'No stack');
 
     const errorMessage = error instanceof Error ? error.message : 'An error occurred';
