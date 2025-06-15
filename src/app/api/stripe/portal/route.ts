@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import type Stripe from 'stripe';
 
 export const runtime = 'edge';
 import { auth } from '@clerk/nextjs/server';
@@ -44,10 +45,19 @@ export async function POST(req: NextRequest) {
     console.log('[Stripe Portal] Creating portal session for customer:', user.stripeCustomerId);
 
     // Create portal session
-    const session = await getStripe().billingPortal.sessions.create({
+    // Note: If you get "No configuration provided" error, you need to:
+    // 1. Create a portal configuration in Stripe Dashboard
+    // 2. Set it as default
+    // Or use the configuration parameter with a specific config ID
+    const sessionParams: Stripe.BillingPortal.SessionCreateParams = {
       customer: user.stripeCustomerId,
       return_url: returnUrl || STRIPE_CONFIG.checkout.billingPortalReturnUrl,
-    });
+    };
+
+    // If you have a specific configuration ID, uncomment and set it here:
+    // sessionParams.configuration = 'bpc_1234567890';
+
+    const session = await getStripe().billingPortal.sessions.create(sessionParams);
 
     console.log('[Stripe Portal] Portal session created successfully');
     return NextResponse.json({ url: session.url });
