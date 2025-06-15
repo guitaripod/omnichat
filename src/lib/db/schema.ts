@@ -170,6 +170,9 @@ export const userSubscriptions = sqliteTable(
     cancelAt: text('cancel_at'),
     canceledAt: text('canceled_at'),
     trialEnd: text('trial_end'),
+    billingInterval: text('billing_interval', {
+      enum: ['monthly', 'annual'],
+    }),
     createdAt: text('created_at')
       .notNull()
       .default(sql`(datetime('now'))`),

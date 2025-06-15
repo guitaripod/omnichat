@@ -123,12 +123,25 @@ async function handleSubscriptionCreated(session: Stripe.Checkout.Session) {
     return;
   }
 
-  // Get the subscription details
-  const stripeSubscription = await getStripe().subscriptions.retrieve(subscriptionId);
+  // Get the subscription details with expanded price information
+  const stripeSubscription = await getStripe().subscriptions.retrieve(subscriptionId, {
+    expand: ['items.data.price'],
+  });
 
   // The retrieved subscription has all the properties we need
   const subscription = stripeSubscription as Stripe.Subscription;
   const planId = subscription.metadata.planId;
+
+  // Determine billing interval from the price object
+  let billingInterval: 'monthly' | 'annual' = 'monthly';
+  if (subscription.items?.data[0]?.price && typeof subscription.items.data[0].price === 'object') {
+    const price = subscription.items.data[0].price as Stripe.Price;
+    if (price.recurring?.interval === 'year') {
+      billingInterval = 'annual';
+    } else if (price.recurring?.interval === 'month') {
+      billingInterval = 'monthly';
+    }
+  }
 
   // Get the current period from the first subscription item or fallback to subscription level
   const currentPeriodStart =
@@ -266,6 +279,7 @@ async function handleSubscriptionCreated(session: Stripe.Checkout.Session) {
           | 'incomplete',
         currentPeriodStart: new Date(currentPeriodStart * 1000).toISOString(),
         currentPeriodEnd: new Date(currentPeriodEnd * 1000).toISOString(),
+        billingInterval,
       })
       .onConflictDoUpdate({
         target: userSubscriptions.userId,
@@ -280,6 +294,7 @@ async function handleSubscriptionCreated(session: Stripe.Checkout.Session) {
             | 'incomplete',
           currentPeriodStart: new Date(currentPeriodStart * 1000).toISOString(),
           currentPeriodEnd: new Date(currentPeriodEnd * 1000).toISOString(),
+          billingInterval,
           updatedAt: new Date().toISOString(),
         },
       });
@@ -408,27 +423,51 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
     return;
   }
 
+  // Retrieve subscription with expanded price information to get billing interval
+  const expandedSubscription = await getStripe().subscriptions.retrieve(subscription.id, {
+    expand: ['items.data.price'],
+  });
+
+  // Determine billing interval from the price object
+  let billingInterval: 'monthly' | 'annual' | undefined;
+  if (
+    expandedSubscription.items?.data[0]?.price &&
+    typeof expandedSubscription.items.data[0].price === 'object'
+  ) {
+    const price = expandedSubscription.items.data[0].price as Stripe.Price;
+    if (price.recurring?.interval === 'year') {
+      billingInterval = 'annual';
+    } else if (price.recurring?.interval === 'month') {
+      billingInterval = 'monthly';
+    }
+  }
+
   // Update subscription record
+  const updateData: any = {
+    status: subscription.status as 'active' | 'canceled' | 'past_due' | 'trialing' | 'incomplete',
+    currentPeriodStart: new Date(
+      (subscription.items?.data[0]?.current_period_start ||
+        (subscription as any).current_period_start) * 1000
+    ).toISOString(),
+    currentPeriodEnd: new Date(
+      (subscription.items?.data[0]?.current_period_end ||
+        (subscription as any).current_period_end) * 1000
+    ).toISOString(),
+    cancelAt: subscription.cancel_at ? new Date(subscription.cancel_at * 1000).toISOString() : null,
+    canceledAt: subscription.canceled_at
+      ? new Date(subscription.canceled_at * 1000).toISOString()
+      : null,
+    updatedAt: new Date().toISOString(),
+  };
+
+  // Only update billingInterval if we could determine it
+  if (billingInterval) {
+    updateData.billingInterval = billingInterval;
+  }
+
   await db()
     .update(userSubscriptions)
-    .set({
-      status: subscription.status as 'active' | 'canceled' | 'past_due' | 'trialing' | 'incomplete',
-      currentPeriodStart: new Date(
-        (subscription.items?.data[0]?.current_period_start ||
-          (subscription as any).current_period_start) * 1000
-      ).toISOString(),
-      currentPeriodEnd: new Date(
-        (subscription.items?.data[0]?.current_period_end ||
-          (subscription as any).current_period_end) * 1000
-      ).toISOString(),
-      cancelAt: subscription.cancel_at
-        ? new Date(subscription.cancel_at * 1000).toISOString()
-        : null,
-      canceledAt: subscription.canceled_at
-        ? new Date(subscription.canceled_at * 1000).toISOString()
-        : null,
-      updatedAt: new Date().toISOString(),
-    })
+    .set(updateData)
     .where(eq(userSubscriptions.stripeSubscriptionId, subscription.id));
 
   // Update user tier based on subscription status
