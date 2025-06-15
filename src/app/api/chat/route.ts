@@ -8,9 +8,11 @@ import { getRequestContext } from '@cloudflare/next-on-pages';
 import type { CloudflareEnv } from '../../../../env';
 import { isDevMode, getDevUser } from '@/lib/auth/dev-auth';
 import { AuditLogger } from '@/services/security';
-import { checkBatteryBalance } from '@/lib/usage-tracking';
+import { checkBatteryBalance, trackApiUsage } from '@/lib/usage-tracking';
 import { canUseModel } from '@/lib/tier';
 import { UPGRADE_MESSAGES } from '@/lib/subscription-plans';
+import { StreamingTokenTracker } from '@/lib/token-counting';
+import { generateId } from '@/utils';
 
 export const runtime = 'edge';
 
@@ -39,6 +41,8 @@ export async function POST(req: NextRequest) {
   let user: any = null;
   let conversationId: string | undefined;
   let dbUser = null;
+  let tokenTracker: StreamingTokenTracker | null = null;
+  let messageId: string | undefined;
 
   try {
     // Authenticate user
@@ -116,6 +120,9 @@ export async function POST(req: NextRequest) {
     } = body;
 
     conversationId = body.conversationId;
+
+    // Generate a message ID for tracking
+    messageId = generateId();
 
     // Get database instance and user data before access check
     let db: ReturnType<typeof getD1Database> | null = null;
@@ -281,6 +288,13 @@ export async function POST(req: NextRequest) {
       userId,
     });
 
+    // Initialize token tracker for accurate usage tracking
+    const fullMessages = messages.map((msg) => ({
+      role: msg.role,
+      content: msg.content,
+    }));
+    tokenTracker = new StreamingTokenTracker(fullMessages, actualModelName);
+
     const response = await provider.chatCompletion({
       model: actualModelName,
       messages,
@@ -305,8 +319,77 @@ export async function POST(req: NextRequest) {
         webSearch,
       }).catch(console.error);
 
+      // Create a transform stream to track tokens and inject usage data
+      const encoder = new TextEncoder();
+      const transformStream = new TransformStream({
+        async transform(chunk, controller) {
+          // Pass through the original chunk
+          controller.enqueue(chunk);
+
+          // Extract text from SSE chunk for token tracking
+          try {
+            const text = new TextDecoder().decode(chunk);
+            const lines = text.split('\n');
+
+            for (const line of lines) {
+              if (line.startsWith('data: ')) {
+                const data = line.slice(6).trim();
+                if (data && data !== '[DONE]') {
+                  try {
+                    const parsed = JSON.parse(data);
+                    const content = parsed.content || parsed.choices?.[0]?.delta?.content;
+                    if (content && tokenTracker) {
+                      tokenTracker.addChunk(content);
+                    }
+                  } catch {
+                    // Ignore parse errors
+                  }
+                }
+              }
+            }
+          } catch {
+            // Ignore decode errors
+          }
+        },
+        async flush(controller) {
+          // Track usage after stream completes
+          if (!isOllamaModel && db && tokenTracker && messageId) {
+            try {
+              const tokenCount = tokenTracker.getTokenCount();
+              console.log('[Chat API] Final token count:', tokenCount);
+
+              await trackApiUsage({
+                userId,
+                conversationId: conversationId!,
+                messageId,
+                model: actualModelName,
+                inputTokens: tokenCount.inputTokens,
+                outputTokens: tokenCount.outputTokens,
+                cached: false,
+              });
+
+              // Send final usage data to client
+              const usageData = {
+                usage: tokenCount,
+                batteryUsed: 0, // Will be calculated by trackApiUsage
+              };
+              const usageChunk = `data: ${JSON.stringify({ type: 'usage', ...usageData })}\n\n`;
+              controller.enqueue(encoder.encode(usageChunk));
+            } catch (error) {
+              console.error('[Chat API] Failed to track usage:', error);
+            }
+          }
+
+          // Send done signal
+          controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+        },
+      });
+
+      // Pipe the original stream through our transform
+      response.stream.pipeThrough(transformStream);
+
       // Return streaming response with proper headers for Cloudflare
-      return new NextResponse(response.stream, {
+      return new NextResponse(transformStream.readable, {
         headers: {
           'Content-Type': 'text/event-stream',
           'Content-Encoding': 'identity', // Critical for Cloudflare streaming
@@ -324,6 +407,26 @@ export async function POST(req: NextRequest) {
         messageCount: messages.length,
         webSearch,
       }).catch(console.error);
+
+      // Track usage for non-streaming response
+      if (!isOllamaModel && db && tokenTracker && messageId && typeof response === 'string') {
+        try {
+          tokenTracker.addChunk(response);
+          const tokenCount = tokenTracker.getTokenCount();
+
+          await trackApiUsage({
+            userId,
+            conversationId: conversationId!,
+            messageId,
+            model: actualModelName,
+            inputTokens: tokenCount.inputTokens,
+            outputTokens: tokenCount.outputTokens,
+            cached: false,
+          });
+        } catch (error) {
+          console.error('[Chat API] Failed to track usage:', error);
+        }
+      }
 
       // Return non-streaming response
       return NextResponse.json({ message: response });

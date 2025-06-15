@@ -30,7 +30,7 @@ export function ChatContainer() {
     conversations,
   } = useConversationStore();
   const { isPremium } = useUserData();
-  const { trackUsage } = useBatteryData();
+  const {} = useBatteryData();
 
   // Subscribe to messages separately to ensure reactivity
   const messages = useConversationStore((state) =>
@@ -349,6 +349,7 @@ export function ChatContainer() {
     scrollToBottom(true); // Use smooth scroll for initial positioning
 
     let tokenCount = 0; // Move this outside try block for access in finally
+    let actualTokenUsage: { inputTokens: number; outputTokens: number } | null = null;
 
     try {
       let response: Response;
@@ -462,6 +463,19 @@ export function ChatContainer() {
                 const parsed = JSON.parse(data);
                 console.log('Parsed streaming data:', parsed);
 
+                // Handle usage data from server
+                if (parsed.type === 'usage' && parsed.usage) {
+                  actualTokenUsage = parsed.usage;
+                  console.log('[ChatContainer] Received usage data:', actualTokenUsage);
+                  // Update the battery widget with real usage
+                  if (actualTokenUsage) {
+                    setTokensGenerated(
+                      actualTokenUsage.inputTokens + actualTokenUsage.outputTokens
+                    );
+                  }
+                  continue; // Don't process usage data as content
+                }
+
                 // Handle different response formats
                 let content = '';
                 if (parsed.content) {
@@ -497,7 +511,8 @@ export function ChatContainer() {
 
                   // For image generation, don't calculate tokens based on base64 data
                   const isImageContent = content.includes('![Generated Image]');
-                  if (!isImageContent) {
+                  if (!isImageContent && !actualTokenUsage) {
+                    // Only do rough estimate if we don't have actual usage from server
                     tokenCount += content.split(/\s+/).length; // Rough token estimate
                     setTokensGenerated(tokenCount);
                   }
@@ -692,25 +707,11 @@ export function ChatContainer() {
       setStreamingMessage('');
       setCurrentStreamId(undefined);
 
-      // Track battery usage if we completed successfully and have tokens
-      if (tokenCount > 0 && !abortControllerRef.current?.signal.aborted) {
-        try {
-          // Estimate input tokens from the conversation
-          const inputTokens = Math.floor(
-            [...messages, userMessage].reduce((acc, msg) => acc + msg.content.length / 4, 0)
-          );
-
-          await trackUsage({
-            conversationId: currentConversationId,
-            messageId: assistantMessage.id,
-            model: selectedModel,
-            inputTokens,
-            outputTokens: tokenCount,
-            cached: false,
-          });
-        } catch (error) {
-          console.error('Failed to track battery usage:', error);
-        }
+      // Usage tracking is now handled server-side
+      // The server sends accurate token counts and updates the database
+      if (actualTokenUsage) {
+        console.log('[ChatContainer] Stream completed with token usage:', actualTokenUsage);
+        // Battery data will auto-refresh via the periodic interval in useBatteryData hook
       }
 
       setTokensGenerated(0);
