@@ -18,8 +18,7 @@ import { compressImage } from '@/utils/image-compression';
 import { TemplateModal } from '@/components/templates/template-modal';
 import { useUserData } from '@/hooks/use-user-data';
 import { useBatteryData } from '@/hooks/use-battery-data';
-import { Button } from '@/components/ui/button';
-import { Sparkles } from 'lucide-react';
+import { EmptyChatView } from '@/components/chat/empty-chat-view';
 
 export function ChatContainer() {
   const {
@@ -1187,58 +1186,10 @@ export function ChatContainer() {
         {/* Messages */}
         <div ref={scrollContainerRef} onScroll={handleScroll} className="flex-1 overflow-y-auto">
           {messages.length === 0 && !isLoading ? (
-            <div className="flex h-full items-center justify-center transition-opacity duration-300">
-              <div className="max-w-md text-center">
-                <h2 className="mb-2 text-2xl font-semibold text-gray-900 dark:text-white">
-                  Start a new conversation
-                </h2>
-                <p className="mb-6 text-gray-600 dark:text-gray-400">
-                  Select a model and send your first message
-                </p>
-
-                {/* Premium Templates Button */}
-                {isPremium && (
-                  <Button
-                    onClick={() => setShowTemplateDialog(true)}
-                    className="mb-6 bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-700 hover:to-violet-700"
-                  >
-                    <Sparkles className="mr-2 h-4 w-4" />
-                    Use a Template
-                  </Button>
-                )}
-
-                {/* Quick Start Guide */}
-                <div className="rounded-lg bg-gray-50 p-4 text-left text-sm dark:bg-gray-800">
-                  <p className="mb-3 font-medium text-gray-900 dark:text-white">Quick Start:</p>
-                  <div className="space-y-2 text-gray-600 dark:text-gray-400">
-                    <div className="flex items-start gap-2">
-                      <span className="text-blue-500">•</span>
-                      <span>
-                        <strong>Cloud AI:</strong> Add API keys in{' '}
-                        <a href="/profile" className="text-blue-500 underline hover:text-blue-600">
-                          Profile Settings
-                        </a>
-                      </span>
-                    </div>
-                    <div className="flex items-start gap-2">
-                      <span className="text-purple-500">•</span>
-                      <span>
-                        <strong>Local AI:</strong> Install{' '}
-                        <a
-                          href="https://ollama.com"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-purple-500 underline hover:text-purple-600"
-                        >
-                          Ollama
-                        </a>{' '}
-                        for offline models
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <EmptyChatView
+              isPremium={isPremium}
+              onTemplateClick={() => setShowTemplateDialog(true)}
+            />
           ) : (
             <>
               <SafeMessageList
