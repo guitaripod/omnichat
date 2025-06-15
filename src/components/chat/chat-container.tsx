@@ -18,6 +18,7 @@ import { compressImage } from '@/utils/image-compression';
 import { TemplateModal } from '@/components/templates/template-modal';
 import { useUserData } from '@/hooks/use-user-data';
 import { useBatteryData } from '@/hooks/use-battery-data';
+import { useUserStore } from '@/store/user';
 import { EmptyChatView } from '@/components/chat/empty-chat-view';
 
 export function ChatContainer() {
@@ -473,6 +474,17 @@ export function ChatContainer() {
                       actualTokenUsage.inputTokens + actualTokenUsage.outputTokens
                     );
                   }
+
+                  // Update battery balance if included
+                  if (parsed.battery) {
+                    console.log('[ChatContainer] Updating battery balance:', parsed.battery);
+                    const store = useUserStore.getState();
+                    store.updateBatteryBalance(
+                      parsed.battery.newBalance,
+                      parsed.battery.batteryUsed
+                    );
+                  }
+
                   continue; // Don't process usage data as content
                 }
 

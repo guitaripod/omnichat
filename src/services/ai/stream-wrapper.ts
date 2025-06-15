@@ -70,10 +70,11 @@ export function createTokenTrackingStream({
                 const db = getD1Database();
                 console.log('[Stream Wrapper] Database instance obtained:', !!db);
 
+                let trackingResult = null;
                 if (db) {
                   console.log('[Stream Wrapper] Calling trackApiUsage...');
                   // Track usage in database
-                  await trackApiUsage({
+                  trackingResult = await trackApiUsage({
                     userId,
                     conversationId,
                     messageId,
@@ -83,15 +84,21 @@ export function createTokenTrackingStream({
                     cached: false,
                   });
 
-                  console.log('[Stream Wrapper] ✓ Usage tracked successfully');
+                  console.log('[Stream Wrapper] ✓ Usage tracked successfully:', trackingResult);
                 } else {
                   console.error('[Stream Wrapper] ERROR: No database instance available');
                 }
 
-                // Send usage data to client
+                // Send usage data to client with battery information
                 const usageData = {
                   type: 'usage',
                   usage: tokenCount,
+                  battery: trackingResult
+                    ? {
+                        batteryUsed: trackingResult.batteryUsed,
+                        newBalance: trackingResult.newBalance,
+                      }
+                    : undefined,
                 };
                 const usageChunk = `data: ${JSON.stringify(usageData)}\n\n`;
                 controller.enqueue(encoder.encode(usageChunk));
