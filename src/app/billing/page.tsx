@@ -239,7 +239,7 @@ export default function BillingPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          returnUrl: window.location.href,
+          returnUrl: `${window.location.origin}/chat`,
         }),
       });
 

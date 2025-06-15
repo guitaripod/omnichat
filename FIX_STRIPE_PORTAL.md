@@ -30,7 +30,7 @@ The error "No configuration provided and your test mode default configuration ha
      - Invoice history
      - Subscription cancellations
      - Subscription updates
-   - Set return URL to: `https://omnichat-7pu.pages.dev/billing`
+   - Set return URL to: `https://omnichat-7pu.pages.dev/chat`
    - Save and set as default
 
 ### Option 2: Via Script
@@ -61,7 +61,7 @@ The error "No configuration provided and your test mode default configuration ha
      -d "features[payment_method_update][enabled]=true" \
      -d "features[subscription_cancel][enabled]=true" \
      -d "features[subscription_update][enabled]=true" \
-     -d "default_return_url=https://omnichat-7pu.pages.dev/billing"
+     -d "default_return_url=https://omnichat-7pu.pages.dev/chat"
    ```
 
 2. **Copy the configuration ID from response (starts with bpc\_)**

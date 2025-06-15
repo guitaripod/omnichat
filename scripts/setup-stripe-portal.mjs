@@ -28,7 +28,7 @@ const data = new URLSearchParams({
   'business_profile[headline]': 'Manage your OmniChat subscription',
   'business_profile[privacy_policy_url]': 'https://omnichat-7pu.pages.dev/privacy',
   'business_profile[terms_of_service_url]': 'https://omnichat-7pu.pages.dev/terms',
-  'default_return_url': 'https://omnichat-7pu.pages.dev/billing'
+  'default_return_url': 'https://omnichat-7pu.pages.dev/chat'
 });
 
 const options = {

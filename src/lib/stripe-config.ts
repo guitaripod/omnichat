@@ -78,7 +78,7 @@ export function getStripeConfig() {
     checkout: {
       successUrl: `${process.env.NEXT_PUBLIC_APP_URL}/billing/success?session_id={CHECKOUT_SESSION_ID}`,
       cancelUrl: `${process.env.NEXT_PUBLIC_APP_URL}/pricing`,
-      billingPortalReturnUrl: `${process.env.NEXT_PUBLIC_APP_URL}/billing`,
+      billingPortalReturnUrl: `${process.env.NEXT_PUBLIC_APP_URL}/chat`,
     },
   };
 }
