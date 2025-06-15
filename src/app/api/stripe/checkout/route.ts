@@ -254,6 +254,22 @@ export async function GET(_req: NextRequest) {
 
     const subscription = subscriptions.data[0];
 
+    // Retrieve the full subscription with price information to determine billing interval
+    const fullSubscription = await getStripe().subscriptions.retrieve(subscription.id, {
+      expand: ['items.data.price'],
+    });
+
+    // Determine billing interval from the price object
+    let billingInterval: 'monthly' | 'annual' | null = null;
+    if (
+      fullSubscription.items?.data[0]?.price &&
+      typeof fullSubscription.items.data[0].price === 'object' &&
+      fullSubscription.items.data[0].price.recurring
+    ) {
+      const interval = fullSubscription.items.data[0].price.recurring.interval;
+      billingInterval = interval === 'month' ? 'monthly' : interval === 'year' ? 'annual' : null;
+    }
+
     return NextResponse.json({
       subscription: {
         id: subscription.id,
@@ -264,6 +280,7 @@ export async function GET(_req: NextRequest) {
             (subscription as any).current_period_end) * 1000
         ).toISOString(),
         cancelAtPeriodEnd: subscription.cancel_at_period_end,
+        billingInterval,
       },
     });
   } catch (error) {
