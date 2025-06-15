@@ -46,24 +46,14 @@ export function BatteryDashboard({
 
   return (
     <div className="space-y-6">
-      {/* Status Alert */}
-      {status.type !== 'success' && (
-        <div
-          className={cn(
-            'flex items-center gap-2 rounded-lg p-3',
-            status.type === 'danger' && 'bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300',
-            status.type === 'warning' &&
-              'bg-yellow-50 text-yellow-700 dark:bg-yellow-950 dark:text-yellow-300',
-            status.type === 'info' && 'bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300'
-          )}
-        >
+      {/* Status Alert - Only show for critical battery depletion */}
+      {status.type === 'danger' && stats.totalRemaining <= 0 && (
+        <div className="flex items-center gap-2 rounded-lg bg-red-50 p-3 text-red-700 dark:bg-red-950 dark:text-red-300">
           <AlertCircle className="h-4 w-4" />
-          <span className="text-sm font-medium">{status.message}</span>
-          {status.type === 'danger' && (
-            <Button size="sm" variant="destructive" onClick={onUpgrade} className="ml-auto">
-              Top Up Now
-            </Button>
-          )}
+          <span className="text-sm font-medium">Battery depleted! Top up to continue.</span>
+          <Button size="sm" variant="destructive" onClick={onUpgrade} className="ml-auto">
+            Top Up Now
+          </Button>
         </div>
       )}
 

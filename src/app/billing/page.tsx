@@ -113,19 +113,25 @@ function BatteryVisualization({
           rx="4"
           className={cn(
             'transition-all duration-1000',
-            batteryColor === 'green' && 'fill-green-500',
-            batteryColor === 'yellow' && 'fill-yellow-500',
-            batteryColor === 'red' && 'fill-red-500'
+            batteryColor === 'green' && 'fill-green-500 dark:fill-green-600',
+            batteryColor === 'yellow' && 'fill-yellow-500 dark:fill-yellow-600',
+            batteryColor === 'red' && 'fill-red-500 dark:fill-red-600'
           )}
         />
 
         {/* Lightning bolt for charging */}
-        <path d="M45 35 L35 50 L42 50 L37 65 L50 45 L43 45 Z" fill="white" opacity="0.8" />
+        <path
+          d="M45 35 L35 50 L42 50 L37 65 L50 45 L43 45 Z"
+          className="fill-white dark:fill-gray-900"
+          opacity="0.8"
+        />
       </svg>
 
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <span className="text-3xl font-bold">{percentage}%</span>
-        <span className="text-sm text-gray-500">{totalBalance.toLocaleString()} units</span>
+        <span className="text-sm text-gray-500 dark:text-gray-400">
+          {totalBalance.toLocaleString()} units
+        </span>
       </div>
     </div>
   );
@@ -170,7 +176,7 @@ export default function BillingPage() {
 
   useEffect(() => {
     if (!isSignedIn) {
-      router.push('/sign-in?redirect_url=/billing');
+      router.push('/auth/sign-in?redirect_url=/billing');
       return;
     }
 
@@ -419,7 +425,7 @@ export default function BillingPage() {
                       {currentPlan.name} Subscription
                     </span>
                     {subscription.status === 'active' && (
-                      <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300">
+                      <Badge className="bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-400">
                         ACTIVE
                       </Badge>
                     )}
@@ -596,7 +602,9 @@ export default function BillingPage() {
                         className="group relative rounded-xl border-2 border-green-500 bg-gradient-to-br from-green-50 to-emerald-50 p-4 transition-all hover:shadow-lg dark:border-green-600 dark:from-green-900/20 dark:to-emerald-900/20"
                       >
                         <div className="absolute -top-3 right-4">
-                          <Badge className="bg-green-500 text-white">FREE - Local Model</Badge>
+                          <Badge className="bg-green-500 text-white dark:bg-green-600 dark:text-green-50">
+                            FREE - Local Model
+                          </Badge>
                         </div>
                         <div className="mt-2 flex items-start justify-between">
                           <div className="flex-1">
@@ -705,11 +713,12 @@ export default function BillingPage() {
                             <div
                               className={cn(
                                 'h-full transition-all',
-                                usage.tier === 'budget' && 'w-1/4 bg-gray-400',
-                                usage.tier === 'mid' && 'w-2/4 bg-blue-400',
-                                usage.tier === 'premium' && 'w-3/4 bg-purple-400',
+                                usage.tier === 'budget' && 'w-1/4 bg-gray-400 dark:bg-gray-500',
+                                usage.tier === 'mid' && 'w-2/4 bg-blue-400 dark:bg-blue-500',
+                                usage.tier === 'premium' &&
+                                  'w-3/4 bg-purple-400 dark:bg-purple-500',
                                 usage.tier === 'ultra' &&
-                                  'w-full bg-gradient-to-r from-purple-400 to-pink-400'
+                                  'w-full bg-gradient-to-r from-purple-400 to-pink-400 dark:from-purple-500 dark:to-pink-500'
                               )}
                             />
                           </div>
