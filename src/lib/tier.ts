@@ -1,4 +1,5 @@
 import type { User } from '@/lib/db/schema';
+import { UPGRADE_MESSAGES } from '@/lib/subscription-plans';
 
 export enum UserTier {
   FREE = 'free',
@@ -71,6 +72,6 @@ export function getModelAccessReason(
   // Free user without API key
   return {
     canAccess: false,
-    reason: 'Upgrade to Pro or add your API key',
+    reason: UPGRADE_MESSAGES.apiKey,
   };
 }

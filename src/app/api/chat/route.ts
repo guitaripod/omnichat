@@ -10,6 +10,7 @@ import { isDevMode, getDevUser } from '@/lib/auth/dev-auth';
 import { AuditLogger } from '@/services/security';
 import { checkBatteryBalance } from '@/lib/usage-tracking';
 import { canUseModel } from '@/lib/tier';
+import { UPGRADE_MESSAGES } from '@/lib/subscription-plans';
 
 export const runtime = 'edge';
 
@@ -159,7 +160,7 @@ export async function POST(req: NextRequest) {
       return new Response(
         JSON.stringify({
           error: 'Model access denied',
-          message: 'Upgrade to Pro or add your API key to use this model',
+          message: UPGRADE_MESSAGES.apiKey,
           model,
           provider: modelProvider,
         }),

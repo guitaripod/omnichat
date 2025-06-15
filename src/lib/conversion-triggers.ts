@@ -105,7 +105,7 @@ export class ConversionTriggerManager {
         type: 'milestone',
         condition: () => stats.conversationCount >= 5,
         message: "You've created 5 conversations! 🎉",
-        cta: 'Unlock unlimited conversations with Pro',
+        cta: 'Unlock unlimited conversations with a subscription',
         priority: 10,
       },
       {
@@ -120,7 +120,7 @@ export class ConversionTriggerManager {
           return totalAttempts >= 3;
         },
         message: "Noticed you're interested in premium models? 🤔",
-        cta: 'Try them all with Pro - No API keys needed',
+        cta: 'Try them all with a subscription - No API keys needed',
         priority: 9,
       },
       {
@@ -128,7 +128,7 @@ export class ConversionTriggerManager {
         type: 'time',
         condition: () => stats.daysSinceSignup >= 7 && stats.messageCount >= 20,
         message: "You're a power user! 💪",
-        cta: 'Get 20% off Pro - Limited time offer',
+        cta: 'Get 20% off annual plans - Limited time offer',
         priority: 8,
       },
       {
@@ -136,7 +136,7 @@ export class ConversionTriggerManager {
         type: 'usage',
         condition: () => stats.messageCount >= 50,
         message: 'Save time with faster models and priority access',
-        cta: 'Upgrade to Pro for 10x speed',
+        cta: 'Upgrade for 10x faster processing',
         priority: 7,
       },
       {
@@ -147,7 +147,7 @@ export class ConversionTriggerManager {
           return (day === 0 || day === 6) && stats.conversationCount >= 3;
         },
         message: 'Weekend Special! 🎁',
-        cta: 'Get 2 months free with annual Pro',
+        cta: 'Get 2 months free with annual billing',
         priority: 6,
       },
     ];
