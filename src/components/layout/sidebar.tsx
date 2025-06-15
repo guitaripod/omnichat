@@ -12,6 +12,7 @@ import {
   BarChart3,
   ChevronLeft,
   ChevronRight,
+  Receipt,
 } from 'lucide-react';
 import { UserButton } from '@clerk/nextjs';
 import { ConversationList } from './conversation-list';
@@ -95,6 +96,16 @@ export function Sidebar() {
               <CreditCard size={16} className={cn(isCollapsed && 'md:mx-auto')} />
               <span className={cn(isCollapsed && 'md:hidden')}>Pricing</span>
             </Link>
+            {isPremium && (
+              <Link
+                href="/billing"
+                className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-gray-600 transition-colors hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700"
+                title="Billing"
+              >
+                <Receipt size={16} className={cn(isCollapsed && 'md:mx-auto')} />
+                <span className={cn(isCollapsed && 'md:hidden')}>Billing</span>
+              </Link>
+            )}
             <Link
               href="/images"
               className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-gray-600 transition-colors hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700"
