@@ -6,23 +6,27 @@ import { useRouter } from 'next/navigation';
 import { BatteryDashboard } from '@/components/battery-dashboard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { PageHeader } from '@/components/layout/page-header';
 import {
   CreditCard,
-  Zap,
-  Calendar,
   TrendingUp,
   Battery as BatteryIcon,
   ArrowRight,
   Sparkles,
   Shield,
   Activity,
-  Package,
   Crown,
+  Gauge,
+  Clock,
+  ChevronRight,
+  Check,
 } from 'lucide-react';
 import { BATTERY_PLANS } from '@/lib/battery-pricing-v2';
 import { loadStripe } from '@stripe/stripe-js';
+import { cn } from '@/lib/utils';
+import { motion } from 'framer-motion';
 
 const stripePromise = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
   ? loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
@@ -49,6 +53,109 @@ interface Subscription {
   cancelAtPeriodEnd: boolean;
 }
 
+// Animated background component
+function AnimatedBackground() {
+  return (
+    <div className="pointer-events-none absolute inset-0 overflow-hidden">
+      <div className="animate-float absolute -top-40 -right-40 h-96 w-96 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 opacity-20 mix-blend-multiply blur-3xl filter dark:opacity-10" />
+      <div className="animation-delay-2000 animate-float absolute -bottom-40 -left-40 h-96 w-96 rounded-full bg-gradient-to-br from-blue-400 to-cyan-400 opacity-20 mix-blend-multiply blur-3xl filter dark:opacity-10" />
+      <div className="animation-delay-4000 animate-float absolute top-1/2 left-1/2 h-96 w-96 rounded-full bg-gradient-to-br from-yellow-400 to-orange-400 opacity-20 mix-blend-multiply blur-3xl filter dark:opacity-10" />
+    </div>
+  );
+}
+
+// Battery visualization component
+function BatteryVisualization({
+  percentage,
+  totalBalance,
+}: {
+  percentage: number;
+  totalBalance: number;
+}) {
+  const batteryColor = percentage > 50 ? 'green' : percentage > 20 ? 'yellow' : 'red';
+
+  return (
+    <div className="relative">
+      <svg className="h-32 w-32" viewBox="0 0 100 100">
+        {/* Battery outline */}
+        <rect
+          x="10"
+          y="20"
+          width="70"
+          height="60"
+          rx="8"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          className="text-gray-300 dark:text-gray-600"
+        />
+        <rect
+          x="80"
+          y="40"
+          width="10"
+          height="20"
+          rx="2"
+          fill="currentColor"
+          className="text-gray-300 dark:text-gray-600"
+        />
+
+        {/* Battery fill */}
+        <rect
+          x="14"
+          y="24"
+          width={(percentage / 100) * 62}
+          height="52"
+          rx="4"
+          className={cn(
+            'transition-all duration-1000',
+            batteryColor === 'green' && 'fill-green-500',
+            batteryColor === 'yellow' && 'fill-yellow-500',
+            batteryColor === 'red' && 'fill-red-500'
+          )}
+        />
+
+        {/* Lightning bolt for charging */}
+        <path d="M45 35 L35 50 L42 50 L37 65 L50 45 L43 45 Z" fill="white" opacity="0.8" />
+      </svg>
+
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <span className="text-3xl font-bold">{percentage}%</span>
+        <span className="text-sm text-gray-500">{totalBalance.toLocaleString()} units</span>
+      </div>
+    </div>
+  );
+}
+
+// Quick stats card component
+function QuickStat({
+  icon: Icon,
+  label,
+  value,
+  color,
+}: {
+  icon: any;
+  label: string;
+  value: string;
+  color: string;
+}) {
+  return (
+    <motion.div
+      whileHover={{ scale: 1.05 }}
+      className="rounded-2xl border border-gray-200/50 bg-white/80 p-6 backdrop-blur-sm transition-all hover:shadow-lg dark:border-gray-700/50 dark:bg-gray-800/80"
+    >
+      <div className="flex items-center gap-4">
+        <div className={cn('rounded-xl p-3', color)}>
+          <Icon className="h-6 w-6 text-white" />
+        </div>
+        <div>
+          <p className="text-sm text-gray-600 dark:text-gray-400">{label}</p>
+          <p className="text-xl font-bold">{value}</p>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
 export default function BillingPage() {
   const { isSignedIn, userId } = useAuth();
   const router = useRouter();
@@ -64,8 +171,6 @@ export default function BillingPage() {
 
     loadBillingData();
   }, [isSignedIn, router]);
-
-  // No longer redirect free users - let them see their usage
 
   const loadBillingData = async () => {
     try {
@@ -139,24 +244,41 @@ export default function BillingPage() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to create portal session');
+        let errorMessage = 'Failed to create portal session';
+        try {
+          const errorData = await response.json();
+          console.error('Portal error response:', errorData);
+          if (errorData && typeof errorData === 'object' && 'error' in errorData) {
+            errorMessage = String(errorData.error);
+          }
+        } catch {
+          console.error('Failed to parse error response');
+        }
+        throw new Error(errorMessage);
       }
 
       const { url } = (await response.json()) as { url: string };
       window.location.href = url;
-    } catch (_error) {
-      console.error('Portal error:', _error);
-      toast.error('Failed to open billing portal');
+    } catch (error) {
+      console.error('Portal error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to open billing portal';
+      toast.error(errorMessage);
     }
   };
 
   if (loading) {
     return (
-      <div className="container mx-auto max-w-4xl py-8">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 w-1/4 rounded bg-gray-200"></div>
-          <div className="h-64 rounded bg-gray-200"></div>
-          <div className="h-64 rounded bg-gray-200"></div>
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 via-white to-gray-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
+        <div className="container mx-auto max-w-6xl px-4 py-8">
+          <div className="animate-pulse space-y-4">
+            <div className="h-8 w-1/4 rounded bg-gray-200 dark:bg-gray-700"></div>
+            <div className="h-64 rounded-2xl bg-gray-200 dark:bg-gray-700"></div>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+              <div className="h-32 rounded-2xl bg-gray-200 dark:bg-gray-700"></div>
+              <div className="h-32 rounded-2xl bg-gray-200 dark:bg-gray-700"></div>
+              <div className="h-32 rounded-2xl bg-gray-200 dark:bg-gray-700"></div>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -166,223 +288,249 @@ export default function BillingPage() {
     ? BATTERY_PLANS.find((p) => p.name.toLowerCase() === subscription.planId)
     : null;
 
+  const batteryPercentage =
+    batteryStatus && batteryStatus.dailyAllowance > 0
+      ? Math.round((batteryStatus.totalBalance / batteryStatus.dailyAllowance) * 100)
+      : 0;
+
   return (
     <>
-      <PageHeader title="Billing & Usage">
+      <PageHeader title="Battery & Billing">
         <Button
           onClick={subscription ? handleManageSubscription : handleUpgrade}
           className="gap-2 bg-gradient-to-r from-purple-600 to-pink-600 px-6 py-2 text-white shadow-lg transition-all hover:scale-105 hover:from-purple-700 hover:to-pink-700 hover:shadow-xl"
         >
           <CreditCard className="h-4 w-4" />
-          <span className="font-medium">{subscription ? 'Manage Subscription' : 'View Plans'}</span>
+          <span className="font-medium">
+            {subscription ? 'Manage Subscription' : 'Upgrade Plan'}
+          </span>
         </Button>
       </PageHeader>
 
       <div className="relative min-h-screen bg-gradient-to-b from-gray-50 via-white to-gray-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
-        {/* Decorative background elements */}
-        <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div className="absolute -top-40 -right-40 h-96 w-96 animate-pulse rounded-full bg-gradient-to-br from-blue-400 to-cyan-400 opacity-20 mix-blend-multiply blur-3xl filter dark:opacity-10" />
-          <div className="animation-delay-2000 absolute -bottom-40 -left-40 h-96 w-96 animate-pulse rounded-full bg-gradient-to-br from-purple-400 to-pink-400 opacity-20 mix-blend-multiply blur-3xl filter dark:opacity-10" />
-        </div>
+        <AnimatedBackground />
 
-        <div className="relative container mx-auto max-w-4xl px-4 py-8">
-          {/* Subscription Status */}
+        <div className="relative container mx-auto max-w-6xl px-4 py-8">
+          {/* Main Battery Status Card */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <Card className="relative mb-8 overflow-hidden border-0 bg-gradient-to-br from-white to-gray-50 shadow-2xl dark:from-gray-800 dark:to-gray-900">
+              <div className="absolute top-0 right-0 h-full w-1/3 bg-gradient-to-l from-purple-500/10 to-transparent" />
+
+              <CardHeader className="pb-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-3xl font-bold text-transparent">
+                      Battery Overview
+                    </CardTitle>
+                    <CardDescription className="mt-2 text-base">
+                      {subscription
+                        ? `${currentPlan?.name} Plan - ${subscription.status === 'active' ? 'Active' : 'Inactive'}`
+                        : 'Free Tier - Upgrade for more battery'}
+                    </CardDescription>
+                  </div>
+
+                  <BatteryVisualization
+                    percentage={batteryPercentage}
+                    totalBalance={batteryStatus?.totalBalance || 0}
+                  />
+                </div>
+              </CardHeader>
+
+              <CardContent>
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+                  <QuickStat
+                    icon={Gauge}
+                    label="Today's Usage"
+                    value={`${batteryStatus?.todayUsage.toLocaleString() || 0} units`}
+                    color="bg-gradient-to-br from-blue-500 to-cyan-600"
+                  />
+                  <QuickStat
+                    icon={BatteryIcon}
+                    label="Total Balance"
+                    value={`${batteryStatus?.totalBalance.toLocaleString() || 0} units`}
+                    color="bg-gradient-to-br from-green-500 to-emerald-600"
+                  />
+                  <QuickStat
+                    icon={Clock}
+                    label="Daily Allowance"
+                    value={`${batteryStatus?.dailyAllowance.toLocaleString() || 0} units`}
+                    color="bg-gradient-to-br from-purple-500 to-pink-600"
+                  />
+                  <QuickStat
+                    icon={TrendingUp}
+                    label="7-Day Average"
+                    value={`${Math.round(
+                      (batteryStatus?.usageHistory.slice(-7).reduce((a, b) => a + b.usage, 0) ??
+                        0) / 7
+                    ).toLocaleString()} units`}
+                    color="bg-gradient-to-br from-orange-500 to-red-600"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Subscription Details */}
           {subscription && currentPlan && (
-            <Card className="relative mb-6 overflow-hidden border-0 bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 shadow-xl dark:from-purple-900/20 dark:via-pink-900/20 dark:to-orange-900/20">
-              <div className="absolute top-0 right-0 p-4">
-                <Crown className="h-8 w-8 text-yellow-500 opacity-50" />
-              </div>
-              <CardHeader className="relative z-10">
-                <CardTitle className="flex items-center gap-2 text-2xl">
-                  <span className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                    {currentPlan.name} Plan
-                  </span>
-                  {subscription.status === 'active' && (
-                    <span className="rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-700 dark:bg-green-900/30 dark:text-green-300">
-                      ACTIVE
-                    </span>
-                  )}
-                </CardTitle>
-                <CardDescription className="text-base">
-                  Premium access to all AI models
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="relative z-10">
-                <div className="space-y-6">
-                  {/* Plan Details */}
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                    <div className="rounded-xl border border-purple-200/50 bg-white/80 p-4 backdrop-blur-sm dark:border-purple-700/50 dark:bg-gray-800/80">
-                      <div className="mb-2 flex items-center gap-3">
-                        <div className="rounded-lg bg-gradient-to-br from-purple-500 to-pink-600 p-2 text-white">
-                          <BatteryIcon className="h-4 w-4" />
-                        </div>
-                        <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                          Daily Battery
-                        </span>
-                      </div>
-                      <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                        {currentPlan.dailyBattery.toLocaleString()}
-                      </p>
-                      <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">units per day</p>
-                    </div>
-
-                    <div className="rounded-xl border border-blue-200/50 bg-white/80 p-4 backdrop-blur-sm dark:border-blue-700/50 dark:bg-gray-800/80">
-                      <div className="mb-2 flex items-center gap-3">
-                        <div className="rounded-lg bg-gradient-to-br from-blue-500 to-cyan-600 p-2 text-white">
-                          <Package className="h-4 w-4" />
-                        </div>
-                        <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                          Monthly Total
-                        </span>
-                      </div>
-                      <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                        {currentPlan.totalBattery.toLocaleString()}
-                      </p>
-                      <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">battery units</p>
-                    </div>
-
-                    <div className="rounded-xl border border-green-200/50 bg-white/80 p-4 backdrop-blur-sm dark:border-green-700/50 dark:bg-gray-800/80">
-                      <div className="mb-2 flex items-center gap-3">
-                        <div className="rounded-lg bg-gradient-to-br from-green-500 to-emerald-600 p-2 text-white">
-                          <Calendar className="h-4 w-4" />
-                        </div>
-                        <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                          Next Renewal
-                        </span>
-                      </div>
-                      <p className="text-lg font-bold text-gray-900 dark:text-white">
-                        {new Date(subscription.currentPeriodEnd).toLocaleDateString('en-US', {
-                          month: 'short',
-                          day: 'numeric',
-                        })}
-                      </p>
-                      {subscription.cancelAtPeriodEnd ? (
-                        <p className="mt-1 text-xs text-red-600 dark:text-red-400">
-                          Cancels at period end
-                        </p>
-                      ) : (
-                        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                          ${currentPlan.price}/month
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Plan Features */}
-                  <div className="grid grid-cols-2 gap-3">
-                    {currentPlan.features.slice(0, 4).map((feature, i) => (
-                      <div
-                        key={i}
-                        className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300"
-                      >
-                        <Sparkles className="h-4 w-4 text-purple-600 dark:text-purple-400" />
-                        <span>{feature}</span>
-                      </div>
-                    ))}
-                  </div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="mb-8"
+            >
+              <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 shadow-xl dark:from-purple-900/20 dark:via-pink-900/20 dark:to-orange-900/20">
+                <div className="absolute top-0 right-0 p-4">
+                  <Crown className="h-12 w-12 text-yellow-500 opacity-30" />
                 </div>
-              </CardContent>
-            </Card>
+
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-3 text-2xl">
+                    <Shield className="h-6 w-6 text-purple-600" />
+                    <span className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                      {currentPlan.name} Subscription
+                    </span>
+                    {subscription.status === 'active' && (
+                      <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300">
+                        ACTIVE
+                      </Badge>
+                    )}
+                  </CardTitle>
+                  <CardDescription className="text-base">
+                    Premium access to all AI models with priority support
+                  </CardDescription>
+                </CardHeader>
+
+                <CardContent>
+                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                    {/* Plan Benefits */}
+                    <div className="space-y-4">
+                      <h4 className="font-semibold text-gray-900 dark:text-white">Plan Benefits</h4>
+                      <div className="space-y-2">
+                        {currentPlan.features.map((feature, i) => (
+                          <div key={i} className="flex items-start gap-3">
+                            <Check className="mt-0.5 h-5 w-5 flex-shrink-0 text-green-600 dark:text-green-400" />
+                            <span className="text-sm text-gray-700 dark:text-gray-300">
+                              {feature}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Billing Details */}
+                    <div className="space-y-4">
+                      <h4 className="font-semibold text-gray-900 dark:text-white">
+                        Billing Details
+                      </h4>
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between rounded-lg bg-white/50 p-3 dark:bg-gray-800/50">
+                          <span className="text-sm text-gray-600 dark:text-gray-400">
+                            Monthly Cost
+                          </span>
+                          <span className="font-semibold">${currentPlan.price}</span>
+                        </div>
+                        <div className="flex items-center justify-between rounded-lg bg-white/50 p-3 dark:bg-gray-800/50">
+                          <span className="text-sm text-gray-600 dark:text-gray-400">
+                            Next Renewal
+                          </span>
+                          <span className="font-semibold">
+                            {new Date(subscription.currentPeriodEnd).toLocaleDateString('en-US', {
+                              month: 'long',
+                              day: 'numeric',
+                              year: 'numeric',
+                            })}
+                          </span>
+                        </div>
+                        {subscription.cancelAtPeriodEnd && (
+                          <div className="rounded-lg bg-red-50 p-3 dark:bg-red-900/20">
+                            <span className="text-sm text-red-600 dark:text-red-400">
+                              ⚠️ Subscription will cancel at period end
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-6 flex justify-end">
+                    <Button onClick={handleManageSubscription} variant="outline" className="gap-2">
+                      Manage Subscription
+                      <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
           )}
 
-          {/* Battery Dashboard with Enhanced Styling */}
-          {batteryStatus && (
-            <div className="mb-6">
-              <BatteryDashboard
-                userId={userId!}
-                subscription={currentPlan || null}
-                totalBattery={batteryStatus.totalBalance}
-                usageHistory={batteryStatus.usageHistory.map((h) => ({
-                  date: h.date,
-                  usage: h.usage,
-                  model: h.models[0]?.model || 'unknown',
-                }))}
-                onUpgrade={handleUpgrade}
-                onTopUp={handleTopUp}
-              />
-            </div>
-          )}
+          {/* Enhanced Battery Dashboard */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
+            {batteryStatus && (
+              <Card className="border-0 shadow-xl">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Activity className="h-5 w-5 text-purple-600" />
+                    Detailed Usage Analytics
+                  </CardTitle>
+                  <CardDescription>
+                    Track your battery consumption and optimize your usage
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <BatteryDashboard
+                    userId={userId!}
+                    subscription={currentPlan || null}
+                    totalBattery={batteryStatus.totalBalance}
+                    usageHistory={batteryStatus.usageHistory.map((h) => ({
+                      date: h.date,
+                      usage: h.usage,
+                      model: h.models[0]?.model || 'unknown',
+                    }))}
+                    onUpgrade={handleUpgrade}
+                    onTopUp={handleTopUp}
+                  />
+                </CardContent>
+              </Card>
+            )}
+          </motion.div>
 
-          {/* Quick Actions for Free Users */}
+          {/* Quick Actions */}
           {!subscription && (
-            <Card className="relative mt-6 overflow-hidden border-0 bg-gradient-to-br from-orange-50 via-yellow-50 to-amber-50 shadow-xl dark:from-orange-900/20 dark:via-yellow-900/20 dark:to-amber-900/20">
-              <div className="absolute top-0 right-0 p-6">
-                <Sparkles className="h-12 w-12 text-orange-400 opacity-20" />
-              </div>
-              <CardHeader className="relative z-10">
-                <CardTitle className="flex items-center gap-2 text-2xl">
-                  <Zap className="h-6 w-6 text-orange-600 dark:text-orange-400" />
-                  Unlock Premium Features
-                </CardTitle>
-                <CardDescription className="text-base">
-                  Get daily battery allowances and access to all AI models
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="relative z-10">
-                <div className="mb-6 space-y-4">
-                  <div className="flex items-center gap-3">
-                    <Shield className="h-5 w-5 text-green-600 dark:text-green-400" />
-                    <span className="text-gray-700 dark:text-gray-300">
-                      Access to 20+ premium AI models
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Activity className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                    <span className="text-gray-700 dark:text-gray-300">
-                      Daily battery allowance that rolls over
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <TrendingUp className="h-5 w-5 text-purple-600 dark:text-purple-400" />
-                    <span className="text-gray-700 dark:text-gray-300">
-                      Advanced features and priority support
-                    </span>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className="mt-8"
+            >
+              <Card className="border-0 bg-gradient-to-r from-purple-600 to-pink-600 p-1 shadow-xl">
+                <div className="rounded-lg bg-white p-8 dark:bg-gray-900">
+                  <div className="text-center">
+                    <Sparkles className="mx-auto mb-4 h-12 w-12 text-purple-600" />
+                    <h3 className="mb-2 text-2xl font-bold">Unlock Premium Features</h3>
+                    <p className="mb-6 text-gray-600 dark:text-gray-400">
+                      Get unlimited battery, priority support, and access to all AI models
+                    </p>
+                    <Button
+                      onClick={handleUpgrade}
+                      size="lg"
+                      className="gap-2 bg-gradient-to-r from-purple-600 to-pink-600 px-8 text-white hover:from-purple-700 hover:to-pink-700"
+                    >
+                      View Plans
+                      <ChevronRight className="h-5 w-5" />
+                    </Button>
                   </div>
                 </div>
-                <Button
-                  onClick={handleUpgrade}
-                  className="w-full bg-gradient-to-r from-orange-600 to-amber-600 py-6 text-lg shadow-lg transition-all hover:scale-105 hover:from-orange-700 hover:to-amber-700 hover:shadow-xl"
-                >
-                  <span className="flex items-center gap-2">
-                    View Subscription Plans
-                    <ArrowRight className="h-5 w-5" />
-                  </span>
-                </Button>
-              </CardContent>
-            </Card>
+              </Card>
+            </motion.div>
           )}
-
-          {/* Usage Tips */}
-          <Card className="mt-6 border-0 bg-gradient-to-br from-gray-50 to-gray-100 shadow-lg dark:from-gray-800 dark:to-gray-700">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Activity className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                Battery Usage Tips
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3 text-sm">
-                <div className="flex items-start gap-3">
-                  <span className="text-green-600 dark:text-green-400">💡</span>
-                  <span className="text-gray-600 dark:text-gray-300">
-                    Use Ollama models for unlimited free local AI - no battery required!
-                  </span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <span className="text-blue-600 dark:text-blue-400">🔋</span>
-                  <span className="text-gray-600 dark:text-gray-300">
-                    Your unused daily battery automatically rolls over to your battery bank
-                  </span>
-                </div>
-                <div className="flex items-start gap-3">
-                  <span className="text-purple-600 dark:text-purple-400">🎯</span>
-                  <span className="text-gray-600 dark:text-gray-300">
-                    Different models use different amounts of battery - choose wisely!
-                  </span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
         </div>
       </div>
     </>

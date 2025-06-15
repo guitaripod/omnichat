@@ -34,6 +34,7 @@
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "drizzle-orm": "^0.44.2",
+    "framer-motion": "^12.18.1",
     "html2canvas": "^1.4.1",
     "katex": "^0.16.22",
     "lucide-react": "^0.513.0",
