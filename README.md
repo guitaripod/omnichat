@@ -94,10 +94,6 @@ Our revolutionary pricing model: **1 Battery = $0.001**
 
 ---
 
-## 🎮 Live Demo
-
-Experience OmniChat in action: [**omnichat.app**](https://omnichat.app)
-
 ## 🚀 Quick Start
 
 ### Prerequisites
@@ -176,12 +172,12 @@ npm run dev
 
 <div align="center">
   
-| Plan | Monthly Price | Batteries | Best For |
-|------|--------------|-----------|----------|
-| **Starter** | $4.99 | 5,000 | Personal use, trying out AI |
-| **Daily** | $12.99 | 15,000 | Regular users, students |
-| **Power** ⭐ | $29.99 | 35,000 | Professionals, teams |
-| **Ultimate** | $99.99 | 125,000 | Enterprises, heavy users |
+| Plan | Monthly Price | Batteries | Daily Limit | Best For |
+|------|--------------|-----------|-------------|----------|
+| **Starter** | $4.99 | 6,000 | 200 | Personal use, trying out AI |
+| **Daily** ⭐ | $12.99 | 18,000 | 600 | Regular users, students |
+| **Power** | $29.99 | 45,000 | 1,500 | Professionals, teams |
+| **Ultimate** | $79.99 | 150,000 | 5,000 | Enterprises, heavy users |
 
 </div>
 

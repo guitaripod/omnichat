@@ -41,67 +41,67 @@
       <text x="180" y="120" font-family="Arial, sans-serif" font-size="18" text-anchor="middle" fill="#64748b">per month</text>
       
       <rect x="30" y="150" width="300" height="60" rx="10" fill="white"/>
-      <text x="180" y="185" font-family="Arial, sans-serif" font-size="20" font-weight="bold" text-anchor="middle" fill="#1e293b">5,000 Batteries</text>
+      <text x="180" y="185" font-family="Arial, sans-serif" font-size="20" font-weight="bold" text-anchor="middle" fill="#1e293b">6,000 Batteries</text>
       
       <text x="30" y="250" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ All AI Models</text>
-      <text x="30" y="280" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ Basic Support</text>
-      <text x="30" y="310" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ File Attachments</text>
-      <text x="30" y="340" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ Export Features</text>
-      <text x="30" y="370" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ Templates</text>
+      <text x="30" y="280" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ 200 battery units daily</text>
+      <text x="30" y="310" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ Standard processing</text>
+      <text x="30" y="340" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ Email support</text>
     </g>
     
     <!-- Daily Plan -->
     <g transform="translate(400, 0)">
       <rect x="0" y="0" width="360" height="420" rx="20" fill="#D1FAE5" filter="url(#shadow)"/>
-      <text x="180" y="50" font-family="Arial, sans-serif" font-size="32" font-weight="bold" text-anchor="middle" fill="#059669">Daily</text>
-      <text x="180" y="90" font-family="Arial, sans-serif" font-size="40" font-weight="bold" text-anchor="middle" fill="#10b981">$12.99</text>
-      <text x="180" y="120" font-family="Arial, sans-serif" font-size="18" text-anchor="middle" fill="#64748b">per month</text>
+      <rect x="0" y="0" width="360" height="40" rx="20" ry="20" fill="#10b981"/>
+      <text x="180" y="28" font-family="Arial, sans-serif" font-size="16" font-weight="bold" text-anchor="middle" fill="white">MOST POPULAR</text>
       
-      <rect x="30" y="150" width="300" height="60" rx="10" fill="white"/>
-      <text x="180" y="185" font-family="Arial, sans-serif" font-size="20" font-weight="bold" text-anchor="middle" fill="#1e293b">15,000 Batteries</text>
+      <text x="180" y="90" font-family="Arial, sans-serif" font-size="32" font-weight="bold" text-anchor="middle" fill="#059669">Daily</text>
+      <text x="180" y="130" font-family="Arial, sans-serif" font-size="40" font-weight="bold" text-anchor="middle" fill="#10b981">$12.99</text>
+      <text x="180" y="160" font-family="Arial, sans-serif" font-size="18" text-anchor="middle" fill="#64748b">per month</text>
       
-      <text x="30" y="250" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ All AI Models</text>
-      <text x="30" y="280" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ Priority Support</text>
-      <text x="30" y="310" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ File Attachments</text>
-      <text x="30" y="340" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ Export Features</text>
-      <text x="30" y="370" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ Templates</text>
+      <rect x="30" y="190" width="300" height="60" rx="10" fill="white"/>
+      <text x="180" y="225" font-family="Arial, sans-serif" font-size="20" font-weight="bold" text-anchor="middle" fill="#1e293b">18,000 Batteries</text>
+      
+      <text x="30" y="290" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ All AI Models</text>
+      <text x="30" y="320" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ 600 battery units daily</text>
+      <text x="30" y="350" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ Priority processing</text>
+      <text x="30" y="380" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ Priority email support</text>
     </g>
     
     <!-- Power Plan -->
     <g transform="translate(800, 0)">
       <rect x="0" y="0" width="360" height="420" rx="20" fill="#E0E7FF" filter="url(#shadow)"/>
-      <rect x="0" y="0" width="360" height="40" rx="20" ry="20" fill="#6366F1"/>
-      <text x="180" y="28" font-family="Arial, sans-serif" font-size="16" font-weight="bold" text-anchor="middle" fill="white">MOST POPULAR</text>
       
-      <text x="180" y="90" font-family="Arial, sans-serif" font-size="32" font-weight="bold" text-anchor="middle" fill="#4f46e5">Power</text>
-      <text x="180" y="130" font-family="Arial, sans-serif" font-size="40" font-weight="bold" text-anchor="middle" fill="#6366f1">$29.99</text>
-      <text x="180" y="160" font-family="Arial, sans-serif" font-size="18" text-anchor="middle" fill="#64748b">per month</text>
+      <text x="180" y="50" font-family="Arial, sans-serif" font-size="32" font-weight="bold" text-anchor="middle" fill="#4f46e5">Power</text>
+      <text x="180" y="90" font-family="Arial, sans-serif" font-size="40" font-weight="bold" text-anchor="middle" fill="#6366f1">$29.99</text>
+      <text x="180" y="120" font-family="Arial, sans-serif" font-size="18" text-anchor="middle" fill="#64748b">per month</text>
       
-      <rect x="30" y="190" width="300" height="60" rx="10" fill="white"/>
-      <text x="180" y="225" font-family="Arial, sans-serif" font-size="20" font-weight="bold" text-anchor="middle" fill="#1e293b">35,000 Batteries</text>
+      <rect x="30" y="150" width="300" height="60" rx="10" fill="white"/>
+      <text x="180" y="185" font-family="Arial, sans-serif" font-size="20" font-weight="bold" text-anchor="middle" fill="#1e293b">45,000 Batteries</text>
       
-      <text x="30" y="290" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ All AI Models</text>
-      <text x="30" y="320" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ Priority Support</text>
-      <text x="30" y="350" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ File Attachments</text>
-      <text x="30" y="380" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ Export Features</text>
-      <text x="30" y="410" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ Templates</text>
+      <text x="30" y="250" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ All AI Models</text>
+      <text x="30" y="280" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ 1,500 battery units daily</text>
+      <text x="30" y="310" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ Priority processing</text>
+      <text x="30" y="340" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ Priority support</text>
+      <text x="30" y="370" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ Battery rollover</text>
     </g>
     
     <!-- Ultimate Plan -->
     <g transform="translate(1200, 0)">
       <rect x="0" y="0" width="360" height="420" rx="20" fill="#FEF3C7" filter="url(#shadow)"/>
       <text x="180" y="50" font-family="Arial, sans-serif" font-size="32" font-weight="bold" text-anchor="middle" fill="#d97706">Ultimate</text>
-      <text x="180" y="90" font-family="Arial, sans-serif" font-size="40" font-weight="bold" text-anchor="middle" fill="#f59e0b">$99.99</text>
+      <text x="180" y="90" font-family="Arial, sans-serif" font-size="40" font-weight="bold" text-anchor="middle" fill="#f59e0b">$79.99</text>
       <text x="180" y="120" font-family="Arial, sans-serif" font-size="18" text-anchor="middle" fill="#64748b">per month</text>
       
       <rect x="30" y="150" width="300" height="60" rx="10" fill="white"/>
-      <text x="180" y="185" font-family="Arial, sans-serif" font-size="20" font-weight="bold" text-anchor="middle" fill="#1e293b">125,000 Batteries</text>
+      <text x="180" y="185" font-family="Arial, sans-serif" font-size="20" font-weight="bold" text-anchor="middle" fill="#1e293b">150,000 Batteries</text>
       
       <text x="30" y="250" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ All AI Models</text>
-      <text x="30" y="280" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ Priority Support</text>
-      <text x="30" y="310" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ File Attachments</text>
-      <text x="30" y="340" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ Export Features</text>
-      <text x="30" y="370" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ Templates</text>
+      <text x="30" y="280" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ 5,000 battery units daily</text>
+      <text x="30" y="310" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ Priority processing</text>
+      <text x="30" y="340" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ Dedicated support</text>
+      <text x="30" y="370" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ Battery rollover</text>
+      <text x="30" y="400" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ Custom integrations</text>
     </g>
   </g>
   
