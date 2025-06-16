@@ -6,6 +6,7 @@ const isProtectedRoute = createRouteMatcher([
   '/api/conversations(.*)',
   '/api/user(.*)',
   '/api/images(.*)',
+  '/api/battery(.*)',
   '/profile(.*)',
   '/settings(.*)',
   '/images(.*)',

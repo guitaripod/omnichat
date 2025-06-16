@@ -7,7 +7,13 @@ import rehypeKatex from 'rehype-katex';
 import rehypeHighlight from 'rehype-highlight';
 import { Copy, Check, Download } from 'lucide-react';
 import { useState } from 'react';
-import html2canvas from 'html2canvas';
+// Dynamic import to avoid Edge runtime issues
+let html2canvas: typeof import('html2canvas').default | null = null;
+if (typeof window !== 'undefined') {
+  import('html2canvas').then((module) => {
+    html2canvas = module.default;
+  });
+}
 import 'katex/dist/katex.min.css';
 import 'highlight.js/styles/github-dark.css';
 import { ProgressiveImage } from './progressive-image';
@@ -104,6 +110,9 @@ function CodeBlock({ className, children, ...props }: React.HTMLAttributes<HTMLE
       document.body.appendChild(container);
 
       // Generate image
+      if (!html2canvas) {
+        throw new Error('html2canvas not loaded');
+      }
       const canvas = await html2canvas(container, {
         backgroundColor: null,
         scale: 2,
