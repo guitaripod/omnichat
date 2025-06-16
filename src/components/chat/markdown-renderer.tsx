@@ -1,12 +1,10 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
-import rehypeKatex from 'rehype-katex';
-import rehypeHighlight from 'rehype-highlight';
 import { Copy, Check, Download } from 'lucide-react';
-import { useState } from 'react';
 // Dynamic import to avoid Edge runtime issues
 let html2canvas: typeof import('html2canvas').default | null = null;
 if (typeof window !== 'undefined') {
@@ -14,8 +12,7 @@ if (typeof window !== 'undefined') {
     html2canvas = module.default;
   });
 }
-import 'katex/dist/katex.min.css';
-import 'highlight.js/styles/github-dark.css';
+// CSS imports are handled in the global CSS or layout
 import { ProgressiveImage } from './progressive-image';
 
 interface MarkdownRendererProps {
@@ -184,11 +181,50 @@ function CodeBlock({ className, children, ...props }: React.HTMLAttributes<HTMLE
 }
 
 export function MarkdownRenderer({ content }: MarkdownRendererProps) {
+  const [rehypePlugins, setRehypePlugins] = useState<any[]>([]);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    // Load rehype plugins dynamically on client
+    Promise.all([import('rehype-katex'), import('rehype-highlight')]).then(
+      ([katexModule, highlightModule]) => {
+        setRehypePlugins([katexModule.default, highlightModule.default]);
+      }
+    );
+
+    // Load CSS dynamically
+    if (typeof window !== 'undefined') {
+      const katexLink = document.createElement('link');
+      katexLink.rel = 'stylesheet';
+      katexLink.href = 'https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css';
+      document.head.appendChild(katexLink);
+
+      const highlightLink = document.createElement('link');
+      highlightLink.rel = 'stylesheet';
+      highlightLink.href =
+        'https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/github-dark.min.css';
+      document.head.appendChild(highlightLink);
+    }
+  }, []);
+
+  // Don't render on server to avoid DOMParser issues
+  if (!mounted) {
+    return (
+      <div className="prose prose-sm dark:prose-invert max-w-none">
+        <div className="animate-pulse">
+          <div className="mb-2 h-4 w-3/4 rounded bg-gray-200 dark:bg-gray-700"></div>
+          <div className="h-4 w-1/2 rounded bg-gray-200 dark:bg-gray-700"></div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="prose prose-sm dark:prose-invert prose-p:my-1 prose-p:last:mb-0 prose-pre:my-2 prose-headings:mt-3 prose-headings:mb-2 max-w-none">
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkMath]}
-        rehypePlugins={[rehypeKatex, rehypeHighlight]}
+        rehypePlugins={rehypePlugins}
         components={{
           code({ inline, className, children, ...props }: CodeProps) {
             if (inline) {
