@@ -1,0 +1,194 @@
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3B82F6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8B5CF6;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#10B981;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#3B82F6;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="grad3" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#F59E0B;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#EF4444;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1920" height="1080" fill="#f8fafc"/>
+  
+  <!-- Title -->
+  <text x="960" y="80" font-family="Arial, sans-serif" font-size="48" font-weight="bold" text-anchor="middle" fill="#1e293b">OmniChat Architecture</text>
+  <text x="960" y="120" font-family="Arial, sans-serif" font-size="24" text-anchor="middle" fill="#64748b">Edge-First AI Chat Platform</text>
+  
+  <!-- Client Layer -->
+  <g transform="translate(100, 200)">
+    <rect x="0" y="0" width="400" height="300" rx="20" fill="url(#grad1)" filter="url(#shadow)"/>
+    <text x="200" y="40" font-family="Arial, sans-serif" font-size="28" font-weight="bold" text-anchor="middle" fill="white">Client Layer</text>
+    
+    <rect x="30" y="80" width="340" height="60" rx="10" fill="white" opacity="0.9"/>
+    <text x="200" y="115" font-family="Arial, sans-serif" font-size="20" text-anchor="middle" fill="#1e293b">Next.js 15 App</text>
+    
+    <rect x="30" y="160" width="160" height="50" rx="10" fill="white" opacity="0.9"/>
+    <text x="110" y="190" font-family="Arial, sans-serif" font-size="16" text-anchor="middle" fill="#1e293b">React 19</text>
+    
+    <rect x="210" y="160" width="160" height="50" rx="10" fill="white" opacity="0.9"/>
+    <text x="290" y="190" font-family="Arial, sans-serif" font-size="16" text-anchor="middle" fill="#1e293b">TypeScript 5</text>
+    
+    <rect x="30" y="230" width="160" height="50" rx="10" fill="white" opacity="0.9"/>
+    <text x="110" y="260" font-family="Arial, sans-serif" font-size="16" text-anchor="middle" fill="#1e293b">Tailwind CSS</text>
+    
+    <rect x="210" y="230" width="160" height="50" rx="10" fill="white" opacity="0.9"/>
+    <text x="290" y="260" font-family="Arial, sans-serif" font-size="16" text-anchor="middle" fill="#1e293b">shadcn/ui</text>
+  </g>
+  
+  <!-- Edge Layer -->
+  <g transform="translate(760, 200)">
+    <rect x="0" y="0" width="400" height="300" rx="20" fill="url(#grad2)" filter="url(#shadow)"/>
+    <text x="200" y="40" font-family="Arial, sans-serif" font-size="28" font-weight="bold" text-anchor="middle" fill="white">Cloudflare Edge</text>
+    
+    <rect x="30" y="80" width="340" height="60" rx="10" fill="white" opacity="0.9"/>
+    <text x="200" y="115" font-family="Arial, sans-serif" font-size="20" text-anchor="middle" fill="#1e293b">Workers Runtime</text>
+    
+    <rect x="30" y="160" width="160" height="50" rx="10" fill="white" opacity="0.9"/>
+    <text x="110" y="190" font-family="Arial, sans-serif" font-size="16" text-anchor="middle" fill="#1e293b">D1 Database</text>
+    
+    <rect x="210" y="160" width="160" height="50" rx="10" fill="white" opacity="0.9"/>
+    <text x="290" y="190" font-family="Arial, sans-serif" font-size="16" text-anchor="middle" fill="#1e293b">R2 Storage</text>
+    
+    <rect x="30" y="230" width="160" height="50" rx="10" fill="white" opacity="0.9"/>
+    <text x="110" y="260" font-family="Arial, sans-serif" font-size="16" text-anchor="middle" fill="#1e293b">KV Store</text>
+    
+    <rect x="210" y="230" width="160" height="50" rx="10" fill="white" opacity="0.9"/>
+    <text x="290" y="260" font-family="Arial, sans-serif" font-size="16" text-anchor="middle" fill="#1e293b">Durable Objects</text>
+  </g>
+  
+  <!-- AI Services Layer -->
+  <g transform="translate(1420, 200)">
+    <rect x="0" y="0" width="400" height="300" rx="20" fill="url(#grad3)" filter="url(#shadow)"/>
+    <text x="200" y="40" font-family="Arial, sans-serif" font-size="28" font-weight="bold" text-anchor="middle" fill="white">AI Services</text>
+    
+    <rect x="30" y="80" width="160" height="50" rx="10" fill="white" opacity="0.9"/>
+    <text x="110" y="110" font-family="Arial, sans-serif" font-size="16" text-anchor="middle" fill="#1e293b">OpenAI</text>
+    
+    <rect x="210" y="80" width="160" height="50" rx="10" fill="white" opacity="0.9"/>
+    <text x="290" y="110" font-family="Arial, sans-serif" font-size="16" text-anchor="middle" fill="#1e293b">Claude</text>
+    
+    <rect x="30" y="150" width="160" height="50" rx="10" fill="white" opacity="0.9"/>
+    <text x="110" y="180" font-family="Arial, sans-serif" font-size="16" text-anchor="middle" fill="#1e293b">Gemini</text>
+    
+    <rect x="210" y="150" width="160" height="50" rx="10" fill="white" opacity="0.9"/>
+    <text x="290" y="180" font-family="Arial, sans-serif" font-size="16" text-anchor="middle" fill="#1e293b">Grok</text>
+    
+    <rect x="30" y="220" width="160" height="50" rx="10" fill="white" opacity="0.9"/>
+    <text x="110" y="250" font-family="Arial, sans-serif" font-size="16" text-anchor="middle" fill="#1e293b">DeepSeek</text>
+    
+    <rect x="210" y="220" width="160" height="50" rx="10" fill="white" opacity="0.9"/>
+    <text x="290" y="250" font-family="Arial, sans-serif" font-size="16" text-anchor="middle" fill="#1e293b">Ollama</text>
+  </g>
+  
+  <!-- External Services -->
+  <g transform="translate(100, 600)">
+    <rect x="0" y="0" width="300" height="200" rx="20" fill="#E0E7FF" filter="url(#shadow)"/>
+    <text x="150" y="35" font-family="Arial, sans-serif" font-size="24" font-weight="bold" text-anchor="middle" fill="#4338CA">Authentication</text>
+    
+    <rect x="30" y="60" width="240" height="50" rx="10" fill="white"/>
+    <text x="150" y="90" font-family="Arial, sans-serif" font-size="18" text-anchor="middle" fill="#1e293b">Clerk Auth</text>
+    
+    <rect x="30" y="130" width="240" height="50" rx="10" fill="white"/>
+    <text x="150" y="160" font-family="Arial, sans-serif" font-size="18" text-anchor="middle" fill="#1e293b">OAuth Providers</text>
+  </g>
+  
+  <g transform="translate(500, 600)">
+    <rect x="0" y="0" width="300" height="200" rx="20" fill="#D1FAE5" filter="url(#shadow)"/>
+    <text x="150" y="35" font-family="Arial, sans-serif" font-size="24" font-weight="bold" text-anchor="middle" fill="#059669">Payments</text>
+    
+    <rect x="30" y="60" width="240" height="50" rx="10" fill="white"/>
+    <text x="150" y="90" font-family="Arial, sans-serif" font-size="18" text-anchor="middle" fill="#1e293b">Stripe</text>
+    
+    <rect x="30" y="130" width="240" height="50" rx="10" fill="white"/>
+    <text x="150" y="160" font-family="Arial, sans-serif" font-size="18" text-anchor="middle" fill="#1e293b">Battery System</text>
+  </g>
+  
+  <g transform="translate(900, 600)">
+    <rect x="0" y="0" width="300" height="200" rx="20" fill="#FEF3C7" filter="url(#shadow)"/>
+    <text x="150" y="35" font-family="Arial, sans-serif" font-size="24" font-weight="bold" text-anchor="middle" fill="#D97706">State Management</text>
+    
+    <rect x="30" y="60" width="240" height="50" rx="10" fill="white"/>
+    <text x="150" y="90" font-family="Arial, sans-serif" font-size="18" text-anchor="middle" fill="#1e293b">Zustand</text>
+    
+    <rect x="30" y="130" width="240" height="50" rx="10" fill="white"/>
+    <text x="150" y="160" font-family="Arial, sans-serif" font-size="18" text-anchor="middle" fill="#1e293b">React Query</text>
+  </g>
+  
+  <!-- Connections -->
+  <g>
+    <!-- Client to Edge -->
+    <path d="M 500 350 L 760 350" stroke="#64748b" stroke-width="4" fill="none" marker-end="url(#arrowhead)"/>
+    
+    <!-- Edge to AI Services -->
+    <path d="M 1160 350 L 1420 350" stroke="#64748b" stroke-width="4" fill="none" marker-end="url(#arrowhead)"/>
+    
+    <!-- Client to Auth -->
+    <path d="M 300 500 L 250 600" stroke="#64748b" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+    
+    <!-- Client to Payments -->
+    <path d="M 300 500 L 650 600" stroke="#64748b" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+    
+    <!-- Client to State -->
+    <path d="M 300 500 L 1050 600" stroke="#64748b" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+  </g>
+  
+  <!-- Arrow marker -->
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#64748b"/>
+    </marker>
+  </defs>
+  
+  <!-- Features box -->
+  <g transform="translate(1300, 600)">
+    <rect x="0" y="0" width="520" height="200" rx="20" fill="#F3E8FF" filter="url(#shadow)"/>
+    <text x="260" y="35" font-family="Arial, sans-serif" font-size="24" font-weight="bold" text-anchor="middle" fill="#7C3AED">Key Features</text>
+    
+    <text x="30" y="70" font-family="Arial, sans-serif" font-size="16" fill="#1e293b">• Multi-LLM Support with Streaming</text>
+    <text x="30" y="95" font-family="Arial, sans-serif" font-size="16" fill="#1e293b">• File Attachments (PDF, Images, Docs)</text>
+    <text x="30" y="120" font-family="Arial, sans-serif" font-size="16" fill="#1e293b">• Voice Input/Output Integration</text>
+    <text x="30" y="145" font-family="Arial, sans-serif" font-size="16" fill="#1e293b">• Conversation Branching &amp; Templates</text>
+    <text x="30" y="170" font-family="Arial, sans-serif" font-size="16" fill="#1e293b">• Pay-per-use Battery System</text>
+  </g>
+  
+  <!-- Performance metrics -->
+  <g transform="translate(100, 850)">
+    <rect x="0" y="0" width="1720" height="150" rx="20" fill="#EFF6FF" filter="url(#shadow)"/>
+    <text x="860" y="40" font-family="Arial, sans-serif" font-size="28" font-weight="bold" text-anchor="middle" fill="#1e40af">Performance Metrics</text>
+    
+    <g transform="translate(200, 70)">
+      <text x="0" y="0" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#3730a3">Global Edge</text>
+      <text x="0" y="30" font-family="Arial, sans-serif" font-size="16" fill="#64748b">300+ PoPs</text>
+    </g>
+    
+    <g transform="translate(500, 70)">
+      <text x="0" y="0" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#3730a3">Latency</text>
+      <text x="0" y="30" font-family="Arial, sans-serif" font-size="16" fill="#64748b">&lt; 50ms worldwide</text>
+    </g>
+    
+    <g transform="translate(800, 70)">
+      <text x="0" y="0" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#3730a3">Uptime</text>
+      <text x="0" y="30" font-family="Arial, sans-serif" font-size="16" fill="#64748b">99.99% SLA</text>
+    </g>
+    
+    <g transform="translate(1100, 70)">
+      <text x="0" y="0" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#3730a3">Scalability</text>
+      <text x="0" y="30" font-family="Arial, sans-serif" font-size="16" fill="#64748b">Auto-scaling</text>
+    </g>
+    
+    <g transform="translate(1400, 70)">
+      <text x="0" y="0" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#3730a3">Security</text>
+      <text x="0" y="30" font-family="Arial, sans-serif" font-size="16" fill="#64748b">DDoS Protection</text>
+    </g>
+  </g>
+</svg>

@@ -1,0 +1,116 @@
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="batteryGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#10B981;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#3B82F6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8B5CF6;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1920" height="1080" fill="#f8fafc"/>
+  
+  <!-- Title -->
+  <text x="960" y="80" font-family="Arial, sans-serif" font-size="48" font-weight="bold" text-anchor="middle" fill="#1e293b">OmniChat Pricing Philosophy</text>
+  <text x="960" y="120" font-family="Arial, sans-serif" font-size="24" text-anchor="middle" fill="#64748b">Transparent • Fair • Flexible</text>
+  
+  <!-- Battery Concept -->
+  <g transform="translate(710, 180)">
+    <rect x="0" y="0" width="500" height="120" rx="20" fill="url(#batteryGrad)" filter="url(#shadow)"/>
+    <rect x="480" y="40" width="20" height="40" rx="5" fill="#10B981"/>
+    
+    <text x="250" y="70" font-family="Arial, sans-serif" font-size="36" font-weight="bold" text-anchor="middle" fill="white">Battery System</text>
+  </g>
+  
+  <!-- Battery = Money equation -->
+  <g transform="translate(560, 340)">
+    <rect x="0" y="0" width="800" height="100" rx="20" fill="#EFF6FF" filter="url(#shadow)"/>
+    <text x="400" y="60" font-family="Arial, sans-serif" font-size="32" font-weight="bold" text-anchor="middle" fill="#1e40af">1 Battery = $0.001 USD</text>
+  </g>
+  
+  <!-- Pricing Tiers -->
+  <g transform="translate(60, 500)">
+    <!-- Starter Plan -->
+    <g transform="translate(0, 0)">
+      <rect x="0" y="0" width="360" height="420" rx="20" fill="#DBEAFE" filter="url(#shadow)"/>
+      <text x="180" y="50" font-family="Arial, sans-serif" font-size="32" font-weight="bold" text-anchor="middle" fill="#1e40af">Starter</text>
+      <text x="180" y="90" font-family="Arial, sans-serif" font-size="40" font-weight="bold" text-anchor="middle" fill="#2563eb">$4.99</text>
+      <text x="180" y="120" font-family="Arial, sans-serif" font-size="18" text-anchor="middle" fill="#64748b">per month</text>
+      
+      <rect x="30" y="150" width="300" height="60" rx="10" fill="white"/>
+      <text x="180" y="185" font-family="Arial, sans-serif" font-size="20" font-weight="bold" text-anchor="middle" fill="#1e293b">5,000 Batteries</text>
+      
+      <text x="30" y="250" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ All AI Models</text>
+      <text x="30" y="280" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ Basic Support</text>
+      <text x="30" y="310" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ File Attachments</text>
+      <text x="30" y="340" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ Export Features</text>
+      <text x="30" y="370" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ Templates</text>
+    </g>
+    
+    <!-- Daily Plan -->
+    <g transform="translate(400, 0)">
+      <rect x="0" y="0" width="360" height="420" rx="20" fill="#D1FAE5" filter="url(#shadow)"/>
+      <text x="180" y="50" font-family="Arial, sans-serif" font-size="32" font-weight="bold" text-anchor="middle" fill="#059669">Daily</text>
+      <text x="180" y="90" font-family="Arial, sans-serif" font-size="40" font-weight="bold" text-anchor="middle" fill="#10b981">$12.99</text>
+      <text x="180" y="120" font-family="Arial, sans-serif" font-size="18" text-anchor="middle" fill="#64748b">per month</text>
+      
+      <rect x="30" y="150" width="300" height="60" rx="10" fill="white"/>
+      <text x="180" y="185" font-family="Arial, sans-serif" font-size="20" font-weight="bold" text-anchor="middle" fill="#1e293b">15,000 Batteries</text>
+      
+      <text x="30" y="250" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ Everything in Starter</text>
+      <text x="30" y="280" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ Priority Support</text>
+      <text x="30" y="310" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ Voice Features</text>
+      <text x="30" y="340" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ Advanced Templates</text>
+      <text x="30" y="370" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ API Access</text>
+    </g>
+    
+    <!-- Power Plan -->
+    <g transform="translate(800, 0)">
+      <rect x="0" y="0" width="360" height="420" rx="20" fill="#E0E7FF" filter="url(#shadow)"/>
+      <rect x="0" y="0" width="360" height="40" rx="20" ry="20" fill="#6366F1"/>
+      <text x="180" y="28" font-family="Arial, sans-serif" font-size="16" font-weight="bold" text-anchor="middle" fill="white">MOST POPULAR</text>
+      
+      <text x="180" y="90" font-family="Arial, sans-serif" font-size="32" font-weight="bold" text-anchor="middle" fill="#4f46e5">Power</text>
+      <text x="180" y="130" font-family="Arial, sans-serif" font-size="40" font-weight="bold" text-anchor="middle" fill="#6366f1">$29.99</text>
+      <text x="180" y="160" font-family="Arial, sans-serif" font-size="18" text-anchor="middle" fill="#64748b">per month</text>
+      
+      <rect x="30" y="190" width="300" height="60" rx="10" fill="white"/>
+      <text x="180" y="225" font-family="Arial, sans-serif" font-size="20" font-weight="bold" text-anchor="middle" fill="#1e293b">35,000 Batteries</text>
+      
+      <text x="30" y="290" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ Everything in Daily</text>
+      <text x="30" y="320" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ Team Features</text>
+      <text x="30" y="350" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ Custom Templates</text>
+      <text x="30" y="380" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ Analytics Dashboard</text>
+      <text x="30" y="410" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ Bulk Export</text>
+    </g>
+    
+    <!-- Ultimate Plan -->
+    <g transform="translate(1200, 0)">
+      <rect x="0" y="0" width="360" height="420" rx="20" fill="#FEF3C7" filter="url(#shadow)"/>
+      <text x="180" y="50" font-family="Arial, sans-serif" font-size="32" font-weight="bold" text-anchor="middle" fill="#d97706">Ultimate</text>
+      <text x="180" y="90" font-family="Arial, sans-serif" font-size="40" font-weight="bold" text-anchor="middle" fill="#f59e0b">$99.99</text>
+      <text x="180" y="120" font-family="Arial, sans-serif" font-size="18" text-anchor="middle" fill="#64748b">per month</text>
+      
+      <rect x="30" y="150" width="300" height="60" rx="10" fill="white"/>
+      <text x="180" y="185" font-family="Arial, sans-serif" font-size="20" font-weight="bold" text-anchor="middle" fill="#1e293b">125,000 Batteries</text>
+      
+      <text x="30" y="250" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ Everything in Power</text>
+      <text x="30" y="280" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ White-glove Support</text>
+      <text x="30" y="310" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ Custom Integration</text>
+      <text x="30" y="340" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ SLA Guarantee</text>
+      <text x="30" y="370" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ Training Sessions</text>
+    </g>
+  </g>
+  
+  <!-- Why Battery System -->
+  <g transform="translate(60, 960)">
+    <rect x="0" y="0" width="1800" height="100" rx="20" fill="#F3F4F6" filter="url(#shadow)"/>
+    <text x="900" y="35" font-family="Arial, sans-serif" font-size="24" font-weight="bold" text-anchor="middle" fill="#1e293b">Why Battery System?</text>
+    <text x="300" y="70" font-family="Arial, sans-serif" font-size="18" text-anchor="middle" fill="#64748b">Pay Only for What You Use</text>
+    <text x="900" y="70" font-family="Arial, sans-serif" font-size="18" text-anchor="middle" fill="#64748b">No Hidden Costs</text>
+    <text x="1500" y="70" font-family="Arial, sans-serif" font-size="18" text-anchor="middle" fill="#64748b">Transparent Pricing</text>
+  </g>
+</svg>

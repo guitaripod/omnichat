@@ -212,10 +212,10 @@
 
 ### Epic 6.2: Documentation
 
-- [ ] Write comprehensive README
+- [x] Write comprehensive README
 - [ ] Create API documentation
-- [ ] Create beautiful SVG bird eye views about the project tech architecture
-- [ ] Convert SVGs to 4K PNGs and put them in the README for previewing on GitHub.
+- [x] Create beautiful SVG bird eye views about the project tech architecture
+- [x] Convert SVGs to 4K PNGs and put them in the README for previewing on GitHub.
 - [ ] Add contribution guidelines
 - [ ] Write deployment guide
 - [ ] Create demo video/GIF

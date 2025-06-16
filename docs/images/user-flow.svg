@@ -1,0 +1,206 @@
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="flowGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3B82F6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1E40AF;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="flowGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#10B981;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#059669;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="flowGrad3" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#8B5CF6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#6D28D9;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1920" height="1080" fill="#f8fafc"/>
+  
+  <!-- Title -->
+  <text x="960" y="60" font-family="Arial, sans-serif" font-size="48" font-weight="bold" text-anchor="middle" fill="#1e293b">OmniChat User Journey</text>
+  <text x="960" y="100" font-family="Arial, sans-serif" font-size="24" text-anchor="middle" fill="#64748b">From Landing to Productive AI Conversations</text>
+  
+  <!-- Flow containers -->
+  <!-- Landing Page -->
+  <g transform="translate(100, 150)">
+    <rect x="0" y="0" width="300" height="180" rx="20" fill="url(#flowGrad1)" filter="url(#shadow)"/>
+    <text x="150" y="40" font-family="Arial, sans-serif" font-size="24" font-weight="bold" text-anchor="middle" fill="white">Landing Page</text>
+    
+    <rect x="20" y="60" width="260" height="40" rx="10" fill="white" opacity="0.9"/>
+    <text x="150" y="85" font-family="Arial, sans-serif" font-size="16" text-anchor="middle" fill="#1e293b">Feature Overview</text>
+    
+    <rect x="20" y="110" width="260" height="40" rx="10" fill="white" opacity="0.9"/>
+    <text x="150" y="135" font-family="Arial, sans-serif" font-size="16" text-anchor="middle" fill="#1e293b">Pricing Plans</text>
+  </g>
+  
+  <!-- Sign Up -->
+  <g transform="translate(500, 150)">
+    <rect x="0" y="0" width="300" height="180" rx="20" fill="url(#flowGrad2)" filter="url(#shadow)"/>
+    <text x="150" y="40" font-family="Arial, sans-serif" font-size="24" font-weight="bold" text-anchor="middle" fill="white">Authentication</text>
+    
+    <rect x="20" y="60" width="125" height="40" rx="10" fill="white" opacity="0.9"/>
+    <text x="82.5" y="85" font-family="Arial, sans-serif" font-size="16" text-anchor="middle" fill="#1e293b">Sign Up</text>
+    
+    <rect x="155" y="60" width="125" height="40" rx="10" fill="white" opacity="0.9"/>
+    <text x="217.5" y="85" font-family="Arial, sans-serif" font-size="16" text-anchor="middle" fill="#1e293b">Sign In</text>
+    
+    <rect x="20" y="110" width="260" height="40" rx="10" fill="white" opacity="0.9"/>
+    <text x="150" y="135" font-family="Arial, sans-serif" font-size="16" text-anchor="middle" fill="#1e293b">OAuth (Google, GitHub)</text>
+  </g>
+  
+  <!-- Onboarding -->
+  <g transform="translate(900, 150)">
+    <rect x="0" y="0" width="300" height="180" rx="20" fill="url(#flowGrad3)" filter="url(#shadow)"/>
+    <text x="150" y="40" font-family="Arial, sans-serif" font-size="24" font-weight="bold" text-anchor="middle" fill="white">Onboarding</text>
+    
+    <rect x="20" y="60" width="260" height="40" rx="10" fill="white" opacity="0.9"/>
+    <text x="150" y="85" font-family="Arial, sans-serif" font-size="16" text-anchor="middle" fill="#1e293b">Choose Plan</text>
+    
+    <rect x="20" y="110" width="260" height="40" rx="10" fill="white" opacity="0.9"/>
+    <text x="150" y="135" font-family="Arial, sans-serif" font-size="16" text-anchor="middle" fill="#1e293b">API Key Setup (Optional)</text>
+  </g>
+  
+  <!-- Main Chat Interface -->
+  <g transform="translate(600, 400)">
+    <rect x="0" y="0" width="720" height="300" rx="20" fill="#E0E7FF" filter="url(#shadow)"/>
+    <text x="360" y="40" font-family="Arial, sans-serif" font-size="28" font-weight="bold" text-anchor="middle" fill="#4338CA">Main Chat Interface</text>
+    
+    <!-- Left column -->
+    <g transform="translate(30, 70)">
+      <rect x="0" y="0" width="200" height="50" rx="10" fill="white"/>
+      <text x="100" y="30" font-family="Arial, sans-serif" font-size="16" text-anchor="middle" fill="#1e293b">Model Selection</text>
+      
+      <rect x="0" y="60" width="200" height="50" rx="10" fill="white"/>
+      <text x="100" y="90" font-family="Arial, sans-serif" font-size="16" text-anchor="middle" fill="#1e293b">Conversation List</text>
+      
+      <rect x="0" y="120" width="200" height="50" rx="10" fill="white"/>
+      <text x="100" y="150" font-family="Arial, sans-serif" font-size="16" text-anchor="middle" fill="#1e293b">Templates</text>
+    </g>
+    
+    <!-- Center column -->
+    <g transform="translate(260, 70)">
+      <rect x="0" y="0" width="200" height="50" rx="10" fill="white"/>
+      <text x="100" y="30" font-family="Arial, sans-serif" font-size="16" text-anchor="middle" fill="#1e293b">Message Input</text>
+      
+      <rect x="0" y="60" width="200" height="50" rx="10" fill="white"/>
+      <text x="100" y="90" font-family="Arial, sans-serif" font-size="16" text-anchor="middle" fill="#1e293b">File Attachments</text>
+      
+      <rect x="0" y="120" width="200" height="50" rx="10" fill="white"/>
+      <text x="100" y="150" font-family="Arial, sans-serif" font-size="16" text-anchor="middle" fill="#1e293b">Voice Input</text>
+    </g>
+    
+    <!-- Right column -->
+    <g transform="translate(490, 70)">
+      <rect x="0" y="0" width="200" height="50" rx="10" fill="white"/>
+      <text x="100" y="30" font-family="Arial, sans-serif" font-size="16" text-anchor="middle" fill="#1e293b">AI Response</text>
+      
+      <rect x="0" y="60" width="200" height="50" rx="10" fill="white"/>
+      <text x="100" y="90" font-family="Arial, sans-serif" font-size="16" text-anchor="middle" fill="#1e293b">Code Highlighting</text>
+      
+      <rect x="0" y="120" width="200" height="50" rx="10" fill="white"/>
+      <text x="100" y="150" font-family="Arial, sans-serif" font-size="16" text-anchor="middle" fill="#1e293b">Export Options</text>
+    </g>
+    
+    <rect x="30" y="250" width="300" height="30" rx="15" fill="#4338CA"/>
+    <text x="180" y="270" font-family="Arial, sans-serif" font-size="16" font-weight="bold" text-anchor="middle" fill="white">Battery Usage: 125 / 5000</text>
+  </g>
+  
+  <!-- Additional Features -->
+  <g transform="translate(100, 750)">
+    <rect x="0" y="0" width="280" height="200" rx="20" fill="#DBEAFE" filter="url(#shadow)"/>
+    <text x="140" y="35" font-family="Arial, sans-serif" font-size="22" font-weight="bold" text-anchor="middle" fill="#1e40af">Profile Settings</text>
+    
+    <text x="20" y="70" font-family="Arial, sans-serif" font-size="16" fill="#475569">• API Key Management</text>
+    <text x="20" y="100" font-family="Arial, sans-serif" font-size="16" fill="#475569">• Theme Preferences</text>
+    <text x="20" y="130" font-family="Arial, sans-serif" font-size="16" fill="#475569">• Language Settings</text>
+    <text x="20" y="160" font-family="Arial, sans-serif" font-size="16" fill="#475569">• Privacy Controls</text>
+  </g>
+  
+  <g transform="translate(450, 750)">
+    <rect x="0" y="0" width="280" height="200" rx="20" fill="#D1FAE5" filter="url(#shadow)"/>
+    <text x="140" y="35" font-family="Arial, sans-serif" font-size="22" font-weight="bold" text-anchor="middle" fill="#059669">Billing Center</text>
+    
+    <text x="20" y="70" font-family="Arial, sans-serif" font-size="16" fill="#475569">• Subscription Status</text>
+    <text x="20" y="100" font-family="Arial, sans-serif" font-size="16" fill="#475569">• Battery Balance</text>
+    <text x="20" y="130" font-family="Arial, sans-serif" font-size="16" fill="#475569">• Usage History</text>
+    <text x="20" y="160" font-family="Arial, sans-serif" font-size="16" fill="#475569">• Upgrade Options</text>
+  </g>
+  
+  <g transform="translate(800, 750)">
+    <rect x="0" y="0" width="280" height="200" rx="20" fill="#FEF3C7" filter="url(#shadow)"/>
+    <text x="140" y="35" font-family="Arial, sans-serif" font-size="22" font-weight="bold" text-anchor="middle" fill="#d97706">Advanced Tools</text>
+    
+    <text x="20" y="70" font-family="Arial, sans-serif" font-size="16" fill="#475569">• Conversation Search</text>
+    <text x="20" y="100" font-family="Arial, sans-serif" font-size="16" fill="#475569">• Bulk Export</text>
+    <text x="20" y="130" font-family="Arial, sans-serif" font-size="16" fill="#475569">• Analytics</text>
+    <text x="20" y="160" font-family="Arial, sans-serif" font-size="16" fill="#475569">• Team Collaboration</text>
+  </g>
+  
+  <g transform="translate(1150, 750)">
+    <rect x="0" y="0" width="280" height="200" rx="20" fill="#E0E7FF" filter="url(#shadow)"/>
+    <text x="140" y="35" font-family="Arial, sans-serif" font-size="22" font-weight="bold" text-anchor="middle" fill="#4338CA">Local AI Setup</text>
+    
+    <text x="20" y="70" font-family="Arial, sans-serif" font-size="16" fill="#475569">• Ollama Integration</text>
+    <text x="20" y="100" font-family="Arial, sans-serif" font-size="16" fill="#475569">• Model Download</text>
+    <text x="20" y="130" font-family="Arial, sans-serif" font-size="16" fill="#475569">• Local Processing</text>
+    <text x="20" y="160" font-family="Arial, sans-serif" font-size="16" fill="#475569">• Privacy Mode</text>
+  </g>
+  
+  <!-- Flow arrows -->
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#64748b"/>
+    </marker>
+  </defs>
+  
+  <g>
+    <!-- Landing to Auth -->
+    <path d="M 400 240 L 500 240" stroke="#64748b" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+    
+    <!-- Auth to Onboarding -->
+    <path d="M 800 240 L 900 240" stroke="#64748b" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+    
+    <!-- Onboarding to Chat -->
+    <path d="M 1050 330 L 960 400" stroke="#64748b" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+    
+    <!-- Chat to Features -->
+    <path d="M 960 700 L 240 750" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrowhead)" stroke-dasharray="5,5"/>
+    <path d="M 960 700 L 590 750" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrowhead)" stroke-dasharray="5,5"/>
+    <path d="M 960 700 L 940 750" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrowhead)" stroke-dasharray="5,5"/>
+    <path d="M 960 700 L 1290 750" stroke="#64748b" stroke-width="2" fill="none" marker-end="url(#arrowhead)" stroke-dasharray="5,5"/>
+  </g>
+  
+  <!-- Success metrics -->
+  <g transform="translate(1500, 150)">
+    <rect x="0" y="0" width="350" height="300" rx="20" fill="#F3E8FF" filter="url(#shadow)"/>
+    <text x="175" y="40" font-family="Arial, sans-serif" font-size="24" font-weight="bold" text-anchor="middle" fill="#7C3AED">Success Metrics</text>
+    
+    <g transform="translate(30, 70)">
+      <circle cx="20" cy="20" r="15" fill="#10B981"/>
+      <text x="15" y="25" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="white">1</text>
+      <text x="50" y="25" font-family="Arial, sans-serif" font-size="16" fill="#1e293b">Quick sign-up (&lt; 30s)</text>
+    </g>
+    
+    <g transform="translate(30, 120)">
+      <circle cx="20" cy="20" r="15" fill="#3B82F6"/>
+      <text x="15" y="25" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="white">2</text>
+      <text x="50" y="25" font-family="Arial, sans-serif" font-size="16" fill="#1e293b">First chat in &lt; 2 min</text>
+    </g>
+    
+    <g transform="translate(30, 170)">
+      <circle cx="20" cy="20" r="15" fill="#8B5CF6"/>
+      <text x="15" y="25" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="white">3</text>
+      <text x="50" y="25" font-family="Arial, sans-serif" font-size="16" fill="#1e293b">Multi-model in one chat</text>
+    </g>
+    
+    <g transform="translate(30, 220)">
+      <circle cx="20" cy="20" r="15" fill="#F59E0B"/>
+      <text x="15" y="25" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="white">4</text>
+      <text x="50" y="25" font-family="Arial, sans-serif" font-size="16" fill="#1e293b">Transparent battery usage</text>
+    </g>
+  </g>
+</svg>

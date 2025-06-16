@@ -1,0 +1,198 @@
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="featureGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#06B6D4;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0891B2;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="featureGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#EC4899;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#DB2777;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="featureGrad3" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#14B8A6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0D9488;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1920" height="1080" fill="#f8fafc"/>
+  
+  <!-- Title -->
+  <text x="960" y="60" font-family="Arial, sans-serif" font-size="48" font-weight="bold" text-anchor="middle" fill="#1e293b">OmniChat Features</text>
+  <text x="960" y="100" font-family="Arial, sans-serif" font-size="24" text-anchor="middle" fill="#64748b">Everything You Need for AI-Powered Conversations</text>
+  
+  <!-- Core Features Section -->
+  <g transform="translate(60, 150)">
+    <rect x="0" y="0" width="850" height="380" rx="20" fill="url(#featureGrad1)" filter="url(#shadow)"/>
+    <text x="425" y="45" font-family="Arial, sans-serif" font-size="32" font-weight="bold" text-anchor="middle" fill="white">Core AI Features</text>
+    
+    <!-- Feature grid -->
+    <g transform="translate(40, 80)">
+      <!-- Row 1 -->
+      <g transform="translate(0, 0)">
+        <rect x="0" y="0" width="250" height="120" rx="15" fill="white" opacity="0.95"/>
+        <text x="125" y="30" font-family="Arial, sans-serif" font-size="20" font-weight="bold" text-anchor="middle" fill="#0891B2">Multi-LLM Support</text>
+        <text x="20" y="55" font-family="Arial, sans-serif" font-size="14" fill="#475569">• OpenAI GPT-4/3.5</text>
+        <text x="20" y="75" font-family="Arial, sans-serif" font-size="14" fill="#475569">• Anthropic Claude</text>
+        <text x="20" y="95" font-family="Arial, sans-serif" font-size="14" fill="#475569">• Google Gemini</text>
+        <text x="20" y="115" font-family="Arial, sans-serif" font-size="14" fill="#475569">• xAI Grok &amp; More</text>
+      </g>
+      
+      <g transform="translate(270, 0)">
+        <rect x="0" y="0" width="250" height="120" rx="15" fill="white" opacity="0.95"/>
+        <text x="125" y="30" font-family="Arial, sans-serif" font-size="20" font-weight="bold" text-anchor="middle" fill="#0891B2">Smart Features</text>
+        <text x="20" y="55" font-family="Arial, sans-serif" font-size="14" fill="#475569">• Real-time Streaming</text>
+        <text x="20" y="75" font-family="Arial, sans-serif" font-size="14" fill="#475569">• Context Memory</text>
+        <text x="20" y="95" font-family="Arial, sans-serif" font-size="14" fill="#475569">• Code Highlighting</text>
+        <text x="20" y="115" font-family="Arial, sans-serif" font-size="14" fill="#475569">• Markdown Support</text>
+      </g>
+      
+      <g transform="translate(540, 0)">
+        <rect x="0" y="0" width="250" height="120" rx="15" fill="white" opacity="0.95"/>
+        <text x="125" y="30" font-family="Arial, sans-serif" font-size="20" font-weight="bold" text-anchor="middle" fill="#0891B2">File Support</text>
+        <text x="20" y="55" font-family="Arial, sans-serif" font-size="14" fill="#475569">• PDF Documents</text>
+        <text x="20" y="75" font-family="Arial, sans-serif" font-size="14" fill="#475569">• Images (JPG, PNG)</text>
+        <text x="20" y="95" font-family="Arial, sans-serif" font-size="14" fill="#475569">• Text Files</text>
+        <text x="20" y="115" font-family="Arial, sans-serif" font-size="14" fill="#475569">• Code Files</text>
+      </g>
+      
+      <!-- Row 2 -->
+      <g transform="translate(0, 140)">
+        <rect x="0" y="0" width="250" height="120" rx="15" fill="white" opacity="0.95"/>
+        <text x="125" y="30" font-family="Arial, sans-serif" font-size="20" font-weight="bold" text-anchor="middle" fill="#0891B2">Voice Features</text>
+        <text x="20" y="55" font-family="Arial, sans-serif" font-size="14" fill="#475569">• Speech-to-Text</text>
+        <text x="20" y="75" font-family="Arial, sans-serif" font-size="14" fill="#475569">• Text-to-Speech</text>
+        <text x="20" y="95" font-family="Arial, sans-serif" font-size="14" fill="#475569">• Multiple Languages</text>
+        <text x="20" y="115" font-family="Arial, sans-serif" font-size="14" fill="#475569">• Natural Voices</text>
+      </g>
+      
+      <g transform="translate(270, 140)">
+        <rect x="0" y="0" width="250" height="120" rx="15" fill="white" opacity="0.95"/>
+        <text x="125" y="30" font-family="Arial, sans-serif" font-size="20" font-weight="bold" text-anchor="middle" fill="#0891B2">Conversations</text>
+        <text x="20" y="55" font-family="Arial, sans-serif" font-size="14" fill="#475569">• Branching Chats</text>
+        <text x="20" y="75" font-family="Arial, sans-serif" font-size="14" fill="#475569">• Save &amp; Resume</text>
+        <text x="20" y="95" font-family="Arial, sans-serif" font-size="14" fill="#475569">• Search History</text>
+        <text x="20" y="115" font-family="Arial, sans-serif" font-size="14" fill="#475569">• Export Options</text>
+      </g>
+      
+      <g transform="translate(540, 140)">
+        <rect x="0" y="0" width="250" height="120" rx="15" fill="white" opacity="0.95"/>
+        <text x="125" y="30" font-family="Arial, sans-serif" font-size="20" font-weight="bold" text-anchor="middle" fill="#0891B2">Local AI</text>
+        <text x="20" y="55" font-family="Arial, sans-serif" font-size="14" fill="#475569">• Ollama Support</text>
+        <text x="20" y="75" font-family="Arial, sans-serif" font-size="14" fill="#475569">• Privacy First</text>
+        <text x="20" y="95" font-family="Arial, sans-serif" font-size="14" fill="#475569">• No Cloud Needed</text>
+        <text x="20" y="115" font-family="Arial, sans-serif" font-size="14" fill="#475569">• Custom Models</text>
+      </g>
+    </g>
+  </g>
+  
+  <!-- Advanced Features Section -->
+  <g transform="translate(1010, 150)">
+    <rect x="0" y="0" width="850" height="380" rx="20" fill="url(#featureGrad2)" filter="url(#shadow)"/>
+    <text x="425" y="45" font-family="Arial, sans-serif" font-size="32" font-weight="bold" text-anchor="middle" fill="white">Advanced Capabilities</text>
+    
+    <!-- Feature cards -->
+    <g transform="translate(40, 80)">
+      <g transform="translate(0, 0)">
+        <rect x="0" y="0" width="380" height="100" rx="15" fill="white" opacity="0.95"/>
+        <text x="20" y="30" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#DB2777">Image Generation</text>
+        <text x="20" y="55" font-family="Arial, sans-serif" font-size="14" fill="#475569">DALL-E 2/3 integration for creating images</text>
+        <text x="20" y="75" font-family="Arial, sans-serif" font-size="14" fill="#475569">from text descriptions with multiple styles</text>
+      </g>
+      
+      <g transform="translate(410, 0)">
+        <rect x="0" y="0" width="380" height="100" rx="15" fill="white" opacity="0.95"/>
+        <text x="20" y="30" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#DB2777">Templates Library</text>
+        <text x="20" y="55" font-family="Arial, sans-serif" font-size="14" fill="#475569">15+ pre-built conversation starters for</text>
+        <text x="20" y="75" font-family="Arial, sans-serif" font-size="14" fill="#475569">coding, writing, analysis, and creativity</text>
+      </g>
+      
+      <g transform="translate(0, 130)">
+        <rect x="0" y="0" width="380" height="100" rx="15" fill="white" opacity="0.95"/>
+        <text x="20" y="30" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#DB2777">Team Collaboration</text>
+        <text x="20" y="55" font-family="Arial, sans-serif" font-size="14" fill="#475569">Share conversations, collaborate on projects,</text>
+        <text x="20" y="75" font-family="Arial, sans-serif" font-size="14" fill="#475569">and manage team access controls</text>
+      </g>
+      
+      <g transform="translate(410, 130)">
+        <rect x="0" y="0" width="380" height="100" rx="15" fill="white" opacity="0.95"/>
+        <text x="20" y="30" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#DB2777">Analytics Dashboard</text>
+        <text x="20" y="55" font-family="Arial, sans-serif" font-size="14" fill="#475569">Track usage, model performance, costs,</text>
+        <text x="20" y="75" font-family="Arial, sans-serif" font-size="14" fill="#475569">and conversation insights over time</text>
+      </g>
+    </g>
+  </g>
+  
+  <!-- Security & Privacy Section -->
+  <g transform="translate(60, 580)">
+    <rect x="0" y="0" width="850" height="200" rx="20" fill="url(#featureGrad3)" filter="url(#shadow)"/>
+    <text x="425" y="45" font-family="Arial, sans-serif" font-size="32" font-weight="bold" text-anchor="middle" fill="white">Security &amp; Privacy</text>
+    
+    <g transform="translate(50, 80)">
+      <rect x="0" y="0" width="180" height="90" rx="15" fill="white" opacity="0.95"/>
+      <text x="90" y="30" font-family="Arial, sans-serif" font-size="18" font-weight="bold" text-anchor="middle" fill="#0D9488">Encryption</text>
+      <text x="90" y="55" font-family="Arial, sans-serif" font-size="14" text-anchor="middle" fill="#475569">End-to-end</text>
+      <text x="90" y="75" font-family="Arial, sans-serif" font-size="14" text-anchor="middle" fill="#475569">TLS 1.3</text>
+    </g>
+    
+    <g transform="translate(250, 80)">
+      <rect x="0" y="0" width="180" height="90" rx="15" fill="white" opacity="0.95"/>
+      <text x="90" y="30" font-family="Arial, sans-serif" font-size="18" font-weight="bold" text-anchor="middle" fill="#0D9488">Compliance</text>
+      <text x="90" y="55" font-family="Arial, sans-serif" font-size="14" text-anchor="middle" fill="#475569">GDPR Ready</text>
+      <text x="90" y="75" font-family="Arial, sans-serif" font-size="14" text-anchor="middle" fill="#475569">SOC 2</text>
+    </g>
+    
+    <g transform="translate(450, 80)">
+      <rect x="0" y="0" width="180" height="90" rx="15" fill="white" opacity="0.95"/>
+      <text x="90" y="30" font-family="Arial, sans-serif" font-size="18" font-weight="bold" text-anchor="middle" fill="#0D9488">Data Control</text>
+      <text x="90" y="55" font-family="Arial, sans-serif" font-size="14" text-anchor="middle" fill="#475569">Export All</text>
+      <text x="90" y="75" font-family="Arial, sans-serif" font-size="14" text-anchor="middle" fill="#475569">Delete Anytime</text>
+    </g>
+    
+    <g transform="translate(650, 80)">
+      <rect x="0" y="0" width="180" height="90" rx="15" fill="white" opacity="0.95"/>
+      <text x="90" y="30" font-family="Arial, sans-serif" font-size="18" font-weight="bold" text-anchor="middle" fill="#0D9488">Privacy</text>
+      <text x="90" y="55" font-family="Arial, sans-serif" font-size="14" text-anchor="middle" fill="#475569">No Training</text>
+      <text x="90" y="75" font-family="Arial, sans-serif" font-size="14" text-anchor="middle" fill="#475569">Local Option</text>
+    </g>
+  </g>
+  
+  <!-- Integration Partners -->
+  <g transform="translate(1010, 580)">
+    <rect x="0" y="0" width="850" height="200" rx="20" fill="#F3F4F6" filter="url(#shadow)"/>
+    <text x="425" y="45" font-family="Arial, sans-serif" font-size="32" font-weight="bold" text-anchor="middle" fill="#1e293b">Trusted Integrations</text>
+    
+    <g transform="translate(80, 80)">
+      <rect x="0" y="0" width="150" height="90" rx="15" fill="white"/>
+      <text x="75" y="50" font-family="Arial, sans-serif" font-size="20" font-weight="bold" text-anchor="middle" fill="#1e293b">Cloudflare</text>
+    </g>
+    
+    <g transform="translate(260, 80)">
+      <rect x="0" y="0" width="150" height="90" rx="15" fill="white"/>
+      <text x="75" y="50" font-family="Arial, sans-serif" font-size="20" font-weight="bold" text-anchor="middle" fill="#1e293b">Stripe</text>
+    </g>
+    
+    <g transform="translate(440, 80)">
+      <rect x="0" y="0" width="150" height="90" rx="15" fill="white"/>
+      <text x="75" y="50" font-family="Arial, sans-serif" font-size="20" font-weight="bold" text-anchor="middle" fill="#1e293b">Clerk</text>
+    </g>
+    
+    <g transform="translate(620, 80)">
+      <rect x="0" y="0" width="150" height="90" rx="15" fill="white"/>
+      <text x="75" y="50" font-family="Arial, sans-serif" font-size="20" font-weight="bold" text-anchor="middle" fill="#1e293b">OpenAI</text>
+    </g>
+  </g>
+  
+  <!-- Call to action -->
+  <g transform="translate(460, 830)">
+    <rect x="0" y="0" width="1000" height="200" rx="20" fill="#1e293b" filter="url(#shadow)"/>
+    <text x="500" y="60" font-family="Arial, sans-serif" font-size="36" font-weight="bold" text-anchor="middle" fill="white">Start Your AI Journey Today</text>
+    <text x="500" y="110" font-family="Arial, sans-serif" font-size="24" text-anchor="middle" fill="#94a3b8">Join thousands of users leveraging AI for productivity</text>
+    
+    <rect x="350" y="140" width="300" height="50" rx="25" fill="#3B82F6"/>
+    <text x="500" y="170" font-family="Arial, sans-serif" font-size="20" font-weight="bold" text-anchor="middle" fill="white">Get Started Free</text>
+  </g>
+</svg>
