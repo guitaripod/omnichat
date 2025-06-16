@@ -202,9 +202,9 @@
 
 ### Epic 6.1: UI/UX Polish
 
-- [ ] Expand input textbox as the user types text into it or starts a new line
-- [ ] Refine all animations and transitions
-- [ ] Ensure full responsive design
+- [x] Expand input textbox as the user types text into it or starts a new line
+- [x] Refine all animations and transitions
+- [x] Ensure full responsive design
 - [ ] Add keyboard shortcuts
 - [x] Create onboarding flow
 - [ ] Implement toast notifications
