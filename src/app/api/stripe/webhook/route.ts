@@ -426,9 +426,25 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
     return;
   }
 
+  // Get the current subscription record to check for plan changes
+  const currentSubscription = await db()
+    .select()
+    .from(userSubscriptions)
+    .where(eq(userSubscriptions.stripeSubscriptionId, subscription.id))
+    .get();
+
+  const previousPlanId = currentSubscription?.planId;
+  const isUpgrade = previousPlanId && planId && previousPlanId !== planId;
+
+  console.log('[Webhook] Plan change detected:', {
+    previousPlanId,
+    newPlanId: planId,
+    isUpgrade,
+  });
+
   // Retrieve subscription with expanded price information to get billing interval
   const expandedSubscription = await getStripe().subscriptions.retrieve(subscription.id, {
-    expand: ['items.data.price'],
+    expand: ['items.data.price', 'latest_invoice'],
   });
 
   // Determine billing interval from the price object
@@ -445,7 +461,7 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
     }
   }
 
-  // Update subscription record
+  // Update subscription record with new planId
   const updateData: any = {
     status: subscription.status as 'active' | 'canceled' | 'past_due' | 'trialing' | 'incomplete',
     currentPeriodStart: new Date(
@@ -462,6 +478,11 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
       : null,
     updatedAt: new Date().toISOString(),
   };
+
+  // Update planId if it changed
+  if (planId) {
+    updateData.planId = planId;
+  }
 
   // Only update billingInterval if we could determine it
   if (billingInterval) {
@@ -484,27 +505,123 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
     })
     .where(eq(users.id, userId));
 
-  // Update daily allowance if plan changed
+  // Handle plan changes and battery allocation
   if (planId) {
-    // Use default plan config
-    const defaultPlans: Record<string, { dailyBattery: number }> = {
-      starter: { dailyBattery: 200 },
-      daily: { dailyBattery: 600 },
-      power: { dailyBattery: 1500 },
-      ultimate: { dailyBattery: 5000 },
+    // Default plan configurations
+    const defaultPlans: Record<
+      string,
+      {
+        name: string;
+        batteryUnits: number;
+        dailyBattery: number;
+      }
+    > = {
+      starter: {
+        name: 'Starter',
+        batteryUnits: 6000,
+        dailyBattery: 200,
+      },
+      daily: {
+        name: 'Daily',
+        batteryUnits: 18000,
+        dailyBattery: 600,
+      },
+      power: {
+        name: 'Power',
+        batteryUnits: 45000,
+        dailyBattery: 1500,
+      },
+      ultimate: {
+        name: 'Ultimate',
+        batteryUnits: 150000,
+        dailyBattery: 5000,
+      },
     };
 
-    const planConfig = defaultPlans[planId];
-    if (planConfig) {
+    const newPlan = defaultPlans[planId];
+    if (newPlan) {
+      // Update daily allowance
       await db()
         .update(userBattery)
         .set({
-          dailyAllowance: planConfig.dailyBattery,
+          dailyAllowance: newPlan.dailyBattery,
           updatedAt: new Date().toISOString(),
         })
         .where(eq(userBattery.userId, userId));
+
+      // Handle upgrade with immediate battery allocation
+      if (isUpgrade && previousPlanId && subscription.status === 'active') {
+        const oldPlan = defaultPlans[previousPlanId];
+
+        if (oldPlan && newPlan.batteryUnits > oldPlan.batteryUnits) {
+          // Calculate prorated battery units based on remaining days in billing period
+          const currentPeriodEnd = new Date(
+            (subscription.items?.data[0]?.current_period_end ||
+              (subscription as any).current_period_end) * 1000
+          );
+          const currentPeriodStart = new Date(
+            (subscription.items?.data[0]?.current_period_start ||
+              (subscription as any).current_period_start) * 1000
+          );
+          const now = new Date();
+
+          const totalPeriodDays = Math.ceil(
+            (currentPeriodEnd.getTime() - currentPeriodStart.getTime()) / (1000 * 60 * 60 * 24)
+          );
+          const remainingDays = Math.ceil(
+            (currentPeriodEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+          );
+
+          // Calculate prorated amount
+          const batteryDifference = newPlan.batteryUnits - oldPlan.batteryUnits;
+          const proratedBatteryUnits = Math.floor(
+            (batteryDifference * remainingDays) / totalPeriodDays
+          );
+
+          console.log('[Webhook] Calculating prorated battery units:', {
+            oldPlan: oldPlan.name,
+            newPlan: newPlan.name,
+            batteryDifference,
+            totalPeriodDays,
+            remainingDays,
+            proratedBatteryUnits,
+          });
+
+          if (proratedBatteryUnits > 0) {
+            // Add prorated battery units
+            await db()
+              .update(userBattery)
+              .set({
+                totalBalance: sql`total_balance + ${proratedBatteryUnits}`,
+                updatedAt: new Date().toISOString(),
+              })
+              .where(eq(userBattery.userId, userId));
+
+            // Record the transaction
+            const batteryBalance = await db()
+              .select()
+              .from(userBattery)
+              .where(eq(userBattery.userId, userId))
+              .get();
+
+            await db()
+              .insert(batteryTransactions)
+              .values({
+                userId,
+                type: 'subscription_upgrade',
+                amount: proratedBatteryUnits,
+                balanceAfter: batteryBalance?.totalBalance || proratedBatteryUnits,
+                description: `Upgraded from ${oldPlan.name} to ${newPlan.name} (prorated for ${remainingDays} days)`,
+              });
+
+            console.log('[Webhook] Added prorated battery units for upgrade');
+          }
+        }
+      }
     }
   }
+
+  console.log('[Webhook] Subscription updated successfully');
 }
 
 async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {

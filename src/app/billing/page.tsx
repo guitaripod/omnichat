@@ -296,7 +296,7 @@ export default function BillingPage() {
   }
 
   const currentPlan = subscription
-    ? BATTERY_PLANS.find((p) => p.name.toLowerCase() === subscription.planId)
+    ? BATTERY_PLANS.find((p) => p.name.toLowerCase() === subscription.planId?.toLowerCase())
     : null;
 
   // Calculate battery percentage based on plan's total battery, not daily allowance

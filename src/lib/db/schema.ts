@@ -215,7 +215,7 @@ export const batteryTransactions = sqliteTable(
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
     type: text('type', {
-      enum: ['purchase', 'subscription', 'bonus', 'refund', 'usage'],
+      enum: ['purchase', 'subscription', 'subscription_upgrade', 'bonus', 'refund', 'usage'],
     }).notNull(),
     amount: integer('amount').notNull(), // positive for credits, negative for usage
     balanceAfter: integer('balance_after').notNull(),
