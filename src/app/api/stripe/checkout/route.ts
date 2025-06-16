@@ -4,7 +4,7 @@ export const runtime = 'edge';
 import { auth } from '@clerk/nextjs/server';
 import { getStripe, getStripePriceId, getBatteryPackPriceId } from '@/lib/stripe-config';
 import { db } from '@/lib/db/index';
-import { users, userBattery } from '@/lib/db/schema';
+import { users, userBattery, userSubscriptions } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import Stripe from 'stripe';
 
@@ -270,11 +270,18 @@ export async function GET(_req: NextRequest) {
       billingInterval = interval === 'month' ? 'monthly' : interval === 'year' ? 'annual' : null;
     }
 
+    // Get planId from our database instead of Stripe metadata
+    const dbSubscription = await db()
+      .select()
+      .from(userSubscriptions)
+      .where(eq(userSubscriptions.stripeSubscriptionId, subscription.id))
+      .get();
+
     return NextResponse.json({
       subscription: {
         id: subscription.id,
         status: subscription.status,
-        planId: subscription.metadata.planId,
+        planId: dbSubscription?.planId || subscription.metadata.planId, // Use DB value if available
         currentPeriodEnd: new Date(
           (subscription.items?.data[0]?.current_period_end ||
             (subscription as any).current_period_end) * 1000
