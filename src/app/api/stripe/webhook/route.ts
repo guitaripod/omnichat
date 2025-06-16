@@ -409,22 +409,54 @@ async function handleBatteryPurchase(session: Stripe.Checkout.Session) {
     });
 }
 
+// Helper function to map Stripe price IDs to plan IDs
+function getPlanIdFromPriceId(priceId: string): string {
+  // Create a reverse mapping of price IDs to plan IDs
+  const priceIdToPlanId: Record<string, string> = {};
+
+  for (const [planId, prices] of Object.entries(STRIPE_CONFIG.prices)) {
+    if (typeof prices === 'object' && 'monthly' in prices && 'annual' in prices) {
+      if (prices.monthly) priceIdToPlanId[prices.monthly] = planId;
+      if (prices.annual) priceIdToPlanId[prices.annual] = planId;
+    }
+  }
+
+  console.log('[Webhook] Price ID mapping:', priceIdToPlanId);
+  console.log('[Webhook] Looking up price ID:', priceId);
+
+  const planId = priceIdToPlanId[priceId];
+
+  if (!planId) {
+    console.error('[Webhook] Unknown price ID:', priceId);
+    // Try to extract from metadata as fallback
+    return 'starter'; // Default fallback
+  }
+
+  return planId;
+}
+
 async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
   const userId = subscription.metadata.userId;
-  const planId = subscription.metadata.planId;
-
-  console.log('[Webhook] handleSubscriptionUpdate:', {
-    subscriptionId: subscription.id,
-    userId,
-    planId,
-    metadata: subscription.metadata,
-    status: subscription.status,
-  });
 
   if (!userId) {
     console.error('[Webhook] No userId in subscription metadata');
     return;
   }
+
+  // Get the price ID from the subscription items
+  const priceId = subscription.items.data[0]?.price.id;
+
+  // Map price ID to plan ID
+  const planId = getPlanIdFromPriceId(priceId);
+
+  console.log('[Webhook] handleSubscriptionUpdate:', {
+    subscriptionId: subscription.id,
+    userId,
+    priceId,
+    planId,
+    metadata: subscription.metadata,
+    status: subscription.status,
+  });
 
   // Get the current subscription record to check for plan changes
   const currentSubscription = await db()
