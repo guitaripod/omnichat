@@ -14,20 +14,12 @@ export const runtime = 'edge';
 // GET /api/conversations - Get user's conversations
 export async function GET(_req: NextRequest) {
   try {
-    const clerkUser = await currentUser();
-
     let userId: string;
     let userEmail: string = '';
     let userName: string = '';
     let userImageUrl: string | null = null;
 
-    if (clerkUser) {
-      userId = clerkUser.id;
-      userEmail = clerkUser.primaryEmailAddress?.emailAddress || '';
-      userName = clerkUser.fullName || clerkUser.username || '';
-      userImageUrl = clerkUser.imageUrl;
-    } else if (isDevMode()) {
-      // Use dev user in dev mode
+    if (isDevMode()) {
       const devUser = await getDevUser();
       if (devUser) {
         userId = devUser.id;
@@ -38,7 +30,15 @@ export async function GET(_req: NextRequest) {
         return new Response('Unauthorized', { status: 401 });
       }
     } else {
-      return new Response('Unauthorized', { status: 401 });
+      const clerkUser = await currentUser();
+      if (clerkUser) {
+        userId = clerkUser.id;
+        userEmail = clerkUser.primaryEmailAddress?.emailAddress || '';
+        userName = clerkUser.fullName || clerkUser.username || '';
+        userImageUrl = clerkUser.imageUrl;
+      } else {
+        return new Response('Unauthorized', { status: 401 });
+      }
     }
 
     // Get database from context (in production)
@@ -60,8 +60,7 @@ export async function GET(_req: NextRequest) {
     const conversations = await getUserConversations(db, dbUser.id);
 
     return NextResponse.json({ conversations });
-  } catch (error) {
-    console.error('Error fetching conversations:', error);
+  } catch {
     return NextResponse.json({ error: 'Failed to fetch conversations' }, { status: 500 });
   }
 }
@@ -69,14 +68,9 @@ export async function GET(_req: NextRequest) {
 // POST /api/conversations - Create new conversation
 export async function POST(req: NextRequest) {
   try {
-    const clerkUser = await currentUser();
-
     let userId: string;
 
-    if (clerkUser) {
-      userId = clerkUser.id;
-    } else if (isDevMode()) {
-      // Use dev user in dev mode
+    if (isDevMode()) {
       const devUser = await getDevUser();
       if (devUser) {
         userId = devUser.id;
@@ -84,7 +78,12 @@ export async function POST(req: NextRequest) {
         return new Response('Unauthorized', { status: 401 });
       }
     } else {
-      return new Response('Unauthorized', { status: 401 });
+      const clerkUser = await currentUser();
+      if (clerkUser) {
+        userId = clerkUser.id;
+      } else {
+        return new Response('Unauthorized', { status: 401 });
+      }
     }
 
     const body = (await req.json()) as { title: string; model: string };
@@ -117,8 +116,7 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json({ conversation });
-  } catch (error) {
-    console.error('Error creating conversation:', error);
+  } catch {
     return NextResponse.json({ error: 'Failed to create conversation' }, { status: 500 });
   }
 }

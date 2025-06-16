@@ -9,16 +9,14 @@ export const runtime = 'edge';
 // GET /api/conversations/[id]/messages - Get messages for a conversation
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const clerkUser = await currentUser();
-
-    if (!clerkUser && !isDevMode()) {
-      return new Response('Unauthorized', { status: 401 });
-    }
-
-    // In dev mode, allow access without authentication
-    if (!clerkUser && isDevMode()) {
+    if (isDevMode()) {
       const devUser = await getDevUser();
       if (!devUser) {
+        return new Response('Unauthorized', { status: 401 });
+      }
+    } else {
+      const clerkUser = await currentUser();
+      if (!clerkUser) {
         return new Response('Unauthorized', { status: 401 });
       }
     }
@@ -31,8 +29,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     const messages = await getConversationMessages(db, conversationId);
 
     return NextResponse.json({ messages });
-  } catch (error) {
-    console.error('Error fetching messages:', error);
+  } catch {
     return NextResponse.json({ error: 'Failed to fetch messages' }, { status: 500 });
   }
 }
@@ -40,16 +37,14 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 // POST /api/conversations/[id]/messages - Create a new message
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const clerkUser = await currentUser();
-
-    if (!clerkUser && !isDevMode()) {
-      return new Response('Unauthorized', { status: 401 });
-    }
-
-    // In dev mode, allow access without authentication
-    if (!clerkUser && isDevMode()) {
+    if (isDevMode()) {
       const devUser = await getDevUser();
       if (!devUser) {
+        return new Response('Unauthorized', { status: 401 });
+      }
+    } else {
+      const clerkUser = await currentUser();
+      if (!clerkUser) {
         return new Response('Unauthorized', { status: 401 });
       }
     }
@@ -79,8 +74,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     });
 
     return NextResponse.json({ message });
-  } catch (error) {
-    console.error('Error creating message:', error);
+  } catch {
     return NextResponse.json({ error: 'Failed to create message' }, { status: 500 });
   }
 }

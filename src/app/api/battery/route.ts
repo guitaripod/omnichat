@@ -11,13 +11,9 @@ export const runtime = 'edge';
 export async function GET(_req: NextRequest) {
   try {
     // Authenticate user
-    const clerkUser = await currentUser();
-
     let userId: string;
 
-    if (clerkUser) {
-      userId = clerkUser.id;
-    } else if (isDevMode()) {
+    if (isDevMode()) {
       const devUser = await getDevUser();
       if (devUser) {
         userId = devUser.id;
@@ -25,7 +21,12 @@ export async function GET(_req: NextRequest) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
     } else {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      const clerkUser = await currentUser();
+      if (clerkUser) {
+        userId = clerkUser.id;
+      } else {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
     }
 
     // Get user battery balance
@@ -72,8 +73,7 @@ export async function GET(_req: NextRequest) {
       todayUsage: todayUsage?.totalBatteryUsed || 0,
       usageHistory,
     });
-  } catch (error) {
-    console.error('Battery status error:', error);
+  } catch {
     return NextResponse.json({ error: 'Failed to get battery status' }, { status: 500 });
   }
 }
