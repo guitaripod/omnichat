@@ -136,8 +136,8 @@
     
     <text x="20" y="70" font-family="Arial, sans-serif" font-size="16" fill="#475569">• Conversation Search</text>
     <text x="20" y="100" font-family="Arial, sans-serif" font-size="16" fill="#475569">• Bulk Export</text>
-    <text x="20" y="130" font-family="Arial, sans-serif" font-size="16" fill="#475569">• Analytics</text>
-    <text x="20" y="160" font-family="Arial, sans-serif" font-size="16" fill="#475569">• Team Collaboration</text>
+    <text x="20" y="130" font-family="Arial, sans-serif" font-size="16" fill="#475569">• Model Switching</text>
+    <text x="20" y="160" font-family="Arial, sans-serif" font-size="16" fill="#475569">• Branching Chats</text>
   </g>
   
   <g transform="translate(1150, 750)">

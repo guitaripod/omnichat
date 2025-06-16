@@ -60,11 +60,11 @@
       <rect x="30" y="150" width="300" height="60" rx="10" fill="white"/>
       <text x="180" y="185" font-family="Arial, sans-serif" font-size="20" font-weight="bold" text-anchor="middle" fill="#1e293b">15,000 Batteries</text>
       
-      <text x="30" y="250" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ Everything in Starter</text>
+      <text x="30" y="250" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ All AI Models</text>
       <text x="30" y="280" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ Priority Support</text>
-      <text x="30" y="310" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ Voice Features</text>
-      <text x="30" y="340" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ Advanced Templates</text>
-      <text x="30" y="370" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ API Access</text>
+      <text x="30" y="310" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ File Attachments</text>
+      <text x="30" y="340" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ Export Features</text>
+      <text x="30" y="370" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ Templates</text>
     </g>
     
     <!-- Power Plan -->
@@ -80,11 +80,11 @@
       <rect x="30" y="190" width="300" height="60" rx="10" fill="white"/>
       <text x="180" y="225" font-family="Arial, sans-serif" font-size="20" font-weight="bold" text-anchor="middle" fill="#1e293b">35,000 Batteries</text>
       
-      <text x="30" y="290" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ Everything in Daily</text>
-      <text x="30" y="320" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ Team Features</text>
-      <text x="30" y="350" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ Custom Templates</text>
-      <text x="30" y="380" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ Analytics Dashboard</text>
-      <text x="30" y="410" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ Bulk Export</text>
+      <text x="30" y="290" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ All AI Models</text>
+      <text x="30" y="320" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ Priority Support</text>
+      <text x="30" y="350" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ File Attachments</text>
+      <text x="30" y="380" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ Export Features</text>
+      <text x="30" y="410" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ Templates</text>
     </g>
     
     <!-- Ultimate Plan -->
@@ -97,11 +97,11 @@
       <rect x="30" y="150" width="300" height="60" rx="10" fill="white"/>
       <text x="180" y="185" font-family="Arial, sans-serif" font-size="20" font-weight="bold" text-anchor="middle" fill="#1e293b">125,000 Batteries</text>
       
-      <text x="30" y="250" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ Everything in Power</text>
-      <text x="30" y="280" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ White-glove Support</text>
-      <text x="30" y="310" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ Custom Integration</text>
-      <text x="30" y="340" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ SLA Guarantee</text>
-      <text x="30" y="370" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ Training Sessions</text>
+      <text x="30" y="250" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ All AI Models</text>
+      <text x="30" y="280" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ Priority Support</text>
+      <text x="30" y="310" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ File Attachments</text>
+      <text x="30" y="340" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ Export Features</text>
+      <text x="30" y="370" font-family="Arial, sans-serif" font-size="18" fill="#475569">✓ Templates</text>
     </g>
   </g>
   

@@ -62,11 +62,11 @@
       <!-- Row 2 -->
       <g transform="translate(0, 140)">
         <rect x="0" y="0" width="250" height="120" rx="15" fill="white" opacity="0.95"/>
-        <text x="125" y="30" font-family="Arial, sans-serif" font-size="20" font-weight="bold" text-anchor="middle" fill="#0891B2">Voice Features</text>
-        <text x="20" y="55" font-family="Arial, sans-serif" font-size="14" fill="#475569">• Speech-to-Text</text>
-        <text x="20" y="75" font-family="Arial, sans-serif" font-size="14" fill="#475569">• Text-to-Speech</text>
-        <text x="20" y="95" font-family="Arial, sans-serif" font-size="14" fill="#475569">• Multiple Languages</text>
-        <text x="20" y="115" font-family="Arial, sans-serif" font-size="14" fill="#475569">• Natural Voices</text>
+        <text x="125" y="30" font-family="Arial, sans-serif" font-size="20" font-weight="bold" text-anchor="middle" fill="#0891B2">Battery System</text>
+        <text x="20" y="55" font-family="Arial, sans-serif" font-size="14" fill="#475569">• Transparent Pricing</text>
+        <text x="20" y="75" font-family="Arial, sans-serif" font-size="14" fill="#475569">• Pay-per-use Model</text>
+        <text x="20" y="95" font-family="Arial, sans-serif" font-size="14" fill="#475569">• No Hidden Fees</text>
+        <text x="20" y="115" font-family="Arial, sans-serif" font-size="14" fill="#475569">• 1 Battery = $0.001</text>
       </g>
       
       <g transform="translate(270, 140)">
@@ -98,9 +98,9 @@
     <g transform="translate(40, 80)">
       <g transform="translate(0, 0)">
         <rect x="0" y="0" width="380" height="100" rx="15" fill="white" opacity="0.95"/>
-        <text x="20" y="30" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#DB2777">Image Generation</text>
-        <text x="20" y="55" font-family="Arial, sans-serif" font-size="14" fill="#475569">DALL-E 2/3 integration for creating images</text>
-        <text x="20" y="75" font-family="Arial, sans-serif" font-size="14" fill="#475569">from text descriptions with multiple styles</text>
+        <text x="20" y="30" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#DB2777">Model Switching</text>
+        <text x="20" y="55" font-family="Arial, sans-serif" font-size="14" fill="#475569">Switch between AI models mid-conversation</text>
+        <text x="20" y="75" font-family="Arial, sans-serif" font-size="14" fill="#475569">without losing context or history</text>
       </g>
       
       <g transform="translate(410, 0)">
@@ -112,16 +112,16 @@
       
       <g transform="translate(0, 130)">
         <rect x="0" y="0" width="380" height="100" rx="15" fill="white" opacity="0.95"/>
-        <text x="20" y="30" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#DB2777">Team Collaboration</text>
-        <text x="20" y="55" font-family="Arial, sans-serif" font-size="14" fill="#475569">Share conversations, collaborate on projects,</text>
-        <text x="20" y="75" font-family="Arial, sans-serif" font-size="14" fill="#475569">and manage team access controls</text>
+        <text x="20" y="30" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#DB2777">Edge Performance</text>
+        <text x="20" y="55" font-family="Arial, sans-serif" font-size="14" fill="#475569">300+ Points of Presence worldwide</text>
+        <text x="20" y="75" font-family="Arial, sans-serif" font-size="14" fill="#475569">with &lt;50ms latency for 99% of users</text>
       </g>
       
       <g transform="translate(410, 130)">
         <rect x="0" y="0" width="380" height="100" rx="15" fill="white" opacity="0.95"/>
-        <text x="20" y="30" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#DB2777">Analytics Dashboard</text>
-        <text x="20" y="55" font-family="Arial, sans-serif" font-size="14" fill="#475569">Track usage, model performance, costs,</text>
-        <text x="20" y="75" font-family="Arial, sans-serif" font-size="14" fill="#475569">and conversation insights over time</text>
+        <text x="20" y="30" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#DB2777">Security First</text>
+        <text x="20" y="55" font-family="Arial, sans-serif" font-size="14" fill="#475569">End-to-end encryption with TLS 1.3</text>
+        <text x="20" y="75" font-family="Arial, sans-serif" font-size="14" fill="#475569">Local AI option for complete privacy</text>
       </g>
     </g>
   </g>

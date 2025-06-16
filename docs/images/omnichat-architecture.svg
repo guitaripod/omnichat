@@ -63,7 +63,7 @@
     <text x="110" y="260" font-family="Arial, sans-serif" font-size="16" text-anchor="middle" fill="#1e293b">KV Store</text>
     
     <rect x="210" y="230" width="160" height="50" rx="10" fill="white" opacity="0.9"/>
-    <text x="290" y="260" font-family="Arial, sans-serif" font-size="16" text-anchor="middle" fill="#1e293b">Durable Objects</text>
+    <text x="290" y="260" font-family="Arial, sans-serif" font-size="16" text-anchor="middle" fill="#1e293b">Edge Functions</text>
   </g>
   
   <!-- AI Services Layer -->
@@ -121,7 +121,7 @@
     <text x="150" y="90" font-family="Arial, sans-serif" font-size="18" text-anchor="middle" fill="#1e293b">Zustand</text>
     
     <rect x="30" y="130" width="240" height="50" rx="10" fill="white"/>
-    <text x="150" y="160" font-family="Arial, sans-serif" font-size="18" text-anchor="middle" fill="#1e293b">React Query</text>
+    <text x="150" y="160" font-family="Arial, sans-serif" font-size="18" text-anchor="middle" fill="#1e293b">Local Storage</text>
   </g>
   
   <!-- Connections -->
@@ -156,7 +156,7 @@
     
     <text x="30" y="70" font-family="Arial, sans-serif" font-size="16" fill="#1e293b">• Multi-LLM Support with Streaming</text>
     <text x="30" y="95" font-family="Arial, sans-serif" font-size="16" fill="#1e293b">• File Attachments (PDF, Images, Docs)</text>
-    <text x="30" y="120" font-family="Arial, sans-serif" font-size="16" fill="#1e293b">• Voice Input/Output Integration</text>
+    <text x="30" y="120" font-family="Arial, sans-serif" font-size="16" fill="#1e293b">• Model Switching Without Context Loss</text>
     <text x="30" y="145" font-family="Arial, sans-serif" font-size="16" fill="#1e293b">• Conversation Branching &amp; Templates</text>
     <text x="30" y="170" font-family="Arial, sans-serif" font-size="16" fill="#1e293b">• Pay-per-use Battery System</text>
   </g>
@@ -188,7 +188,7 @@
     
     <g transform="translate(1400, 70)">
       <text x="0" y="0" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#3730a3">Security</text>
-      <text x="0" y="30" font-family="Arial, sans-serif" font-size="16" fill="#64748b">DDoS Protection</text>
+      <text x="0" y="30" font-family="Arial, sans-serif" font-size="16" fill="#64748b">Edge Security</text>
     </g>
   </g>
 </svg>
