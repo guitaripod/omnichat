@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { UserButton } from '@clerk/nextjs';
 import Link from 'next/link';
 import ApiSettings from '@/components/profile/api-settings';
@@ -27,6 +27,8 @@ import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { useUserData } from '@/hooks/use-user-data';
 import { getPlanName } from '@/lib/subscription-plans';
+import { useBatteryData } from '@/hooks/use-battery-data';
+import { useConversationStore } from '@/store/conversations';
 
 interface ProfileContentProps {
   user: UserResource;
@@ -104,6 +106,19 @@ function QuickAction({
 export default function ProfileContent({ user }: ProfileContentProps) {
   const [activeTab] = useState('overview');
   const { subscription } = useUserData();
+  const { battery } = useBatteryData();
+  const conversations = useConversationStore((state) => state.conversations);
+  const messages = useConversationStore((state) => state.messages);
+  const [messageCount, setMessageCount] = useState(0);
+
+  // Calculate total messages
+  useEffect(() => {
+    let total = 0;
+    Object.values(messages).forEach((convMessages) => {
+      total += convMessages.length;
+    });
+    setMessageCount(total);
+  }, [messages]);
 
   return (
     <>
@@ -143,11 +158,13 @@ export default function ProfileContent({ user }: ProfileContentProps) {
                       <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
                         {user.firstName} {user.lastName}
                       </h2>
-                      {subscription && (
+                      {subscription ? (
                         <Badge className="bg-gradient-to-r from-purple-600 to-pink-600 text-white">
                           <Crown className="mr-1 h-3 w-3" />
                           {subscription.planId ? getPlanName(subscription.planId) : 'Premium'}
                         </Badge>
+                      ) : (
+                        <Badge variant="secondary">Free</Badge>
                       )}
                     </div>
                     <p className="mt-1 text-gray-600 dark:text-gray-400">
@@ -254,13 +271,23 @@ export default function ProfileContent({ user }: ProfileContentProps) {
                         <div className="space-y-3">
                           <div className="flex items-center justify-between rounded-lg border border-gray-200 p-3 dark:border-gray-700">
                             <span className="text-sm text-gray-600 dark:text-gray-400">Plan</span>
-                            <Badge variant="secondary">Premium</Badge>
+                            {subscription ? (
+                              <Badge className="bg-gradient-to-r from-purple-600 to-pink-600 text-white">
+                                {subscription.planId ? getPlanName(subscription.planId) : 'Premium'}
+                              </Badge>
+                            ) : (
+                              <Badge variant="secondary">Free</Badge>
+                            )}
                           </div>
                           <div className="flex items-center justify-between rounded-lg border border-gray-200 p-3 dark:border-gray-700">
                             <span className="text-sm text-gray-600 dark:text-gray-400">
                               Battery
                             </span>
-                            <span className="text-sm font-medium text-green-600">Unlimited</span>
+                            <span className="text-sm font-medium text-green-600">
+                              {battery
+                                ? `${battery.totalBalance.toLocaleString()} units`
+                                : 'Loading...'}
+                            </span>
                           </div>
                         </div>
                       </div>
@@ -273,7 +300,7 @@ export default function ProfileContent({ user }: ProfileContentProps) {
                           <CardContent className="p-4">
                             <div className="flex items-center justify-between">
                               <div>
-                                <p className="text-2xl font-bold">42</p>
+                                <p className="text-2xl font-bold">{conversations.length}</p>
                                 <p className="text-sm text-gray-600 dark:text-gray-400">
                                   Conversations
                                 </p>
@@ -286,7 +313,7 @@ export default function ProfileContent({ user }: ProfileContentProps) {
                           <CardContent className="p-4">
                             <div className="flex items-center justify-between">
                               <div>
-                                <p className="text-2xl font-bold">156</p>
+                                <p className="text-2xl font-bold">{messageCount}</p>
                                 <p className="text-sm text-gray-600 dark:text-gray-400">Messages</p>
                               </div>
                               <Activity className="h-8 w-8 text-purple-500" />
@@ -310,7 +337,9 @@ export default function ProfileContent({ user }: ProfileContentProps) {
                           <CardContent className="p-4">
                             <div className="flex items-center justify-between">
                               <div>
-                                <p className="text-2xl font-bold">∞</p>
+                                <p className="text-2xl font-bold">
+                                  {battery ? battery.totalBalance.toLocaleString() : '0'}
+                                </p>
                                 <p className="text-sm text-gray-600 dark:text-gray-400">Battery</p>
                               </div>
                               <Battery className="h-8 w-8 text-orange-500" />
