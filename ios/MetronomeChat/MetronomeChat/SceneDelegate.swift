@@ -10,9 +10,13 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
   ) {
     guard (scene as? UIWindowScene) != nil else { return }
     guard let windowScene = scene as? UIWindowScene else { return }
+    
+    // Login test user for development
+    AuthService.shared.loginAsTestUser()
+    
     window = UIWindow(windowScene: windowScene)
-    let rootViewController = ViewController()
-    window?.rootViewController = rootViewController
+    let homeViewController = HomeViewController()
+    window?.rootViewController = homeViewController
     window?.makeKeyAndVisible()
   }
 }
