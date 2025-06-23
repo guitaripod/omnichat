@@ -316,6 +316,85 @@ export const auditLogs = sqliteTable(
   })
 );
 
+// Auth providers table (Apple, Google, etc.)
+export const authProviders = sqliteTable(
+  'auth_providers',
+  {
+    id: text('id')
+      .primaryKey()
+      .default(sql`(lower(hex(randomblob(16))))`),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    provider: text('provider').notNull(), // 'apple', 'google', etc.
+    providerUserId: text('provider_user_id').notNull(),
+    email: text('email'),
+    createdAt: text('created_at')
+      .notNull()
+      .default(sql`(datetime('now'))`),
+    updatedAt: text('updated_at')
+      .notNull()
+      .default(sql`(datetime('now'))`),
+  },
+  (table) => ({
+    userIdIdx: index('idx_auth_providers_user_id').on(table.userId),
+    providerIdx: index('idx_auth_providers_provider').on(table.provider),
+    providerUserIdx: index('idx_auth_providers_provider_user').on(
+      table.provider,
+      table.providerUserId
+    ),
+  })
+);
+
+// Refresh tokens table
+export const refreshTokens = sqliteTable(
+  'refresh_tokens',
+  {
+    id: text('id')
+      .primaryKey()
+      .default(sql`(lower(hex(randomblob(16))))`),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    tokenHash: text('token_hash').notNull().unique(), // Store hashed token for security
+    expiresAt: text('expires_at').notNull(),
+    createdAt: text('created_at')
+      .notNull()
+      .default(sql`(datetime('now'))`),
+    lastUsedAt: text('last_used_at'),
+    userAgent: text('user_agent'),
+    ipAddress: text('ip_address'),
+  },
+  (table) => ({
+    userIdIdx: index('idx_refresh_tokens_user_id').on(table.userId),
+    expiresAtIdx: index('idx_refresh_tokens_expires_at').on(table.expiresAt),
+  })
+);
+
+// API keys table (for future use)
+export const apiKeys = sqliteTable(
+  'api_keys',
+  {
+    id: text('id')
+      .primaryKey()
+      .default(sql`(lower(hex(randomblob(16))))`),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    name: text('name').notNull(),
+    keyHash: text('key_hash').notNull().unique(),
+    lastUsedAt: text('last_used_at'),
+    expiresAt: text('expires_at'),
+    scopes: text('scopes'), // JSON array of scopes
+    createdAt: text('created_at')
+      .notNull()
+      .default(sql`(datetime('now'))`),
+  },
+  (table) => ({
+    userIdIdx: index('idx_api_keys_user_id').on(table.userId),
+  })
+);
+
 // Types for TypeScript
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
@@ -341,3 +420,9 @@ export type DailyUsageSummary = typeof dailyUsageSummary.$inferSelect;
 export type NewDailyUsageSummary = typeof dailyUsageSummary.$inferInsert;
 export type AuditLog = typeof auditLogs.$inferSelect;
 export type NewAuditLog = typeof auditLogs.$inferInsert;
+export type AuthProvider = typeof authProviders.$inferSelect;
+export type NewAuthProvider = typeof authProviders.$inferInsert;
+export type RefreshToken = typeof refreshTokens.$inferSelect;
+export type NewRefreshToken = typeof refreshTokens.$inferInsert;
+export type ApiKey = typeof apiKeys.$inferSelect;
+export type NewApiKey = typeof apiKeys.$inferInsert;
