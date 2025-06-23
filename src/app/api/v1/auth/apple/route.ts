@@ -2,11 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { users, authProviders, refreshTokens } from '@/lib/db/schema';
 import { eq, and } from 'drizzle-orm';
-import {
-  verifyAppleIdToken,
-  extractUserInfo,
-  mockVerifyAppleIdToken,
-} from '@/lib/api/auth/apple-edge';
+import { verifyAppleIdToken, extractUserInfo } from '@/lib/api/auth/apple-verifier';
 import { generateTokenPair } from '@/lib/api/auth/jwt';
 import { hashToken } from '@/lib/api/auth/hash';
 import { nanoid } from 'nanoid';
@@ -27,12 +23,7 @@ export async function POST(request: NextRequest) {
     // Verify Apple ID token
     let appleToken;
     try {
-      // In development, use mock verification
-      if (process.env.NODE_ENV === 'development') {
-        appleToken = await mockVerifyAppleIdToken(idToken, APPLE_CLIENT_ID);
-      } else {
-        appleToken = await verifyAppleIdToken(idToken, APPLE_CLIENT_ID);
-      }
+      appleToken = await verifyAppleIdToken(idToken, APPLE_CLIENT_ID);
     } catch (error) {
       console.error('Apple token verification failed:', error);
       return NextResponse.json({ error: 'Invalid Apple ID token' }, { status: 401 });
