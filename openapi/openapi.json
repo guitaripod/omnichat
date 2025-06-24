@@ -3,11 +3,20 @@
   "info": {
     "title": "OmniChat API",
     "description": "Multi-LLM chat application API",
-    "version": "1.0.0"
+    "version": "1.0.0",
+    "license": {
+      "name": "MIT",
+      "url": "https://opensource.org/licenses/MIT"
+    },
+    "contact": {
+      "name": "OmniChat Support",
+      "url": "https://omnichat-7pu.pages.dev",
+      "email": "support@omnichat.app"
+    }
   },
   "servers": [
     {
-      "url": "https://api.omnichat.app",
+      "url": "https://omnichat-7pu.pages.dev",
       "description": "Production server"
     },
     {
@@ -15,7 +24,843 @@
       "description": "Development server"
     }
   ],
+  "tags": [
+    {
+      "name": "Authentication",
+      "description": "Authentication endpoints"
+    },
+    {
+      "name": "Chat",
+      "description": "AI chat interactions"
+    },
+    {
+      "name": "Conversations",
+      "description": "Conversation management"
+    },
+    {
+      "name": "Messages",
+      "description": "Message operations"
+    },
+    {
+      "name": "User",
+      "description": "User profile and settings"
+    },
+    {
+      "name": "Files",
+      "description": "File upload and management"
+    },
+    {
+      "name": "Search",
+      "description": "Search functionality"
+    },
+    {
+      "name": "Billing",
+      "description": "Stripe payment and subscription management"
+    },
+    {
+      "name": "Models",
+      "description": "AI model information"
+    },
+    {
+      "name": "Battery",
+      "description": "Usage tracking and battery system"
+    }
+  ],
   "paths": {
+    "/api/v1/auth/apple": {
+      "post": {
+        "operationId": "appleSignIn",
+        "summary": "Apple Sign In",
+        "description": "Authenticate user with Apple ID token and receive JWT tokens",
+        "tags": ["Authentication"],
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AppleAuthRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful authentication",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/api/v1/auth/refresh": {
+      "post": {
+        "operationId": "refreshToken",
+        "summary": "Refresh Access Token",
+        "description": "Exchange a refresh token for a new access token",
+        "tags": ["Authentication"],
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshTokenRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Token refreshed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RefreshTokenResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/api/chat": {
+      "post": {
+        "summary": "Chat with AI",
+        "description": "Send messages to an AI model and receive responses. Supports streaming.",
+        "tags": ["Chat"],
+        "security": [
+          {
+            "ClerkAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatResponse"
+                }
+              },
+              "text/event-stream": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "headers": {
+              "Content-Type": {
+                "description": "Response content type - either application/json for non-streaming or text/event-stream for streaming",
+                "schema": {
+                  "type": "string",
+                  "enum": ["application/json", "text/event-stream"]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "402": {
+            "description": "Payment Required - Insufficient battery balance",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InsufficientBatteryError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Model access denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelAccessError"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/conversations": {
+      "get": {
+        "summary": "List conversations",
+        "description": "Get all conversations for the authenticated user",
+        "tags": ["Conversations"],
+        "security": [
+          {
+            "ClerkAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of conversations",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "conversations": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Conversation"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create conversation",
+        "description": "Create a new conversation",
+        "tags": ["Conversations"],
+        "security": [
+          {
+            "ClerkAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateConversationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Conversation created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "conversation": {
+                      "$ref": "#/components/schemas/Conversation"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/api/conversations/{id}": {
+      "delete": {
+        "summary": "Delete conversation",
+        "description": "Delete a conversation and all its messages",
+        "tags": ["Conversations"],
+        "security": [
+          {
+            "ClerkAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Conversation ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Conversation deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/api/conversations/{id}/messages": {
+      "get": {
+        "summary": "Get conversation messages",
+        "description": "Get all messages in a conversation",
+        "tags": ["Messages"],
+        "security": [
+          {
+            "ClerkAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Conversation ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of messages",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "messages": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Message"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create message",
+        "description": "Add a new message to a conversation",
+        "tags": ["Messages"],
+        "security": [
+          {
+            "ClerkAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Conversation ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateMessageRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Message created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "$ref": "#/components/schemas/Message"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/api/upload": {
+      "post": {
+        "summary": "Upload file",
+        "description": "Upload a file attachment for a message",
+        "tags": ["Files"],
+        "security": [
+          {
+            "ClerkAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "The file to upload (max 10MB)"
+                  },
+                  "conversationId": {
+                    "type": "string",
+                    "description": "The conversation ID"
+                  },
+                  "messageId": {
+                    "type": "string",
+                    "description": "The message ID"
+                  }
+                },
+                "required": ["file", "conversationId", "messageId"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "File uploaded successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      },
+      "get": {
+        "summary": "Download file",
+        "description": "Download a previously uploaded file",
+        "tags": ["Files"],
+        "security": [
+          {
+            "ClerkAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "key",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The R2 storage key for the file"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "File content",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "description": "Access denied"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/api/search": {
+      "get": {
+        "summary": "Search conversations and messages",
+        "description": "Search through user's conversations and messages",
+        "tags": ["Search"],
+        "security": [
+          {
+            "ClerkAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 2
+            },
+            "description": "Search query (minimum 2 characters)"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 20,
+              "minimum": 1,
+              "maximum": 100
+            },
+            "description": "Maximum number of results per type"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Search results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/api/battery": {
+      "get": {
+        "summary": "Get battery status",
+        "description": "Get user's battery balance and usage history",
+        "tags": ["Battery"],
+        "security": [
+          {
+            "ClerkAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Battery status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BatteryStatus"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/api/user/tier": {
+      "get": {
+        "summary": "Get user tier",
+        "description": "Get the current user's subscription tier",
+        "tags": ["User"],
+        "security": [
+          {
+            "ClerkAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User tier",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "tier": {
+                      "type": "string",
+                      "enum": ["free", "paid"],
+                      "description": "User's subscription tier"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/stripe/checkout": {
+      "post": {
+        "summary": "Create checkout session",
+        "description": "Create a Stripe checkout session for subscription or battery purchase",
+        "tags": ["Billing"],
+        "security": [
+          {
+            "ClerkAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCheckoutRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Checkout session created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CheckoutSessionResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      },
+      "get": {
+        "summary": "Get subscription status",
+        "description": "Get the current user's active subscription details",
+        "tags": ["Billing"],
+        "security": [
+          {
+            "ClerkAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Subscription status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriptionStatus"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/api/stripe/portal": {
+      "post": {
+        "summary": "Create billing portal session",
+        "description": "Create a Stripe billing portal session to manage subscription",
+        "tags": ["Billing"],
+        "security": [
+          {
+            "ClerkAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "returnUrl": {
+                    "type": "string",
+                    "format": "uri",
+                    "description": "URL to return to after portal session"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Portal session created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "url": {
+                      "type": "string",
+                      "format": "uri",
+                      "description": "Stripe billing portal URL"
+                    }
+                  },
+                  "required": ["url"]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "description": "User or billing account not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "503": {
+            "description": "Service Unavailable - Payment system not configured",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "details": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/models": {
       "get": {
         "summary": "Get available AI models",
@@ -61,10 +906,1519 @@
           }
         }
       }
+    },
+    "/api/v1/conversations": {
+      "get": {
+        "summary": "List conversations (V1 API)",
+        "description": "Get all conversations for the authenticated user with pagination support",
+        "tags": ["Conversations"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of conversations with last message",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "conversations": {
+                      "type": "array",
+                      "items": {
+                        "allOf": [
+                          {
+                            "$ref": "#/components/schemas/Conversation"
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "lastMessage": {
+                                "type": "object",
+                                "nullable": true,
+                                "allOf": [
+                                  {
+                                    "$ref": "#/components/schemas/Message"
+                                  }
+                                ]
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Rate limit exceeded"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create conversation (V1 API)",
+        "description": "Create a new conversation with JWT authentication",
+        "tags": ["Conversations"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "description": "Conversation title"
+                  },
+                  "model": {
+                    "type": "string",
+                    "description": "Default AI model",
+                    "default": "gpt-4o-mini"
+                  }
+                },
+                "required": ["title"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Conversation created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Conversation"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "429": {
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/api/v1/conversations/{id}": {
+      "get": {
+        "summary": "Get conversation (V1 API)",
+        "description": "Get a specific conversation by ID",
+        "tags": ["Conversations"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Conversation ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Conversation details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Conversation"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update conversation (V1 API)",
+        "description": "Update conversation properties",
+        "tags": ["Conversations"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Conversation ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "description": "New conversation title"
+                  },
+                  "isArchived": {
+                    "type": "boolean",
+                    "description": "Archive status"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Conversation updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Conversation"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete conversation (V1 API)",
+        "description": "Delete a conversation and all its messages",
+        "tags": ["Conversations"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Conversation ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Conversation deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/api/v1/conversations/{id}/messages": {
+      "get": {
+        "summary": "Get conversation messages (V1 API)",
+        "description": "Get all messages in a conversation with pagination",
+        "tags": ["Messages"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Conversation ID"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 50,
+              "minimum": 1,
+              "maximum": 100
+            },
+            "description": "Number of messages to return"
+          },
+          {
+            "name": "before",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Get messages before this message ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of messages",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "messages": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Message"
+                      }
+                    },
+                    "hasMore": {
+                      "type": "boolean",
+                      "description": "Whether there are more messages"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create message (V1 API)",
+        "description": "Add a new message to a conversation",
+        "tags": ["Messages"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Conversation ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateMessageRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Message created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/api/v1/user/profile": {
+      "get": {
+        "summary": "Get user profile (V1 API)",
+        "description": "Get authenticated user's profile including subscription and battery info",
+        "tags": ["User"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User profile",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserProfile"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update user profile (V1 API)",
+        "description": "Update user profile information",
+        "tags": ["User"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "User's display name"
+                  },
+                  "imageUrl": {
+                    "type": "string",
+                    "format": "uri",
+                    "description": "Profile image URL"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Profile updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "imageUrl": {
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "429": {
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/api/v1/user/usage": {
+      "get": {
+        "summary": "Get usage statistics (V1 API)",
+        "description": "Get user's API usage statistics and battery consumption",
+        "tags": ["User"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "period",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["day", "week", "month"],
+              "default": "week"
+            },
+            "description": "Time period for usage statistics"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Usage statistics",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "period": {
+                      "type": "string"
+                    },
+                    "totalBatteryUsed": {
+                      "type": "number"
+                    },
+                    "totalMessages": {
+                      "type": "integer"
+                    },
+                    "totalConversations": {
+                      "type": "integer"
+                    },
+                    "modelUsage": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "object",
+                        "properties": {
+                          "messageCount": {
+                            "type": "integer"
+                          },
+                          "batteryUsed": {
+                            "type": "number"
+                          }
+                        }
+                      }
+                    },
+                    "dailyUsage": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "date": {
+                            "type": "string",
+                            "format": "date"
+                          },
+                          "batteryUsed": {
+                            "type": "number"
+                          },
+                          "messageCount": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "429": {
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/api/v1/upload": {
+      "post": {
+        "summary": "Upload file (V1 API)",
+        "description": "Upload a file attachment with JWT authentication",
+        "tags": ["Files"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "The file to upload (max 10MB)"
+                  },
+                  "conversationId": {
+                    "type": "string",
+                    "description": "The conversation ID"
+                  },
+                  "messageId": {
+                    "type": "string",
+                    "description": "The message ID"
+                  }
+                },
+                "required": ["file", "conversationId", "messageId"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "File uploaded successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "413": {
+            "description": "Payload Too Large"
+          },
+          "429": {
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/api/v1/files/{key}": {
+      "get": {
+        "summary": "Download file (V1 API)",
+        "description": "Download a file by its storage key",
+        "tags": ["Files"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The file storage key"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "File content",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "description": "Access denied"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "AppleAuthRequest": {
+        "type": "object",
+        "properties": {
+          "idToken": {
+            "type": "string",
+            "description": "Apple ID token from Sign in with Apple"
+          },
+          "user": {
+            "type": "object",
+            "properties": {
+              "email": {
+                "type": "string",
+                "format": "email"
+              },
+              "name": {
+                "type": "object",
+                "properties": {
+                  "firstName": {
+                    "type": "string"
+                  },
+                  "lastName": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "description": "User data from Apple (only provided on first sign-in)"
+          }
+        },
+        "required": ["idToken"]
+      },
+      "AuthResponse": {
+        "type": "object",
+        "properties": {
+          "accessToken": {
+            "type": "string",
+            "description": "JWT access token"
+          },
+          "refreshToken": {
+            "type": "string",
+            "description": "JWT refresh token"
+          },
+          "expiresIn": {
+            "type": "integer",
+            "description": "Token expiration time in seconds"
+          },
+          "tokenType": {
+            "type": "string",
+            "enum": ["Bearer"],
+            "description": "Token type"
+          },
+          "user": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "email": {
+                "type": "string",
+                "format": "email"
+              }
+            }
+          }
+        },
+        "required": ["accessToken", "refreshToken", "expiresIn", "tokenType", "user"]
+      },
+      "RefreshTokenRequest": {
+        "type": "object",
+        "properties": {
+          "refreshToken": {
+            "type": "string",
+            "description": "The refresh token to exchange"
+          }
+        },
+        "required": ["refreshToken"]
+      },
+      "RefreshTokenResponse": {
+        "type": "object",
+        "properties": {
+          "accessToken": {
+            "type": "string",
+            "description": "New JWT access token"
+          },
+          "expiresIn": {
+            "type": "integer",
+            "description": "Token expiration time in seconds"
+          },
+          "tokenType": {
+            "type": "string",
+            "enum": ["Bearer"]
+          },
+          "user": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "email": {
+                "type": "string",
+                "format": "email"
+              }
+            }
+          }
+        },
+        "required": ["accessToken", "expiresIn", "tokenType", "user"]
+      },
+      "ChatRequest": {
+        "type": "object",
+        "properties": {
+          "messages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ChatMessage"
+            },
+            "description": "Array of chat messages"
+          },
+          "model": {
+            "type": "string",
+            "description": "AI model ID to use",
+            "example": "gpt-4.1"
+          },
+          "temperature": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 2,
+            "description": "Sampling temperature",
+            "default": 0.7
+          },
+          "maxTokens": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Maximum tokens to generate"
+          },
+          "stream": {
+            "type": "boolean",
+            "description": "Whether to stream the response",
+            "default": true
+          },
+          "ollamaBaseUrl": {
+            "type": "string",
+            "format": "uri",
+            "description": "Base URL for Ollama models"
+          },
+          "conversationId": {
+            "type": "string",
+            "description": "ID of the conversation"
+          },
+          "webSearch": {
+            "type": "boolean",
+            "description": "Enable web search (if supported by model)",
+            "default": false
+          },
+          "imageGenerationOptions": {
+            "$ref": "#/components/schemas/ImageGenerationOptions"
+          },
+          "userApiKeys": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "User's own API keys for providers"
+          }
+        },
+        "required": ["messages", "model", "conversationId"]
+      },
+      "ChatMessage": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": ["system", "user", "assistant", "tool"],
+            "description": "Message role"
+          },
+          "content": {
+            "type": "string",
+            "description": "Message content"
+          },
+          "images": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Array of image URLs or base64 data"
+          },
+          "toolCalls": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            },
+            "description": "Tool/function calls"
+          },
+          "toolCallId": {
+            "type": "string",
+            "description": "ID for tool response messages"
+          }
+        },
+        "required": ["role", "content"]
+      },
+      "ImageGenerationOptions": {
+        "type": "object",
+        "properties": {
+          "size": {
+            "type": "string",
+            "description": "Image size"
+          },
+          "quality": {
+            "type": "string",
+            "description": "Image quality"
+          },
+          "style": {
+            "type": "string",
+            "description": "Image style"
+          },
+          "n": {
+            "type": "integer",
+            "description": "Number of images to generate"
+          },
+          "background": {
+            "type": "string",
+            "description": "Background style"
+          },
+          "outputFormat": {
+            "type": "string",
+            "description": "Output format"
+          },
+          "outputCompression": {
+            "type": "integer",
+            "description": "Compression level"
+          }
+        }
+      },
+      "ChatResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "description": "AI response message (non-streaming)"
+          }
+        }
+      },
+      "InsufficientBatteryError": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "example": "Insufficient battery balance"
+          },
+          "currentBalance": {
+            "type": "number",
+            "description": "Current battery balance"
+          },
+          "estimatedCost": {
+            "type": "number",
+            "description": "Estimated cost for this request"
+          }
+        }
+      },
+      "ModelAccessError": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "example": "Model access denied"
+          },
+          "message": {
+            "type": "string",
+            "description": "Detailed error message"
+          },
+          "model": {
+            "type": "string",
+            "description": "Model ID that was requested"
+          },
+          "provider": {
+            "type": "string",
+            "description": "AI provider"
+          }
+        }
+      },
+      "Conversation": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique conversation ID"
+          },
+          "userId": {
+            "type": "string",
+            "description": "Owner user ID"
+          },
+          "title": {
+            "type": "string",
+            "description": "Conversation title"
+          },
+          "model": {
+            "type": "string",
+            "description": "Default AI model for this conversation"
+          },
+          "isArchived": {
+            "type": "boolean",
+            "description": "Whether the conversation is archived",
+            "default": false
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Creation timestamp"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Last update timestamp"
+          }
+        },
+        "required": ["id", "userId", "title", "model", "createdAt", "updatedAt"]
+      },
+      "CreateConversationRequest": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Conversation title"
+          },
+          "model": {
+            "type": "string",
+            "description": "Default AI model for this conversation"
+          }
+        },
+        "required": ["title", "model"]
+      },
+      "Message": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique message ID"
+          },
+          "conversationId": {
+            "type": "string",
+            "description": "Parent conversation ID"
+          },
+          "role": {
+            "type": "string",
+            "enum": ["user", "assistant", "system"],
+            "description": "Message role"
+          },
+          "content": {
+            "type": "string",
+            "description": "Message content"
+          },
+          "model": {
+            "type": "string",
+            "description": "AI model used (for assistant messages)"
+          },
+          "parentId": {
+            "type": "string",
+            "nullable": true,
+            "description": "Parent message ID for branching"
+          },
+          "isComplete": {
+            "type": "boolean",
+            "description": "Whether streaming is complete",
+            "default": true
+          },
+          "streamState": {
+            "type": "string",
+            "nullable": true,
+            "description": "Streaming metadata (JSON)"
+          },
+          "tokensGenerated": {
+            "type": "integer",
+            "description": "Number of tokens generated",
+            "default": 0
+          },
+          "totalTokens": {
+            "type": "integer",
+            "nullable": true,
+            "description": "Estimated total tokens"
+          },
+          "streamId": {
+            "type": "string",
+            "nullable": true,
+            "description": "Unique ID for resuming streams"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Creation timestamp"
+          },
+          "attachments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FileAttachment"
+            },
+            "description": "File attachments"
+          }
+        },
+        "required": ["id", "conversationId", "role", "content", "createdAt"]
+      },
+      "CreateMessageRequest": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": ["user", "assistant", "system"],
+            "description": "Message role"
+          },
+          "content": {
+            "type": "string",
+            "description": "Message content"
+          },
+          "model": {
+            "type": "string",
+            "description": "AI model used (for assistant messages)"
+          },
+          "parentId": {
+            "type": "string",
+            "description": "Parent message ID for branching"
+          }
+        },
+        "required": ["role", "content"]
+      },
+      "FileAttachment": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique attachment ID"
+          },
+          "conversationId": {
+            "type": "string",
+            "description": "Parent conversation ID"
+          },
+          "messageId": {
+            "type": "string",
+            "description": "Parent message ID"
+          },
+          "fileName": {
+            "type": "string",
+            "description": "Original file name"
+          },
+          "fileSize": {
+            "type": "integer",
+            "description": "File size in bytes"
+          },
+          "mimeType": {
+            "type": "string",
+            "description": "MIME type"
+          },
+          "uploadedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Upload timestamp"
+          },
+          "r2Key": {
+            "type": "string",
+            "description": "R2 storage key"
+          }
+        },
+        "required": [
+          "id",
+          "conversationId",
+          "messageId",
+          "fileName",
+          "fileSize",
+          "mimeType",
+          "uploadedAt",
+          "r2Key"
+        ]
+      },
+      "UploadResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether upload was successful"
+          },
+          "attachment": {
+            "$ref": "#/components/schemas/FileAttachment"
+          },
+          "error": {
+            "type": "string",
+            "description": "Error message if failed"
+          }
+        },
+        "required": ["success"]
+      },
+      "SearchResponse": {
+        "type": "object",
+        "properties": {
+          "results": {
+            "type": "object",
+            "properties": {
+              "conversations": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "type": {
+                      "type": "string",
+                      "enum": ["conversation"]
+                    }
+                  }
+                }
+              },
+              "messages": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "conversationId": {
+                      "type": "string"
+                    },
+                    "conversationTitle": {
+                      "type": "string"
+                    },
+                    "content": {
+                      "type": "string"
+                    },
+                    "role": {
+                      "type": "string",
+                      "enum": ["user", "assistant", "system"]
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "type": {
+                      "type": "string",
+                      "enum": ["message"]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "BatteryStatus": {
+        "type": "object",
+        "properties": {
+          "totalBalance": {
+            "type": "number",
+            "description": "Total battery balance"
+          },
+          "dailyAllowance": {
+            "type": "number",
+            "description": "Daily battery allowance"
+          },
+          "lastDailyReset": {
+            "type": "string",
+            "format": "date",
+            "description": "Last daily reset date"
+          },
+          "todayUsage": {
+            "type": "number",
+            "description": "Battery used today"
+          },
+          "usageHistory": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "date": {
+                  "type": "string",
+                  "format": "date"
+                },
+                "totalBatteryUsed": {
+                  "type": "number"
+                },
+                "conversationCount": {
+                  "type": "integer"
+                },
+                "messageCount": {
+                  "type": "integer"
+                }
+              }
+            },
+            "description": "Usage history for the last 7 days"
+          }
+        },
+        "required": ["totalBalance", "dailyAllowance", "lastDailyReset"]
+      },
+      "CreateCheckoutRequest": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["subscription", "battery"],
+            "description": "Checkout type"
+          },
+          "planId": {
+            "type": "string",
+            "description": "Subscription plan ID (required for subscription type)"
+          },
+          "isAnnual": {
+            "type": "boolean",
+            "description": "Whether to bill annually (for subscriptions)",
+            "default": false
+          },
+          "batteryUnits": {
+            "type": "integer",
+            "description": "Number of battery units to purchase (required for battery type)"
+          },
+          "returnUrl": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL to return to after checkout"
+          }
+        },
+        "required": ["type"]
+      },
+      "CheckoutSessionResponse": {
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": "string",
+            "description": "Stripe checkout session ID"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "Checkout URL to redirect user to"
+          }
+        },
+        "required": ["sessionId", "url"]
+      },
+      "SubscriptionStatus": {
+        "type": "object",
+        "properties": {
+          "subscription": {
+            "type": "object",
+            "nullable": true,
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Stripe subscription ID"
+              },
+              "status": {
+                "type": "string",
+                "enum": ["active", "canceled", "past_due", "trialing"],
+                "description": "Subscription status"
+              },
+              "planId": {
+                "type": "string",
+                "description": "Plan ID"
+              },
+              "currentPeriodEnd": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Current billing period end date"
+              },
+              "cancelAtPeriodEnd": {
+                "type": "boolean",
+                "description": "Whether subscription will cancel at period end"
+              },
+              "billingInterval": {
+                "type": "string",
+                "enum": ["monthly", "annual"],
+                "nullable": true,
+                "description": "Billing interval"
+              }
+            }
+          }
+        }
+      },
+      "UserProfile": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "User ID"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "User email"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true,
+            "description": "User display name"
+          },
+          "imageUrl": {
+            "type": "string",
+            "nullable": true,
+            "format": "uri",
+            "description": "Profile image URL"
+          },
+          "tier": {
+            "type": "string",
+            "enum": ["free", "paid"],
+            "description": "User tier"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Account creation date"
+          },
+          "subscription": {
+            "type": "object",
+            "nullable": true,
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "planId": {
+                "type": "string"
+              },
+              "planName": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string",
+                "enum": ["active", "canceled", "past_due", "trialing"]
+              },
+              "currentPeriodEnd": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "billingInterval": {
+                "type": "string",
+                "enum": ["monthly", "annual"]
+              },
+              "features": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "battery": {
+            "type": "object",
+            "nullable": true,
+            "properties": {
+              "totalBalance": {
+                "type": "number",
+                "description": "Total battery balance"
+              },
+              "dailyAllowance": {
+                "type": "number",
+                "description": "Daily battery allowance"
+              },
+              "lastDailyReset": {
+                "type": "string",
+                "format": "date",
+                "description": "Last daily reset date"
+              }
+            }
+          }
+        },
+        "required": ["id", "email", "tier", "createdAt"]
+      },
       "ModelsResponse": {
         "type": "object",
         "properties": {
@@ -161,6 +2515,101 @@
         "type": "http",
         "scheme": "bearer",
         "description": "Authentication via Clerk session token"
+      },
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT Bearer token for API access"
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "description": "Bad Request",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "error": {
+                  "type": "string",
+                  "description": "Error message"
+                }
+              }
+            }
+          },
+          "text/plain": {
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "Unauthorized": {
+        "description": "Unauthorized",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "error": {
+                  "type": "string",
+                  "example": "Unauthorized"
+                }
+              }
+            }
+          },
+          "text/plain": {
+            "schema": {
+              "type": "string",
+              "example": "Unauthorized"
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Not Found",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "error": {
+                  "type": "string",
+                  "example": "Not found"
+                }
+              }
+            }
+          },
+          "text/plain": {
+            "schema": {
+              "type": "string",
+              "example": "Not found"
+            }
+          }
+        }
+      },
+      "InternalServerError": {
+        "description": "Internal Server Error",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "error": {
+                  "type": "string",
+                  "example": "Internal server error"
+                }
+              }
+            }
+          },
+          "text/plain": {
+            "schema": {
+              "type": "string",
+              "example": "Internal Server Error"
+            }
+          }
+        }
       }
     }
   }
