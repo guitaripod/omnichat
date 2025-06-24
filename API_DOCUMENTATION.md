@@ -2,7 +2,7 @@
 
 ## Overview
 
-The OmniChat API v1 provides a JWT-based authentication system that supports Sign in with Apple (with Google and other providers coming soon), allowing iOS and Android apps to interact with the OmniChat backend independently of the web application's Clerk authentication.
+The OmniChat API v1 provides a JWT-based authentication system that supports Sign in with Apple (with Google and other providers coming soon), allowing client applications to interact with the OmniChat backend independently of the web application's Clerk authentication.
 
 ## Live Documentation
 
@@ -25,7 +25,7 @@ Authorization: Bearer <access_token>
 - **Access Token**: Valid for 15 minutes
 - **Refresh Token**: Valid for 30 days
 - Use the refresh endpoint to get a new access token before expiration
-- Store tokens securely in your app's keychain (iOS) or encrypted preferences (Android)
+- Store tokens securely using platform-appropriate secure storage mechanisms
 
 ## Endpoints
 
@@ -609,22 +609,24 @@ Real-time features will be available via WebSocket connections:
 
 Official SDKs are planned for:
 
-- Swift (iOS/macOS)
-- Kotlin (Android)
-- React Native
-- Flutter
+- JavaScript/TypeScript
+- Python
+- Swift
+- Kotlin
+- Go
+- Rust
 
 ## Security Best Practices
 
 1. **Token Storage**
 
-   - iOS: Use Keychain Services
-   - Android: Use Android Keystore or encrypted SharedPreferences
+   - Use platform-specific secure storage solutions
+   - Implement proper encryption for token storage
    - Never store tokens in plain text
 
 2. **Certificate Pinning**
 
-   - Implement certificate pinning in production apps
+   - Implement certificate pinning in production environments
    - Validate SSL certificates
 
 3. **Request Signing**
@@ -640,7 +642,7 @@ This API is designed to work alongside the existing Clerk-authenticated web appl
 - AI model integrations
 - Billing and subscription system
 
-Users can seamlessly switch between web and mobile apps with their data synchronized.
+Users can seamlessly switch between different client applications with their data synchronized.
 
 ## Changelog
 

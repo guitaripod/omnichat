@@ -155,7 +155,7 @@ const API_DOCS_HTML = `<!DOCTYPE html>
   <header>
     <div class="container">
       <h1>OmniChat API v1</h1>
-      <p class="subtitle">RESTful API for iOS and mobile applications</p>
+      <p class="subtitle">RESTful API for client applications</p>
     </div>
   </header>
 
@@ -206,7 +206,7 @@ const API_DOCS_HTML = `<!DOCTYPE html>
 
       <div class="content">
         <h2 id="overview">Overview</h2>
-        <p>The OmniChat API v1 provides a JWT-based authentication system that supports Sign in with Apple and other auth providers, allowing iOS apps to interact with the OmniChat backend without Clerk dependencies.</p>
+        <p>The OmniChat API v1 provides a JWT-based authentication system that supports Sign in with Apple and other auth providers, allowing any client application to interact with the OmniChat backend without Clerk dependencies.</p>
         
         <h3>Base URL</h3>
         <pre><code>Production: https://omnichat-7pu.pages.dev/api/v1</code></pre>
