@@ -57,7 +57,7 @@ export async function GET(
       const messageList = result.results || [];
 
       // Get attachments for all messages
-      const messageIds = messageList.map((m) => m.id);
+      const messageIds = messageList.map((m: { id: string }) => m.id);
       if (messageIds.length > 0) {
         const attachmentResults = await database
           .select()
@@ -66,7 +66,7 @@ export async function GET(
           .all();
 
         // Group attachments by message
-        const attachmentsByMessage = (attachmentResults.results || []).reduce((acc, att) => {
+        const attachmentsByMessage = (attachmentResults.results || []).reduce((acc: Record<string, any[]>, att: any) => {
           if (!acc[att.messageId]) acc[att.messageId] = [];
           acc[att.messageId].push(att);
           return acc;
@@ -87,6 +87,12 @@ export async function GET(
   });
 }
 
+interface SendMessageRequest {
+  content: string;
+  attachmentIds?: string[];
+  stream?: boolean;
+}
+
 // POST /api/v1/conversations/[id]/messages - Send a message
 export async function POST(
   request: NextRequest,
@@ -95,7 +101,7 @@ export async function POST(
   return withRateLimit(request, async () => {
     return withApiAuth(request, async (req) => {
       const { id: conversationId } = await params;
-      const body = await request.json();
+      const body = await request.json() as SendMessageRequest;
       const { content, attachmentIds, stream = true } = body;
 
       if (!content || !content.trim()) {
@@ -142,7 +148,7 @@ export async function POST(
         .orderBy(asc(messages.createdAt))
         .all();
 
-      const messageHistory = (history.results || []).map((msg) => ({
+      const messageHistory = (history.results || []).map((msg: { role: string; content: string }) => ({
         role: msg.role as 'user' | 'assistant' | 'system',
         content: msg.content,
       }));

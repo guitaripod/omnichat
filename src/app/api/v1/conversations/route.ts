@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
 
       // Get last message for each conversation
       const conversationsWithLastMessage = await Promise.all(
-        userConversations.map(async (conv) => {
+        userConversations.map(async (conv: any) => {
           const lastMessage = await database
             .select({
               id: messages.id,
@@ -60,11 +60,16 @@ export async function GET(request: NextRequest) {
   });
 }
 
+interface CreateConversationRequest {
+  title: string;
+  model?: string;
+}
+
 // POST /api/v1/conversations - Create new conversation
 export async function POST(request: NextRequest) {
   return withRateLimit(request, async () => {
     return withApiAuth(request, async (req) => {
-      const body = await request.json();
+      const body = await request.json() as CreateConversationRequest;
       const { title, model = 'gpt-4o-mini' } = body;
 
       if (!title) {

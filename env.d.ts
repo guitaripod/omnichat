@@ -19,9 +19,11 @@ export interface CloudflareEnv {
   GOOGLE_API_KEY: string;
   XAI_API_KEY: string;
   DEEPSEEK_API_KEY: string;
+  PERPLEXITY_API_KEY?: string;
 
   // Bindings
   DB: D1Database;
+  R2_STORAGE: R2Bucket;
 }
 
 export {};

@@ -4,6 +4,7 @@ import { withApiAuth, withRateLimit } from '@/lib/api/middleware/auth';
 import { nanoid } from 'nanoid';
 import { db } from '@/lib/db';
 import { attachments } from '@/lib/db/schema';
+import type { CloudflareEnv } from '@/../../env';
 
 export const runtime = 'edge';
 
@@ -61,7 +62,7 @@ export async function POST(request: NextRequest) {
 
           const userId = req.user!.id;
           const database = db();
-          const env = getRequestContext().env;
+          const env = getRequestContext().env as CloudflareEnv;
 
           // Generate unique key
           const fileId = nanoid();

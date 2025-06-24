@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getRequestContext } from '@cloudflare/next-on-pages';
 import { withApiAuth, withRateLimit } from '@/lib/api/middleware/auth';
+import type { CloudflareEnv } from '@/../../env';
 
 export const runtime = 'edge';
 
@@ -15,7 +16,7 @@ export async function GET(
         const { key: keyParts } = await params;
         const key = keyParts.join('/');
         const userId = req.user!.id;
-        const env = getRequestContext().env;
+        const env = getRequestContext().env as CloudflareEnv;
 
         // Verify user owns this file
         if (!key.startsWith(`${userId}/`)) {
@@ -63,7 +64,7 @@ export async function DELETE(
         const { key: keyParts } = await params;
         const key = keyParts.join('/');
         const userId = req.user!.id;
-        const env = getRequestContext().env;
+        const env = getRequestContext().env as CloudflareEnv;
 
         // Verify user owns this file
         if (!key.startsWith(`${userId}/`)) {
