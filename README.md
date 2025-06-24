@@ -92,6 +92,19 @@ Our revolutionary pricing model: **1 Battery = $0.001**
   <img src="docs/images/pricing-ideology.png" alt="OmniChat Pricing" width="100%" />
 </div>
 
+### 🔌 **Comprehensive API**
+
+Build on top of OmniChat with our fully documented REST API:
+
+- **20+ Endpoints** covering auth, chat, files, and more
+- **OpenAPI 3.0 Specification** at `/api/openapi.json`
+- **Interactive Documentation** at `/api/v1/docs`
+- **JWT & OAuth Support** for secure authentication
+- **Streaming Responses** for real-time AI interactions
+- **Go CLI Validator** for testing and development
+
+Perfect for building mobile apps, integrations, or custom clients.
+
 ---
 
 ## 🚀 Quick Start
@@ -223,6 +236,12 @@ npm run dev
 - DeepSeek SDK
 - Ollama for local models
 
+### Developer Tools
+
+- **OpenAPI Specification**: Complete API documentation
+- **Go CLI Validator**: API testing and validation tool
+- **TypeScript Types**: Full type safety across the stack
+
 ---
 
 ## 📁 Project Structure
@@ -240,6 +259,11 @@ omnichat/
 │   ├── services/        # External service integrations
 │   ├── store/           # Zustand state management
 │   └── types/           # TypeScript type definitions
+├── openapi/             # OpenAPI specification and docs
+├── go-cli/              # Go-based API validator CLI
+│   ├── cmd/             # CLI commands
+│   ├── internal/        # Internal packages
+│   └── pkg/             # Reusable packages
 ├── docs/                # Documentation and images
 ├── scripts/             # Build and deployment scripts
 └── tests/               # Test suites
@@ -292,4 +316,3 @@ See the [Contributing Guide](CONTRIBUTING.md) for details.
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
-
