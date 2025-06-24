@@ -209,7 +209,7 @@ const API_DOCS_HTML = `<!DOCTYPE html>
         <p>The OmniChat API v1 provides a JWT-based authentication system that supports Sign in with Apple and other auth providers, allowing iOS apps to interact with the OmniChat backend without Clerk dependencies.</p>
         
         <h3>Base URL</h3>
-        <pre><code>Production: https://omnichat.pages.dev/api/v1</code></pre>
+        <pre><code>Production: https://omnichat-7pu.pages.dev/api/v1</code></pre>
 
         <h3>Authentication</h3>
         <p>All API endpoints (except auth endpoints) require a Bearer token in the Authorization header:</p>

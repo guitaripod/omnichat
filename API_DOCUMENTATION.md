@@ -6,11 +6,11 @@ The OmniChat API v1 provides a JWT-based authentication system that supports Sig
 
 ## Live Documentation
 
-Interactive API documentation is available at: `https://omnichat.pages.dev/api/v1/docs`
+Interactive API documentation is available at: `https://omnichat-7pu.pages.dev/api/v1/docs`
 
 ## Base URL
 
-Production: `https://omnichat.pages.dev/api/v1`
+Production: `https://omnichat-7pu.pages.dev/api/v1`
 
 ## Authentication
 
@@ -38,6 +38,7 @@ Authorization: Bearer <access_token>
 Authenticates a user using Apple Sign In. Creates a new user account if one doesn't exist.
 
 **Request Body:**
+
 ```json
 {
   "idToken": "apple_id_token_from_apple_signin",
@@ -52,11 +53,13 @@ Authenticates a user using Apple Sign In. Creates a new user account if one does
 ```
 
 **Notes:**
+
 - The `user` object is only required on first sign-in when Apple provides user details
 - The `idToken` is verified against Apple's public keys
 - If the email already exists, the Apple account will be linked to the existing user
 
 **Response:**
+
 ```json
 {
   "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
@@ -77,6 +80,7 @@ Authenticates a user using Apple Sign In. Creates a new user account if one does
 Refreshes an expired access token using a valid refresh token.
 
 **Request Body:**
+
 ```json
 {
   "refreshToken": "your_refresh_token"
@@ -84,6 +88,7 @@ Refreshes an expired access token using a valid refresh token.
 ```
 
 **Response:**
+
 ```json
 {
   "accessToken": "new_access_token",
@@ -105,9 +110,11 @@ Refreshes an expired access token using a valid refresh token.
 Returns all conversations for the authenticated user, sorted by most recently updated.
 
 **Headers:**
+
 - `Authorization: Bearer <access_token>`
 
 **Response:**
+
 ```json
 {
   "conversations": [
@@ -136,9 +143,11 @@ Returns all conversations for the authenticated user, sorted by most recently up
 Creates a new conversation.
 
 **Headers:**
+
 - `Authorization: Bearer <access_token>`
 
 **Request Body:**
+
 ```json
 {
   "title": "New Conversation",
@@ -147,6 +156,7 @@ Creates a new conversation.
 ```
 
 **Available Models:**
+
 - `gpt-4o-mini` - OpenAI GPT-4 Optimized Mini
 - `gpt-4o` - OpenAI GPT-4 Optimized
 - `claude-3-5-sonnet-20241022` - Claude 3.5 Sonnet
@@ -155,6 +165,7 @@ Creates a new conversation.
 - `llama-3.1-sonar-huge-128k-online` - Perplexity Llama 3.1
 
 **Response:**
+
 ```json
 {
   "id": "conv_new_nanoid",
@@ -173,9 +184,11 @@ Creates a new conversation.
 Gets detailed information about a specific conversation.
 
 **Headers:**
+
 - `Authorization: Bearer <access_token>`
 
 **Response:**
+
 ```json
 {
   "id": "conv_nanoid",
@@ -201,9 +214,11 @@ Gets detailed information about a specific conversation.
 Updates a conversation's title or archive status.
 
 **Headers:**
+
 - `Authorization: Bearer <access_token>`
 
 **Request Body:**
+
 ```json
 {
   "title": "Updated Conversation Title",
@@ -212,6 +227,7 @@ Updates a conversation's title or archive status.
 ```
 
 **Response:**
+
 ```json
 {
   "id": "conv_nanoid",
@@ -228,9 +244,11 @@ Updates a conversation's title or archive status.
 Permanently deletes a conversation and all its messages.
 
 **Headers:**
+
 - `Authorization: Bearer <access_token>`
 
 **Response:**
+
 ```json
 {
   "success": true
@@ -246,14 +264,17 @@ Permanently deletes a conversation and all its messages.
 Gets messages in a conversation with pagination support.
 
 **Headers:**
+
 - `Authorization: Bearer <access_token>`
 
 **Query Parameters:**
+
 - `limit` (number, default: 50): Number of messages to return
 - `offset` (number, default: 0): Number of messages to skip
 - `order` (string, default: 'asc'): Sort order - 'asc' or 'desc'
 
 **Response:**
+
 ```json
 {
   "messages": [
@@ -287,9 +308,11 @@ Gets messages in a conversation with pagination support.
 Sends a message to a conversation and receives an AI response. Supports both streaming and non-streaming responses.
 
 **Headers:**
+
 - `Authorization: Bearer <access_token>`
 
 **Request Body:**
+
 ```json
 {
   "content": "What is quantum computing?",
@@ -299,11 +322,13 @@ Sends a message to a conversation and receives an AI response. Supports both str
 ```
 
 **Parameters:**
+
 - `content` (required): The message text
 - `attachmentIds` (optional): Array of attachment IDs to include with the message
 - `stream` (optional, default: true): Whether to stream the response
 
 **Response (Non-streaming):**
+
 ```json
 {
   "id": "msg_nanoid_3",
@@ -341,20 +366,24 @@ data: [DONE]
 Uploads a file to R2 storage. Files are automatically associated with conversations and optionally with messages.
 
 **Headers:**
+
 - `Authorization: Bearer <access_token>`
 - `Content-Type: multipart/form-data`
 
 **Request Body (multipart/form-data):**
+
 - `file` (required): The file to upload (max 10MB)
 - `conversationId` (required): ID of the conversation
 - `messageId` (optional): ID of the message to attach to
 
 **Allowed File Types:**
+
 - Images: `image/jpeg`, `image/png`, `image/gif`, `image/webp`
 - Documents: `application/pdf`, `text/plain`, `text/markdown`
 - Data: `application/json`, `application/xml`
 
 **Response:**
+
 ```json
 {
   "id": "attachment_nanoid",
@@ -373,6 +402,7 @@ Uploads a file to R2 storage. Files are automatically associated with conversati
 Retrieves a file from R2 storage. Only the file owner can access their files.
 
 **Headers:**
+
 - `Authorization: Bearer <access_token>`
 
 **Response:**
@@ -385,9 +415,11 @@ Returns the file with appropriate content-type headers and a 1-hour cache direct
 Deletes a file from R2 storage.
 
 **Headers:**
+
 - `Authorization: Bearer <access_token>`
 
 **Response:**
+
 ```json
 {
   "success": true
@@ -403,9 +435,11 @@ Deletes a file from R2 storage.
 Gets the authenticated user's profile information, including subscription and battery balance.
 
 **Headers:**
+
 - `Authorization: Bearer <access_token>`
 
 **Response:**
+
 ```json
 {
   "id": "user_nanoid",
@@ -421,11 +455,7 @@ Gets the authenticated user's profile information, including subscription and ba
     "status": "active",
     "currentPeriodEnd": "2025-07-01T00:00:00Z",
     "billingInterval": "monthly",
-    "features": [
-      "unlimited_messages",
-      "priority_support",
-      "advanced_models"
-    ]
+    "features": ["unlimited_messages", "priority_support", "advanced_models"]
   },
   "battery": {
     "totalBalance": 5000,
@@ -442,9 +472,11 @@ Gets the authenticated user's profile information, including subscription and ba
 Updates the user's profile information.
 
 **Headers:**
+
 - `Authorization: Bearer <access_token>`
 
 **Request Body:**
+
 ```json
 {
   "name": "Jane Doe",
@@ -453,6 +485,7 @@ Updates the user's profile information.
 ```
 
 **Response:**
+
 ```json
 {
   "id": "user_nanoid",
@@ -469,14 +502,17 @@ Updates the user's profile information.
 Gets detailed usage statistics for the authenticated user.
 
 **Headers:**
+
 - `Authorization: Bearer <access_token>`
 
 **Query Parameters:**
+
 - `period` (string, default: '30d'): Time period - '7d', '30d', '90d', or 'all'
 - `startDate` (string, optional): Custom start date in ISO format
 - `endDate` (string, optional): Custom end date in ISO format
 
 **Response:**
+
 ```json
 {
   "period": {
@@ -563,6 +599,7 @@ API requests are rate limited to prevent abuse. Rate limit information is includ
 ## WebSocket Support (Coming Soon)
 
 Real-time features will be available via WebSocket connections:
+
 - Live message streaming
 - Conversation updates
 - Presence indicators
@@ -571,6 +608,7 @@ Real-time features will be available via WebSocket connections:
 ## SDK Support
 
 Official SDKs are planned for:
+
 - Swift (iOS/macOS)
 - Kotlin (Android)
 - React Native
@@ -579,11 +617,13 @@ Official SDKs are planned for:
 ## Security Best Practices
 
 1. **Token Storage**
+
    - iOS: Use Keychain Services
    - Android: Use Android Keystore or encrypted SharedPreferences
    - Never store tokens in plain text
 
 2. **Certificate Pinning**
+
    - Implement certificate pinning in production apps
    - Validate SSL certificates
 
@@ -594,6 +634,7 @@ Official SDKs are planned for:
 ## Migration Notes
 
 This API is designed to work alongside the existing Clerk-authenticated web application. Both systems share the same:
+
 - D1 database
 - R2 storage
 - AI model integrations
@@ -604,6 +645,7 @@ Users can seamlessly switch between web and mobile apps with their data synchron
 ## Changelog
 
 ### v1.0.0 (2025-06-23)
+
 - Initial release
 - Apple Sign In authentication
 - Conversation and message management
@@ -612,6 +654,7 @@ Users can seamlessly switch between web and mobile apps with their data synchron
 - Streaming AI responses
 
 ### Planned Features
+
 - Google Sign In
 - Push notifications
 - Voice message support
