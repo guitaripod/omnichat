@@ -43,7 +43,7 @@ async function getApplePublicKeys(): Promise<AppleKey[]> {
     throw new Error('Failed to fetch Apple public keys');
   }
 
-  const data = await response.json();
+  const data = await response.json() as { keys: AppleKey[] };
   keysCache = {
     keys: data.keys,
     timestamp: Date.now(),

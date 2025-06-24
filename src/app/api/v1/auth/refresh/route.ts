@@ -8,9 +8,13 @@ import type { RefreshTokenPayload } from '@/lib/api/auth/jwt';
 
 export const runtime = 'edge';
 
+interface RefreshRequest {
+  refreshToken: string;
+}
+
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    const body = await request.json() as RefreshRequest;
     const { refreshToken } = body;
 
     if (!refreshToken) {

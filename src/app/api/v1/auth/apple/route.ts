@@ -11,9 +11,20 @@ export const runtime = 'edge';
 
 const APPLE_CLIENT_ID = process.env.APPLE_CLIENT_ID || 'com.example.omnichat';
 
+interface AppleAuthRequest {
+  idToken: string;
+  user?: {
+    email?: string;
+    name?: {
+      firstName?: string;
+      lastName?: string;
+    };
+  };
+}
+
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    const body = await request.json() as AppleAuthRequest;
     const { idToken, user: appleUserData } = body;
 
     if (!idToken) {

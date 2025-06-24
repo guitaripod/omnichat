@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import {
-  apiUsageTracking,
   batteryTransactions,
   dailyUsageSummary,
   conversations,
@@ -98,8 +97,8 @@ export async function GET(request: NextRequest) {
         .where(
           and(
             eq(conversations.userId, userId),
-            gte(conversations.createdAt, startDate.getTime()),
-            lte(conversations.createdAt, endDate.getTime())
+            gte(conversations.createdAt, startDate),
+            lte(conversations.createdAt, endDate)
           )
         )
         .get();
@@ -112,31 +111,31 @@ export async function GET(request: NextRequest) {
         .where(
           and(
             eq(conversations.userId, userId),
-            gte(messages.createdAt, startDate.getTime()),
-            lte(messages.createdAt, endDate.getTime())
+            gte(messages.createdAt, startDate),
+            lte(messages.createdAt, endDate)
           )
         )
         .get();
 
       // Calculate totals
       const totalBatteryUsed = (dailyUsage.results || []).reduce(
-        (sum, day) => sum + day.totalBatteryUsed,
+        (sum: number, day: any) => sum + day.totalBatteryUsed,
         0
       );
       const totalMessages = (dailyUsage.results || []).reduce(
-        (sum, day) => sum + day.totalMessages,
+        (sum: number, day: any) => sum + day.totalMessages,
         0
       );
 
       // Get model usage breakdown
       const modelUsage: Record<string, number> = {};
-      (dailyUsage.results || []).forEach((day) => {
+      (dailyUsage.results || []).forEach((day: any) => {
         try {
           const models = JSON.parse(day.modelsUsed || '{}');
           Object.entries(models).forEach(([model, count]) => {
             modelUsage[model] = (modelUsage[model] || 0) + (count as number);
           });
-        } catch (e) {
+        } catch {
           // Ignore parse errors
         }
       });
@@ -153,7 +152,7 @@ export async function GET(request: NextRequest) {
           totalUserMessages: messageCount?.count || 0,
           averageDailyUsage: totalBatteryUsed / Math.max(1, dailyUsage.results?.length || 1),
         },
-        dailyUsage: (dailyUsage.results || []).map((day) => ({
+        dailyUsage: (dailyUsage.results || []).map((day: any) => ({
           date: day.date,
           batteryUsed: day.totalBatteryUsed,
           messages: day.totalMessages,

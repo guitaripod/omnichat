@@ -73,11 +73,16 @@ export async function GET(request: NextRequest) {
   });
 }
 
+interface UpdateProfileRequest {
+  name?: string;
+  imageUrl?: string;
+}
+
 // PATCH /api/v1/user/profile - Update user profile
 export async function PATCH(request: NextRequest) {
   return withRateLimit(request, async () => {
     return withApiAuth(request, async (req) => {
-      const body = await request.json();
+      const body = await request.json() as UpdateProfileRequest;
       const { name, imageUrl } = body;
 
       if (!name && !imageUrl) {
@@ -88,7 +93,7 @@ export async function PATCH(request: NextRequest) {
       const userId = req.user!.id;
 
       // Update user
-      const updates: any = { updatedAt: new Date() };
+      const updates: { updatedAt: Date; name?: string; imageUrl?: string } = { updatedAt: new Date() };
       if (name !== undefined) updates.name = name;
       if (imageUrl !== undefined) updates.imageUrl = imageUrl;
 

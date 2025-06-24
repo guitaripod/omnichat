@@ -92,6 +92,11 @@ export async function DELETE(
   });
 }
 
+interface UpdateConversationRequest {
+  title?: string;
+  isArchived?: boolean;
+}
+
 // PATCH /api/v1/conversations/[id] - Update conversation
 export async function PATCH(
   request: NextRequest,
@@ -100,7 +105,7 @@ export async function PATCH(
   return withRateLimit(request, async () => {
     return withApiAuth(request, async (req) => {
       const { id } = await params;
-      const body = await request.json();
+      const body = await request.json() as UpdateConversationRequest;
       const { title, isArchived } = body;
 
       if (!title && isArchived === undefined) {
@@ -125,7 +130,7 @@ export async function PATCH(
       }
 
       // Update conversation
-      const updates: any = { updatedAt: new Date() };
+      const updates: { updatedAt: Date; title?: string; isArchived?: boolean } = { updatedAt: new Date() };
       if (title !== undefined) updates.title = title;
       if (isArchived !== undefined) updates.isArchived = isArchived;
 
