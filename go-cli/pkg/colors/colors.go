@@ -49,3 +49,8 @@ func BoldText(text string) string {
 func Header(emoji, text string) string {
 	return fmt.Sprintf("%s %s", emoji, BoldText(text))
 }
+
+// Subheader returns a formatted subheader
+func Subheader(emoji, text string) string {
+	return fmt.Sprintf("%s %s", emoji, text)
+}
