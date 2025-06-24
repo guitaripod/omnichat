@@ -1,0 +1,167 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "OmniChat API",
+    "description": "Multi-LLM chat application API",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://api.omnichat.app",
+      "description": "Production server"
+    },
+    {
+      "url": "http://localhost:3000",
+      "description": "Development server"
+    }
+  ],
+  "paths": {
+    "/api/models": {
+      "get": {
+        "summary": "Get available AI models",
+        "description": "Returns all available AI models grouped by provider. Requires authentication.",
+        "tags": ["Models"],
+        "security": [
+          {
+            "ClerkAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelsResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - User not authenticated",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "Unauthorized"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "Internal Server Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ModelsResponse": {
+        "type": "object",
+        "properties": {
+          "providers": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/AIModel"
+              }
+            },
+            "example": {
+              "openai": [
+                {
+                  "id": "gpt-4.1",
+                  "name": "GPT-4.1",
+                  "provider": "openai",
+                  "contextWindow": 128000,
+                  "maxOutput": 16384,
+                  "supportsVision": true,
+                  "supportsTools": true,
+                  "supportsWebSearch": false,
+                  "description": "Latest model - excels at coding & instruction following"
+                }
+              ],
+              "anthropic": [
+                {
+                  "id": "claude-opus-4-20250514",
+                  "name": "Claude Opus 4",
+                  "provider": "anthropic",
+                  "contextWindow": 200000,
+                  "maxOutput": 8192,
+                  "supportsVision": true,
+                  "supportsTools": true,
+                  "supportsWebSearch": true,
+                  "description": "Most capable - Level 3 safety rating"
+                }
+              ]
+            }
+          }
+        },
+        "required": ["providers"]
+      },
+      "AIModel": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the model"
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable name of the model"
+          },
+          "provider": {
+            "type": "string",
+            "enum": ["openai", "anthropic", "google", "ollama", "xai", "deepseek"],
+            "description": "The AI provider for this model"
+          },
+          "contextWindow": {
+            "type": "integer",
+            "description": "Maximum context window size in tokens"
+          },
+          "maxOutput": {
+            "type": "integer",
+            "description": "Maximum output tokens the model can generate"
+          },
+          "supportsVision": {
+            "type": "boolean",
+            "description": "Whether the model supports image inputs"
+          },
+          "supportsTools": {
+            "type": "boolean",
+            "description": "Whether the model supports function/tool calling"
+          },
+          "supportsWebSearch": {
+            "type": "boolean",
+            "description": "Whether the model supports web search integration"
+          },
+          "supportsImageGeneration": {
+            "type": "boolean",
+            "description": "Whether the model can generate images"
+          },
+          "description": {
+            "type": "string",
+            "description": "Optional description of the model's capabilities"
+          }
+        },
+        "required": ["id", "name", "provider", "contextWindow", "maxOutput"]
+      }
+    },
+    "securitySchemes": {
+      "ClerkAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Authentication via Clerk session token"
+      }
+    }
+  }
+}
