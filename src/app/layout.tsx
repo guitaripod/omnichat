@@ -1,27 +1,14 @@
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
-import { ClerkProvider } from '@/components/providers/clerk-provider';
-import { UserDataProvider } from '@/components/providers/user-data-provider';
-import { MigrationErrorBoundary } from '@/components/migration-error-boundary';
-import { ThemeScript } from './theme-script';
+import { Inter } from 'next/font/google';
 import './globals.css';
 
 export const runtime = 'edge';
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
-  subsets: ['latin'],
-});
-
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
-  subsets: ['latin'],
-});
+const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'OmniChat - Multi-LLM Chat Application',
-  description:
-    'Chat with multiple AI models including OpenAI, Anthropic, Google, and local Ollama models',
+  title: 'OmniChat - 3rd Place T3 Cloneathon',
+  description: '3rd Place Winner in T3 Cloneathon - Multi-LLM Chat Interface',
 };
 
 export default function RootLayout({
@@ -30,17 +17,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <head>
-        <ThemeScript />
-      </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <ClerkProvider>
-          <UserDataProvider>
-            <MigrationErrorBoundary>{children}</MigrationErrorBoundary>
-          </UserDataProvider>
-        </ClerkProvider>
-      </body>
+    <html lang="en">
+      <body className={`${inter.className} antialiased`}>{children}</body>
     </html>
   );
 }
