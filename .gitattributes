@@ -28,6 +28,11 @@ package-lock.json linguist-generated=true
 # Mark shell scripts as vendor
 *.sh linguist-vendored=true
 
+# Mark Makefiles as vendor
+Makefile linguist-vendored=true
+makefile linguist-vendored=true
+*.mk linguist-vendored=true
+
 # Mark HTML as vendor (likely templates)
 *.html linguist-vendored=true
 
