@@ -1,0 +1,44 @@
+# Linguist overrides to show only TypeScript and Go as primary languages
+
+# Mark JavaScript files as generated (compiled from TypeScript)
+*.js linguist-generated=true
+*.mjs linguist-generated=true
+*.js.map linguist-generated=true
+
+# Mark CSS as vendor/generated
+*.css linguist-vendored=true
+
+# Mark JSON files as data (not code)
+*.json linguist-detectable=false
+package-lock.json linguist-generated=true
+
+# Mark SQL migration files as generated
+*.sql linguist-generated=true
+
+# Mark fonts and assets as vendor
+*.woff linguist-vendored=true
+*.woff2 linguist-vendored=true
+*.ttf linguist-vendored=true
+*.eot linguist-vendored=true
+*.otf linguist-vendored=true
+*.svg linguist-vendored=true
+*.png linguist-vendored=true
+*.ico linguist-vendored=true
+
+# Mark shell scripts as vendor
+*.sh linguist-vendored=true
+
+# Mark HTML as vendor (likely templates)
+*.html linguist-vendored=true
+
+# Ensure TypeScript and Go are detected
+*.ts linguist-detectable=true
+*.tsx linguist-detectable=true
+*.go linguist-detectable=true
+
+# Mark test files
+*_test.go linguist-detectable=true
+*.test.ts linguist-detectable=true
+*.test.tsx linguist-detectable=true
+*.spec.ts linguist-detectable=true
+*.spec.tsx linguist-detectable=true
